@@ -1,0 +1,2 @@
+# Hocon
+Simple Hocon
