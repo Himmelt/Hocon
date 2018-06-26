@@ -1,0 +1,10 @@
+apply plugin: 'java'
+
+group = 'hocon'
+version = '0.0.1'
+archivesBaseName = "Hocon"
+
+sourceCompatibility = targetCompatibility = 1.8
+compileJava {
+    sourceCompatibility = targetCompatibility = 1.8
+}
