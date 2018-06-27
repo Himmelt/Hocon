@@ -1,21 +1,20 @@
 package org.soraworld.hocon;
 
 import java.io.*;
-import java.util.ArrayList;
 
-public class FileConfigure {
+public class FileConfigure extends Node {
 
     private File file;
-    private String head;
-    private ArrayList<Node> nodes;
+
+    public FileConfigure(File file) {
+        this.file = file;
+    }
 
     public void save() throws IOException {
-        Writer writer = new FileWriter(file);
-        writer.write(head);
-        writer.write("\n");
-        for (Node node : nodes) {
-            node.write(writer);
-        }
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+        write(writer);
+        writer.flush();
+        writer.close();
     }
 
     public void load() throws IOException {
