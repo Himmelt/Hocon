@@ -3,6 +3,7 @@ package org.soraworld.hocon;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -73,6 +74,23 @@ public class Node {
 
     public void modify(Object obj) {
 
+    }
+
+    public void readFrom(Object obj) throws IllegalAccessException {
+        values = new LinkedHashMap<>();
+        appendFrom(obj);
+    }
+
+    public void appendFrom(Object obj) throws IllegalAccessException {
+        if (obj == null) return;
+        List<Field> fields = Fields.getFields(obj.getClass());
+        for (Field field : fields) {
+            field.setAccessible(true);
+            Setting set = field.getAnnotation(Setting.class);
+            if (set != null) {
+                values.put(field.getName(), new CommentValue(field.get(obj)));
+            }
+        }
     }
 
     public void addHead(String head) {
