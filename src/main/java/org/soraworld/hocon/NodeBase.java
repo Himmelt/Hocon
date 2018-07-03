@@ -12,21 +12,18 @@ public class NodeBase<T> {
 
     public static final String NEW_LINE = System.lineSeparator();
 
+    static int INDENT_SIZE = 2;
+
     public NodeBase(T value) {
         this.value = value;
     }
 
-    public boolean isEmpty() {
-        return value == null;
+    public boolean notEmpty() {
+        return value != null;
     }
 
-    public void writeValue(int indent, Writer writer) throws IOException {
-        if (value instanceof NodeBase) {
-            ((NodeBase) value).writeValue(indent, writer);
-        } else if (value != null) {
-//            writeIndent(indent, writer);
-            writer.write(" = " + value + NEW_LINE);
-        }
+    protected void writeValue(int indent, Writer writer) throws IOException {
+        writer.write(toString());
     }
 
     public void writeComment(int indent, Writer writer) {
@@ -34,7 +31,13 @@ public class NodeBase<T> {
     }
 
     public static void writeIndent(int indent, Writer writer) throws IOException {
+        indent *= INDENT_SIZE;
         while (indent-- > 0) writer.write(' ');
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
     }
 
 }

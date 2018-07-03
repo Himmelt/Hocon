@@ -2,6 +2,7 @@ package org.soraworld.hocon;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -11,8 +12,8 @@ public class NodeMap extends NodeBase<LinkedHashMap<String, NodeBase>> {
         super(new LinkedHashMap<>());
     }
 
-    public boolean isEmpty() {
-        return value == null || value.isEmpty();
+    public boolean notEmpty() {
+        return value != null && !value.isEmpty();
     }
 
     public void setBool(String path, boolean value) {
@@ -45,21 +46,36 @@ public class NodeMap extends NodeBase<LinkedHashMap<String, NodeBase>> {
     }
 
     @Override
-    public void writeValue(int indent, Writer writer) throws IOException {
-        //writer.write(" {");
-        if (!isEmpty()) {
-            //writer.write(NEW_LINE);
-            //writeIndent(indent, writer);
-            for (Map.Entry<String, NodeBase> entry : value.entrySet()) {
+    protected void writeValue(int indent, Writer writer) throws IOException {
+        if (notEmpty()) {
+            Iterator<Map.Entry<String, NodeBase>> it = value.entrySet().iterator();
+            while (it.hasNext()) {
+                Map.Entry<String, NodeBase> entry = it.next();
+                String path = entry.getKey();
                 NodeBase node = entry.getValue();
-                node.writeComment(indent, writer);
-                writer.write(entry.getKey());
-                node.writeValue(indent + 4, writer);
+                if (path != null && !path.isEmpty() && node != null) {
+                    node.writeComment(indent, writer);
+                    writeIndent(indent, writer);
+                    writer.write(path);
+                    if (node instanceof NodeMap) {
+                        writer.write(" {" + NEW_LINE);
+                        node.writeValue(indent + 1, writer);
+                        writer.write(NEW_LINE);
+                        writeIndent(indent, writer);
+                        writer.write('}');
+                    } else if (node instanceof NodeList) {
+                        writer.write(Constant.EQUAL_LIST + NEW_LINE);
+                        node.writeValue(indent + 1, writer);
+                        writer.write(NEW_LINE);
+                        writeIndent(indent, writer);
+                        writer.write(']');
+                    } else {
+                        writer.write(Constant.EQUAL + node);
+                    }
+                    if (it.hasNext()) writer.write(NEW_LINE);
+                }
             }
-            writeIndent(indent - 4, writer);
         }
-        //writer.write('}');
-        //writer.write(NEW_LINE);
     }
 
 }

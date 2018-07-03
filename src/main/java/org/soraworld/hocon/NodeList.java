@@ -7,33 +7,32 @@ import java.util.Iterator;
 
 public class NodeList extends NodeBase<ArrayList<NodeBase>> {
 
-    public NodeList(ArrayList<NodeBase> value) {
-        super(value);
+    public NodeList() {
+        super(new ArrayList<>());
     }
 
-    public boolean isEmpty() {
-        return value == null || value.isEmpty();
+    public boolean notEmpty() {
+        return value != null && !value.isEmpty();
     }
 
     public void clear() {
         value.clear();
     }
 
+    public void add(NodeBase element) {
+        value.add(element);
+    }
+
     @Override
     public void writeValue(int indent, Writer writer) throws IOException {
-        writer.write(" = [");
-        if (!isEmpty()) {
-            writer.write(NEW_LINE);
-            writeIndent(indent, writer);
+        if (notEmpty()) {
             Iterator<NodeBase> it = value.iterator();
             while (it.hasNext()) {
-                it.next().writeValue(indent + 4, writer);
-                if (it.hasNext()) writer.write(',');
+                writeIndent(indent, writer);
+                it.next().writeValue(indent + 1, writer);
+                if (it.hasNext()) writer.write(',' + NEW_LINE);
             }
-            writeIndent(indent - 4, writer);
         }
-        writer.write(']');
-        writer.write(NEW_LINE);
     }
 
 }
