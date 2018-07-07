@@ -1,117 +1,137 @@
 package org.soraworld.hocon;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Writer;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-public class NodeMap extends NodeBase<LinkedHashMap<String, NodeBase>> {
+public class NodeMap implements Node {
 
-    public NodeMap() {
-        super(new LinkedHashMap<>());
-    }
+    private final LinkedHashMap<String, Node> value = new LinkedHashMap<>();
+    private final List<String> comments = new ArrayList<>();
 
-    public boolean notEmpty() {
-        return value != null && !value.isEmpty();
-    }
-
-    public void setBool(String path, boolean value) {
-        this.value.put(path, new NodeBase<>(value));
-    }
-
-    public void setNum(String path, Number value) {
-        this.value.put(path, new NodeBase<>(value));
-    }
-
-    public void setString(String path, String value) {
-        this.value.put(path, new NodeBase<>(value));
-    }
-
-    public void setNode(String path, NodeBase node) {
-        // TODO cycle reference
-        this.value.put(path, node);
-    }
-
-    public void setBool(String path, boolean value, String comment) {
-        this.value.put(path, new NodeBase<>(value, comment));
-    }
-
-    public void setNum(String path, Number value, String comment) {
-        this.value.put(path, new NodeBase<>(value, comment));
-    }
-
-    public void setString(String path, String value, String comment) {
-        this.value.put(path, new NodeBase<>(value, comment));
-    }
-
-    public void setNode(String path, NodeBase node, String comment) {
-        // TODO cycle reference
-        node.addComment(comment);
-        this.value.put(path, node);
-    }
-
-/*
-    public void setList(String path, NodeList list) {
-        this.value.put(path, list);
-    }
-
-    public void setMap(String path, NodeMap map) {
-        // TODO cycle reference
-        this.value.put(path, map);
-    }
-*/
-
-    public void setComments(String path, List<String> comments) {
-        NodeBase node = value.get(path);
-        if (node != null) node.setComments(comments);
-    }
-
-    public void addComment(String path, String comment) {
-        NodeBase node = value.get(path);
-        if (node != null) node.addComment(comment);
-    }
-
-    private boolean containsValue(NodeMap map) {
-        return false;
-    }
 
     public void clear() {
         value.clear();
     }
 
+    public void setNode(String path, Object node) {
+        // TODO cycle reference
+        if (node instanceof Node) value.put(path, (Node) node);
+        else value.put(path, new NodeBase(String.valueOf(node)));
+    }
+
+    public void setNode(String path, Object node, String comment) {
+        // TODO cycle reference
+        if (node instanceof Node) {
+            ((Node) node).addComment(comment);
+            value.put(path, (Node) node);
+        } else value.put(path, new NodeBase(String.valueOf(node), comment));
+    }
+
+    public boolean notEmpty() {
+        return !value.isEmpty();
+    }
+
     @Override
-    protected void writeValue(int indent, Writer writer) throws IOException {
+    public void readValue(BufferedReader reader) throws IOException {
+        value.clear();
+        String line = null;
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith("}") || line.startsWith("]")) return;
+            if (line.startsWith("#")) continue;
+            if (line.contains("{")) {
+                NodeMap node = new NodeMap();
+                String path = line.substring(0, line.indexOf('{') - 1).trim();
+                value.put(path, node);
+                if (!line.endsWith("}")) node.readValue(reader);
+            } else if (line.contains("[")) {
+                NodeList list = new NodeList();
+                String path = line.substring(0, line.indexOf('=') - 1).trim();
+                value.put(path, list);
+                if (!line.endsWith("]")) list.readValue(reader);
+            } else if (line.contains("=")) {
+                String path = line.substring(0, line.indexOf('=') - 1).trim();
+                String base = line.substring(line.indexOf('='));
+                value.put(path, new NodeBase(base));
+            }
+        }
+    }
+
+    @Override
+    public void writeValue(int indent, BufferedWriter writer) throws IOException {
         if (notEmpty()) {
-            Iterator<Map.Entry<String, NodeBase>> it = value.entrySet().iterator();
+            Iterator<Map.Entry<String, Node>> it = value.entrySet().iterator();
             while (it.hasNext()) {
-                Map.Entry<String, NodeBase> entry = it.next();
+                Map.Entry<String, Node> entry = it.next();
                 String path = entry.getKey();
-                NodeBase node = entry.getValue();
+                Node node = entry.getValue();
                 if (path != null && !path.isEmpty() && node != null) {
                     node.writeComment(indent, writer);
                     writeIndent(indent, writer);
                     writer.write(path);
                     if (node instanceof NodeMap) {
-                        writer.write(" {" + NEW_LINE);
+                        writer.write(" {");
+                        writer.newLine();
                         node.writeValue(indent + 1, writer);
-                        writer.write(NEW_LINE);
+                        writer.newLine();
                         writeIndent(indent, writer);
                         writer.write('}');
                     } else if (node instanceof NodeList) {
-                        writer.write(Constant.EQUAL_LIST + NEW_LINE);
+                        writer.write(Global.EQUAL_LIST);
+                        writer.newLine();
                         node.writeValue(indent + 1, writer);
-                        writer.write(NEW_LINE);
+                        writer.newLine();
                         writeIndent(indent, writer);
                         writer.write(']');
                     } else {
-                        writer.write(Constant.EQUAL + node);
+                        writer.write(Global.EQUAL + node);
                     }
-                    if (it.hasNext()) writer.write(NEW_LINE);
+                    if (it.hasNext()) writer.newLine();
                 }
             }
         }
+    }
+
+    public void addComment(String path, String comment) {
+        Node node = value.get(path);
+        if (node != null) node.addComment(comment);
+    }
+
+    public void setComments(String path, List<String> comments) {
+        Node node = value.get(path);
+        if (node != null) node.setComments(comments);
+    }
+
+    @Override
+    public void addComment(String comment) {
+        if (comment != null && !comment.isEmpty()) {
+            comments.addAll(Arrays.asList(comment.split("[\n\r]")));
+            comments.removeIf(String::isEmpty);
+        }
+    }
+
+    @Override
+    public void setComments(List<String> comments) {
+        this.comments.clear();
+        if (comments != null) {
+            comments.forEach(s -> this.comments.addAll(Arrays.asList(s.split("[\n\r]"))));
+            this.comments.removeIf(String::isEmpty);
+        }
+    }
+
+    @Override
+    public void writeComment(int indent, BufferedWriter writer) throws IOException {
+        for (String comment : comments) {
+            writeIndent(indent, writer);
+            writer.write("# " + comment);
+            writer.newLine();
+        }
+    }
+
+    @Override
+    public void clearComments() {
+        this.comments.clear();
     }
 
 }

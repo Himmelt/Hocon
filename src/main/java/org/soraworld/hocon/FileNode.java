@@ -10,8 +10,6 @@ public class FileNode extends NodeMap {
     private File file;
     private final List<String> heads = new ArrayList<>();
 
-    private static final String LINE = "-------------------------------------";
-
     public FileNode(File file) {
         super();
         this.file = file;
@@ -21,10 +19,15 @@ public class FileNode extends NodeMap {
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
 
         if (!heads.isEmpty()) {
-            writer.write("# " + LINE + NEW_LINE);
-            for (String head : heads) writer.write("# " + head + NEW_LINE);
-            writer.write("# " + LINE + NEW_LINE);
-            if (notEmpty()) writer.write(NEW_LINE);
+            writer.write("# " + Global.LINE);
+            writer.newLine();
+            for (String head : heads) {
+                writer.write("# " + head);
+                writer.newLine();
+            }
+            writer.write("# " + Global.LINE);
+            writer.newLine();
+            if (notEmpty()) writer.newLine();
         }
 
         writeValue(0, writer);
@@ -33,8 +36,10 @@ public class FileNode extends NodeMap {
     }
 
     public void load() throws IOException {
-        Reader reader = new FileReader(file);
-        reader.read();
+        // TODO backup copy
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+        clear();
+        readValue(reader);
     }
 
     public void setHeads(List<String> heads) {
@@ -54,10 +59,6 @@ public class FileNode extends NodeMap {
 
     public void clearHeads() {
         this.heads.clear();
-    }
-
-    public void setIndent(int size) {
-        INDENT_SIZE = size;
     }
 
 }

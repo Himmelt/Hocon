@@ -1,25 +1,22 @@
 package org.soraworld.hocon;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class NodeBase<T> {
+public class NodeBase implements Node {
 
-    final T value;
+    private final String value;
     private final List<String> comments = new ArrayList<>();
 
-    static final String NEW_LINE = System.lineSeparator();
-
-    static int INDENT_SIZE = 2;
-
-    public NodeBase(T value) {
+    public NodeBase(String value) {
         this.value = value;
     }
 
-    public NodeBase(T value, String comment) {
+    public NodeBase(String value, String comment) {
         this.value = value;
         if (comment != null && !comment.isEmpty()) {
             comments.addAll(Arrays.asList(comment.split("[\n\r]")));
@@ -31,10 +28,25 @@ public class NodeBase<T> {
         return value != null;
     }
 
-    protected void writeValue(int indent, Writer writer) throws IOException {
-        writer.write(toString());
+    @Override
+    public void readValue(BufferedReader reader) {
+
     }
 
+    @Override
+    public void writeValue(int indent, BufferedWriter writer) throws IOException {
+        writer.write(value == null ? "null" : value);
+    }
+
+    @Override
+    public void addComment(String comment) {
+        if (comment != null && !comment.isEmpty()) {
+            comments.addAll(Arrays.asList(comment.split("[\n\r]")));
+            comments.removeIf(String::isEmpty);
+        }
+    }
+
+    @Override
     public void setComments(List<String> comments) {
         this.comments.clear();
         if (comments != null) {
@@ -43,32 +55,18 @@ public class NodeBase<T> {
         }
     }
 
-    public void clearComments() {
-        this.comments.clear();
-    }
-
-    public void addComment(String comment) {
-        if (comment != null && !comment.isEmpty()) {
-            comments.addAll(Arrays.asList(comment.split("[\n\r]")));
-            comments.removeIf(String::isEmpty);
-        }
-    }
-
-    public void writeComment(int indent, Writer writer) throws IOException {
+    @Override
+    public void writeComment(int indent, BufferedWriter writer) throws IOException {
         for (String comment : comments) {
             writeIndent(indent, writer);
-            writer.write("# " + comment + NEW_LINE);
+            writer.write("# " + comment);
+            writer.newLine();
         }
-    }
-
-    public static void writeIndent(int indent, Writer writer) throws IOException {
-        indent *= INDENT_SIZE;
-        while (indent-- > 0) writer.write(' ');
     }
 
     @Override
-    public String toString() {
-        return String.valueOf(value);
+    public void clearComments() {
+        this.comments.clear();
     }
 
 }

@@ -21,11 +21,11 @@ public class CommentValue {
     }
 
     public boolean isNode() {
-        return value instanceof Node;
+        return value instanceof NodeXXX;
     }
 
-    public Node getNode() {
-        if (value instanceof Node) return (Node) value;
+    public NodeXXX getNode() {
+        if (value instanceof NodeXXX) return (NodeXXX) value;
         return null;
     }
 
@@ -52,7 +52,7 @@ public class CommentValue {
     }
 
     public boolean isEmpty() {
-        if (value instanceof Node) return ((Node) value).empty();
+        if (value instanceof NodeXXX) return ((NodeXXX) value).empty();
         if (value instanceof Collection) return ((Collection) value).isEmpty();
         return value == null;
     }
