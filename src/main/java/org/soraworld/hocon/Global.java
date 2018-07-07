@@ -1,5 +1,7 @@
 package org.soraworld.hocon;
 
+import java.util.regex.Pattern;
+
 public class Global {
 
     public static final String COMMENT_HEAD = "# ";
@@ -12,5 +14,7 @@ public class Global {
     public static final String LINE = "-------------------------------------";
 
     public static int INDENT_SIZE = 2;
+
+    public static final Pattern ILLEGAL = Pattern.compile(".*[\":=,+?`!@#$^&*{}\\[\\]\\\\].*");
 
 }

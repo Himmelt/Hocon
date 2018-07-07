@@ -28,8 +28,28 @@ public class NodeList implements Node {
     }
 
     @Override
-    public void readValue(BufferedReader reader) {
-
+    public void readValue(BufferedReader reader) throws IOException {
+        value.clear();
+        String line;
+        while ((line = reader.readLine()) != null) {
+            line = line.trim();
+            if (line.startsWith("]")) return;
+            if (line.startsWith("#")) continue;
+            if (line.startsWith("{")) {
+                NodeMap node = new NodeMap();
+                value.add(node);
+                if (!line.endsWith("}")) node.readValue(reader);
+            } else if (line.startsWith("[")) {
+                NodeList list = new NodeList();
+                value.add(list);
+                if (!line.endsWith("]")) list.readValue(reader);
+            } else {
+                // TODO ","
+                NodeBase node = new NodeBase();
+                node.readValue(line.trim());
+                value.add(node);
+            }
+        }
     }
 
     @Override
@@ -38,7 +58,26 @@ public class NodeList implements Node {
             Iterator<Node> it = value.iterator();
             while (it.hasNext()) {
                 writeIndent(indent, writer);
-                it.next().writeValue(indent + 1, writer);
+                Node node = it.next();
+                if (node instanceof NodeMap) {
+                    writer.write("{");
+                    if (node.notEmpty()) {
+                        writer.newLine();
+                        node.writeValue(indent + 1, writer);
+                        writer.newLine();
+                        writeIndent(indent, writer);
+                    }
+                    writer.write("}");
+                } else if (node instanceof NodeList) {
+                    writer.write("[");
+                    if (node.notEmpty()) {
+                        writer.newLine();
+                        node.writeValue(indent + 1, writer);
+                        writer.newLine();
+                        writeIndent(indent, writer);
+                    }
+                    writer.write("]");
+                } else node.writeValue(indent + 1, writer);
                 if (it.hasNext()) {
                     writer.write(',');
                     writer.newLine();

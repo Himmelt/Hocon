@@ -18,7 +18,7 @@ public class NodeMap implements Node {
     public void setNode(String path, Object node) {
         // TODO cycle reference
         if (node instanceof Node) value.put(path, (Node) node);
-        else value.put(path, new NodeBase(String.valueOf(node)));
+        else value.put(path, new NodeBase(node));
     }
 
     public void setNode(String path, Object node, String comment) {
@@ -36,10 +36,11 @@ public class NodeMap implements Node {
     @Override
     public void readValue(BufferedReader reader) throws IOException {
         value.clear();
-        String line = null;
+        String line;
         while ((line = reader.readLine()) != null) {
+            line = line.trim();
             if (line.startsWith("}") || line.startsWith("]")) return;
-            if (line.startsWith("#")) continue;
+            if (line.isEmpty() || line.startsWith("#")) continue;
             if (line.contains("{")) {
                 NodeMap node = new NodeMap();
                 String path = line.substring(0, line.indexOf('{') - 1).trim();
@@ -52,8 +53,10 @@ public class NodeMap implements Node {
                 if (!line.endsWith("]")) list.readValue(reader);
             } else if (line.contains("=")) {
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
-                String base = line.substring(line.indexOf('='));
-                value.put(path, new NodeBase(base));
+                String base = line.substring(line.indexOf('=') + 1).trim();
+                NodeBase node = new NodeBase();
+                node.readValue(base);
+                value.put(path, node);
             }
         }
     }
@@ -72,20 +75,25 @@ public class NodeMap implements Node {
                     writer.write(path);
                     if (node instanceof NodeMap) {
                         writer.write(" {");
-                        writer.newLine();
-                        node.writeValue(indent + 1, writer);
-                        writer.newLine();
-                        writeIndent(indent, writer);
+                        if (node.notEmpty()) {
+                            writer.newLine();
+                            node.writeValue(indent + 1, writer);
+                            writer.newLine();
+                            writeIndent(indent, writer);
+                        }
                         writer.write('}');
                     } else if (node instanceof NodeList) {
                         writer.write(Global.EQUAL_LIST);
-                        writer.newLine();
-                        node.writeValue(indent + 1, writer);
-                        writer.newLine();
-                        writeIndent(indent, writer);
+                        if (node.notEmpty()) {
+                            writer.newLine();
+                            node.writeValue(indent + 1, writer);
+                            writer.newLine();
+                            writeIndent(indent, writer);
+                        }
                         writer.write(']');
                     } else {
-                        writer.write(Global.EQUAL + node);
+                        writer.write(Global.EQUAL);
+                        node.writeValue(indent + 1, writer);
                     }
                     if (it.hasNext()) writer.newLine();
                 }
