@@ -17,7 +17,7 @@ public class NodeBase implements Node {
     }
 
     public NodeBase(Object value) {
-        if (value != null) this.value = value.toString();
+        this.value = value == null ? null : value.toString();
     }
 
     public NodeBase(String value, String comment) {
@@ -30,6 +30,11 @@ public class NodeBase implements Node {
 
     public boolean notEmpty() {
         return value != null;
+    }
+
+    @Override
+    public void setValue(Object value) {
+        this.value = value == null ? null : value.toString();
     }
 
     @Override
@@ -91,6 +96,30 @@ public class NodeBase implements Node {
     @Override
     public void clearComments() {
         this.comments.clear();
+    }
+
+    public String getString() {
+        return value;
+    }
+
+    public int getInt() {
+        return Integer.valueOf(value);
+    }
+
+    public long getLong() {
+        return Long.valueOf(value);
+    }
+
+    public float getFloat() {
+        return Float.valueOf(value);
+    }
+
+    public double getDouble() {
+        return Double.valueOf(value);
+    }
+
+    public boolean getBoolean() {
+        return Boolean.valueOf(value);
     }
 
 }

@@ -3,6 +3,7 @@ package org.soraworld.hocon;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.*;
 
 public class NodeMap implements Node {
@@ -29,8 +30,37 @@ public class NodeMap implements Node {
         } else value.put(path, new NodeBase(String.valueOf(node), comment));
     }
 
+    public void modify(Object object) throws IllegalAccessException {
+        List<Field> fields = Fields.getFields(object.getClass());
+        for (Field field : fields) {
+            Primitive setting = field.getAnnotation(Primitive.class);
+            if (setting != null) {
+                String path = setting.value().isEmpty() ? field.getName() : setting.value();
+                Node node = getNode(path);
+                if (node instanceof NodeBase) {
+                    Class<?> type = field.getType();
+                    if (type.equals(int.class) || type.equals(Integer.class)) {
+                        field.set(object, ((NodeBase) node).getInt());
+                    } else if (type.equals(byte.class) || type.equals(Byte.class)) {
+                        field.set(object, (byte) ((NodeBase) node).getInt());
+                    } else if (type.equals(long.class) || type.equals(Long.class)) {
+                        field.set(object, ((NodeBase) node).getLong());
+                    }
+                }
+            }
+        }
+    }
+
+    private Node getNode(String path) {
+        return value.get(path);
+    }
+
     public boolean notEmpty() {
         return !value.isEmpty();
+    }
+
+    public void setValue(Object value) {
+
     }
 
     @Override

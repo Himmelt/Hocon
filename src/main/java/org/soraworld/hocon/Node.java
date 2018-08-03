@@ -11,6 +11,8 @@ public interface Node {
 
     boolean notEmpty();
 
+    void setValue(Object value);
+
     void readValue(BufferedReader reader) throws IOException;
 
     void writeValue(int indent, BufferedWriter writer) throws IOException;

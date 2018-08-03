@@ -13,7 +13,6 @@ public class NodeList implements Node {
     private final ArrayList<Node> value = new ArrayList<>();
     private final List<String> comments = new ArrayList<>();
 
-
     public void clear() {
         value.clear();
     }
@@ -25,6 +24,10 @@ public class NodeList implements Node {
     @Override
     public boolean notEmpty() {
         return !value.isEmpty();
+    }
+
+    public void setValue(Object value) {
+
     }
 
     @Override
