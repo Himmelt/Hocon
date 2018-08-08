@@ -1,9 +1,11 @@
 package org.soraworld.hocon;
 
-public interface TypeSerializer<T> {
+import javax.annotation.Nonnull;
 
-    T deserialize(Class<?> type, Node node);
+public interface TypeSerializer<T,N extends Node> {
 
-    void serialize(Class<?> type, T obj, Node node);
+    T deserialize(@Nonnull TypeToken<?> type, @Nonnull N node) throws Exception;
+
+    void serialize(@Nonnull TypeToken<?> type, T value, @Nonnull N node);
 
 }

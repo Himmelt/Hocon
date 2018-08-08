@@ -119,6 +119,7 @@ public class NodeBase implements Node {
     }
 
     public boolean getBoolean() {
+        // TODO true/yes/1/t/y
         return Boolean.valueOf(value);
     }
 

@@ -1,35 +1,15 @@
 package org.soraworld.hocon;
 
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
+import java.lang.reflect.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Represents a generic type {@code T}. Java doesn't yet provide a way to
- * represent generic types, so this class does. Forces clients to create a
- * subclass of this class which enables retrieval the type information even at
- * runtime.
- *
- * <p>For example, to create a type literal for {@code List<String>}, you can
- * create an empty anonymous inner class:
- *
- * <p>
- * {@code TypeToken<List<String>> list = new TypeToken<List<String>>() {};}
- *
- * <p>This syntax cannot be used to create type literals that have wildcard
- * parameters, such as {@code Class<?>} or {@code List<? extends CharSequence>}.
- *
- * @author Bob Lee
- * @author Sven Mawson
- * @author Jesse Wilson
- */
 public class TypeToken<T> {
-    final Class<? super T> rawType;
-    final Type type;
-    final int hashCode;
+
+    private final Class<? super T> rawType;
+    private final Type type;
+    private final int hashCode;
 
     /**
      * Constructs a new type literal. Derives represented class from type
@@ -42,7 +22,7 @@ public class TypeToken<T> {
     @SuppressWarnings("unchecked")
     protected TypeToken() {
         this.type = getSuperclassTypeParameter(getClass());
-        this.rawType = (Class<? super T>) $Gson$Types.getRawType(type);
+        this.rawType = (Class<? super T>) getRawType(type);
         this.hashCode = type.hashCode();
     }
 
@@ -51,8 +31,8 @@ public class TypeToken<T> {
      */
     @SuppressWarnings("unchecked")
     TypeToken(Type type) {
-        this.type = $Gson$Types.canonicalize($Gson$Preconditions.checkNotNull(type));
-        this.rawType = (Class<? super T>) $Gson$Types.getRawType(this.type);
+        this.type = canonicalize(checkNotNull(type));
+        this.rawType = (Class<? super T>) getRawType(this.type);
         this.hashCode = this.type.hashCode();
     }
 
@@ -60,14 +40,18 @@ public class TypeToken<T> {
      * Returns the type from super class's type parameter in {@link $Gson$Types#canonicalize
      * canonical form}.
      */
-    static Type getSuperclassTypeParameter(Class<?> subclass) {
-
+    private static Type getSuperclassTypeParameter(Class<?> subclass) {
         Type superclass = subclass.getGenericSuperclass();
         if (superclass instanceof Class) {
             throw new RuntimeException("Missing type parameter.");
         }
         ParameterizedType parameterized = (ParameterizedType) superclass;
-        return $Gson$Types.canonicalize(parameterized.getActualTypeArguments()[0]);
+        return canonicalize(parameterized.getActualTypeArguments()[0]);
+    }
+
+    public static <E> TypeToken<E> of(Class<E> clazz) {
+        return new TypeToken<E>() {
+        };
     }
 
     /**
@@ -112,16 +96,13 @@ public class TypeToken<T> {
         }
 
         if (type instanceof Class<?>) {
-            return rawType.isAssignableFrom($Gson$Types.getRawType(from));
+            return rawType.isAssignableFrom(getRawType(from));
         } else if (type instanceof ParameterizedType) {
-            return isAssignableFrom(from, (ParameterizedType) type,
-                    new HashMap<String, Type>());
+            return isAssignableFrom(from, (ParameterizedType) type, new HashMap<>());
         } else if (type instanceof GenericArrayType) {
-            return rawType.isAssignableFrom($Gson$Types.getRawType(from))
-                    && isAssignableFrom(from, (GenericArrayType) type);
+            return rawType.isAssignableFrom(getRawType(from)) && isAssignableFrom(from, (GenericArrayType) type);
         } else {
-            throw buildUnexpectedTypeError(
-                    type, Class.class, ParameterizedType.class, GenericArrayType.class);
+            throw buildUnexpectedTypeError(type, Class.class, ParameterizedType.class, GenericArrayType.class);
         }
     }
 
@@ -154,7 +135,7 @@ public class TypeToken<T> {
                 t = classType;
             }
             return isAssignableFrom(t, (ParameterizedType) toGenericComponentType,
-                    new HashMap<String, Type>());
+                    new HashMap<>());
         }
         // No generic defined on "to"; therefore, return true and let other
         // checks determine assignability
@@ -165,8 +146,7 @@ public class TypeToken<T> {
      * Private recursive helper function to actually do the type-safe checking
      * of assignability.
      */
-    private static boolean isAssignableFrom(Type from, ParameterizedType to,
-                                            Map<String, Type> typeVarMap) {
+    private static boolean isAssignableFrom(Type from, ParameterizedType to, Map<String, Type> typeVarMap) {
 
         if (from == null) {
             return false;
@@ -177,7 +157,7 @@ public class TypeToken<T> {
         }
 
         // First figure out the class and any type information.
-        Class<?> clazz = $Gson$Types.getRawType(from);
+        Class<?> clazz = getRawType(from);
         ParameterizedType ptype = null;
         if (from instanceof ParameterizedType) {
             ptype = (ParameterizedType) from;
@@ -204,22 +184,21 @@ public class TypeToken<T> {
         }
 
         for (Type itype : clazz.getGenericInterfaces()) {
-            if (isAssignableFrom(itype, to, new HashMap<String, Type>(typeVarMap))) {
+            if (isAssignableFrom(itype, to, new HashMap<>(typeVarMap))) {
                 return true;
             }
         }
 
         // Interfaces didn't work, try the superclass.
         Type sType = clazz.getGenericSuperclass();
-        return isAssignableFrom(sType, to, new HashMap<String, Type>(typeVarMap));
+        return isAssignableFrom(sType, to, new HashMap<>(typeVarMap));
     }
 
     /**
      * Checks if two parameterized types are exactly equal, under the variable
      * replacement described in the typeVarMap.
      */
-    private static boolean typeEquals(ParameterizedType from,
-                                      ParameterizedType to, Map<String, Type> typeVarMap) {
+    private static boolean typeEquals(ParameterizedType from, ParameterizedType to, Map<String, Type> typeVarMap) {
         if (from.getRawType().equals(to.getRawType())) {
             Type[] fromArgs = from.getActualTypeArguments();
             Type[] toArgs = to.getActualTypeArguments();
@@ -233,12 +212,10 @@ public class TypeToken<T> {
         return false;
     }
 
-    private static AssertionError buildUnexpectedTypeError(
-            Type token, Class<?>... expected) {
+    private static AssertionError buildUnexpectedTypeError(Type token, Class<?>... expected) {
 
         // Build exception message
-        StringBuilder exceptionMessage =
-                new StringBuilder("Unexpected type. Expected one of: ");
+        StringBuilder exceptionMessage = new StringBuilder("Unexpected type. Expected one of: ");
         for (Class<?> clazz : expected) {
             exceptionMessage.append(clazz.getName()).append(", ");
         }
@@ -266,8 +243,7 @@ public class TypeToken<T> {
 
     @Override
     public final boolean equals(Object o) {
-        return o instanceof TypeToken<?>
-                && $Gson$Types.equals(type, ((TypeToken<?>) o).type);
+        return o instanceof TypeToken<?> && equals(type, ((TypeToken<?>) o).type);
     }
 
     @Override
@@ -279,7 +255,7 @@ public class TypeToken<T> {
      * Gets type literal for the given {@code Type} instance.
      */
     public static TypeToken<?> get(Type type) {
-        return new TypeToken<Object>(type);
+        return new TypeToken<>(type);
     }
 
     /**
@@ -301,6 +277,152 @@ public class TypeToken<T> {
      * Gets type literal for the array type whose elements are all instances of {@code componentType}.
      */
     public static TypeToken<?> getArray(Type componentType) {
-        return new TypeToken<Object>($Gson$Types.arrayOf(componentType));
+        return new TypeToken<>(arrayOf(componentType));
+    }
+
+    /****************************************/
+
+    public static Class<?> getRawType(Type type) {
+        if (type instanceof Class<?>) {
+            // type is a normal class.
+            return (Class<?>) type;
+        } else if (type instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) type;
+
+            // I'm not exactly sure why getRawType() returns Type instead of Class.
+            // Neal isn't either but suspects some pathological case related
+            // to nested classes exists.
+            Type rawType = parameterizedType.getRawType();
+            checkArgument(rawType instanceof Class);
+            return (Class<?>) rawType;
+
+        } else if (type instanceof GenericArrayType) {
+            Type componentType = ((GenericArrayType) type).getGenericComponentType();
+            return Array.newInstance(getRawType(componentType), 0).getClass();
+
+        } else if (type instanceof TypeVariable) {
+            // we could use the variable's bounds, but that won't work if there are multiple.
+            // having a raw type that's more general than necessary is okay
+            return Object.class;
+
+        } else if (type instanceof WildcardType) {
+            return getRawType(((WildcardType) type).getUpperBounds()[0]);
+
+        } else {
+            String className = type == null ? "null" : type.getClass().getName();
+            throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
+                    + "GenericArrayType, but <" + type + "> is of type " + className);
+        }
+    }
+
+    /**
+     * Returns a type that is functionally equal but not necessarily equal
+     * according to {@link Object#equals(Object) Object.equals()}. The returned
+     * type is {@link java.io.Serializable}.
+     */
+    public static Type canonicalize(Type type) {
+        if (type instanceof Class) {
+            Class<?> c = (Class<?>) type;
+            return c.isArray() ? new GenericArrayTypeImpl(canonicalize(c.getComponentType())) : c;
+
+        } else if (type instanceof ParameterizedType) {
+            ParameterizedType p = (ParameterizedType) type;
+            return new ParameterizedTypeImpl(p.getOwnerType(),
+                    p.getRawType(), p.getActualTypeArguments());
+
+        } else if (type instanceof GenericArrayType) {
+            GenericArrayType g = (GenericArrayType) type;
+            return new GenericArrayTypeImpl(g.getGenericComponentType());
+
+        } else if (type instanceof WildcardType) {
+            WildcardType w = (WildcardType) type;
+            return new WildcardTypeImpl(w.getUpperBounds(), w.getLowerBounds());
+
+        } else {
+            // type is either serializable as-is or unsupported
+            return type;
+        }
+    }
+
+
+    public static void checkArgument(boolean condition) {
+        if (!condition) {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    public static <T> T checkNotNull(T obj) {
+        if (obj == null) {
+            throw new NullPointerException();
+        }
+        return obj;
+    }
+
+    /**
+     * Returns true if {@code a} and {@code b} are equal.
+     */
+    public static boolean equals(Type a, Type b) {
+        if (a == b) {
+            // also handles (a == null && b == null)
+            return true;
+
+        } else if (a instanceof Class) {
+            // Class already specifies equals().
+            return a.equals(b);
+
+        } else if (a instanceof ParameterizedType) {
+            if (!(b instanceof ParameterizedType)) {
+                return false;
+            }
+
+            // TODO: save a .clone() call
+            ParameterizedType pa = (ParameterizedType) a;
+            ParameterizedType pb = (ParameterizedType) b;
+            return equal(pa.getOwnerType(), pb.getOwnerType())
+                    && pa.getRawType().equals(pb.getRawType())
+                    && Arrays.equals(pa.getActualTypeArguments(), pb.getActualTypeArguments());
+
+        } else if (a instanceof GenericArrayType) {
+            if (!(b instanceof GenericArrayType)) {
+                return false;
+            }
+
+            GenericArrayType ga = (GenericArrayType) a;
+            GenericArrayType gb = (GenericArrayType) b;
+            return equals(ga.getGenericComponentType(), gb.getGenericComponentType());
+
+        } else if (a instanceof WildcardType) {
+            if (!(b instanceof WildcardType)) {
+                return false;
+            }
+
+            WildcardType wa = (WildcardType) a;
+            WildcardType wb = (WildcardType) b;
+            return Arrays.equals(wa.getUpperBounds(), wb.getUpperBounds())
+                    && Arrays.equals(wa.getLowerBounds(), wb.getLowerBounds());
+
+        } else if (a instanceof TypeVariable) {
+            if (!(b instanceof TypeVariable)) {
+                return false;
+            }
+            TypeVariable<?> va = (TypeVariable<?>) a;
+            TypeVariable<?> vb = (TypeVariable<?>) b;
+            return va.getGenericDeclaration() == vb.getGenericDeclaration()
+                    && va.getName().equals(vb.getName());
+
+        } else {
+            // This isn't a type we support. Could be a generic array type, wildcard type, etc.
+            return false;
+        }
+    }
+
+    /**
+     * Returns an array type whose elements are all instances of
+     * {@code componentType}.
+     *
+     * @return a {@link java.io.Serializable serializable} generic array type.
+     */
+    public static GenericArrayType arrayOf(Type componentType) {
+        return new GenericArrayTypeImpl(componentType);
     }
 }

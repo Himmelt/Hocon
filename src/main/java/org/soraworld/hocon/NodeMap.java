@@ -33,7 +33,7 @@ public class NodeMap implements Node {
     public void modify(Object object) throws IllegalAccessException {
         List<Field> fields = Fields.getFields(object.getClass());
         for (Field field : fields) {
-            Primitive setting = field.getAnnotation(Primitive.class);
+            Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
                 String path = setting.value().isEmpty() ? field.getName() : setting.value();
                 Node node = getNode(path);
