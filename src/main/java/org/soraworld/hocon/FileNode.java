@@ -1,6 +1,7 @@
 package org.soraworld.hocon;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,21 +12,26 @@ public class FileNode extends NodeMap {
     private final List<String> heads = new ArrayList<>();
 
     public FileNode(File file) {
-        super();
+        super(NodeOptions.defaults());
+        this.file = file;
+    }
+
+    public FileNode(File file, NodeOptions options) {
+        super(options);
         this.file = file;
     }
 
     public void save() throws IOException {
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
 
         if (!heads.isEmpty()) {
-            writer.write("# " + Global.LINE);
+            writer.write("# " + options.LINE);
             writer.newLine();
             for (String head : heads) {
                 writer.write("# " + head);
                 writer.newLine();
             }
-            writer.write("# " + Global.LINE);
+            writer.write("# " + options.LINE);
             writer.newLine();
             if (notEmpty()) writer.newLine();
         }
@@ -37,7 +43,7 @@ public class FileNode extends NodeMap {
 
     public void load() throws IOException {
         // TODO backup copy
-        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
         clear();
         readValue(reader);
     }

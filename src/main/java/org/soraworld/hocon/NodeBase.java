@@ -12,16 +12,20 @@ public class NodeBase implements Node {
 
     private String value;
     private final List<String> comments = new ArrayList<>();
+    private final NodeOptions options;
 
-    public NodeBase() {
+    public NodeBase(NodeOptions options) {
+        this.options = options != null ? options : NodeOptions.defaults();
     }
 
-    public NodeBase(Object value) {
+    public NodeBase(Object value, NodeOptions options) {
+        this.options = options != null ? options : NodeOptions.defaults();
         this.value = value == null ? null : value.toString();
     }
 
-    public NodeBase(String value, String comment) {
-        this.value = value;
+    public NodeBase(Object value, String comment, NodeOptions options) {
+        this.options = options != null ? options : NodeOptions.defaults();
+        this.value = value == null ? null : value.toString();
         if (comment != null && !comment.isEmpty()) {
             comments.addAll(Arrays.asList(comment.split("[\n\r]")));
             comments.removeIf(String::isEmpty);
@@ -59,7 +63,7 @@ public class NodeBase implements Node {
     public void writeValue(int indent, BufferedWriter writer) throws IOException {
         if (value == null) writer.write("null");
         else {
-            Matcher matcher = Global.ILLEGAL.matcher(value);
+            Matcher matcher = options.ILLEGAL.matcher(value);
             if (matcher.matches() || value.equals("null")) {
                 String target = value.replace("\\", "\\\\").replace("\"", "\\\"");
                 writer.write('"' + target + '"');
@@ -96,6 +100,11 @@ public class NodeBase implements Node {
     @Override
     public void clearComments() {
         this.comments.clear();
+    }
+
+    @Override
+    public NodeOptions getOptions() {
+        return options;
     }
 
     public String getString() {

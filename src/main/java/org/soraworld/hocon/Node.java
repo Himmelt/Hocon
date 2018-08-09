@@ -5,8 +5,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.List;
 
-import static org.soraworld.hocon.Global.INDENT_SIZE;
-
 public interface Node {
 
     boolean notEmpty();
@@ -25,13 +23,11 @@ public interface Node {
 
     void clearComments();
 
-    default void writeIndent(int indent, BufferedWriter writer) throws IOException {
-        indent *= INDENT_SIZE;
-        while (indent-- > 0) writer.write(' ');
-    }
+    NodeOptions getOptions();
 
-    default void setIndent(int indent) {
-        INDENT_SIZE = indent;
+    default void writeIndent(int indent, BufferedWriter writer) throws IOException {
+        indent *= getOptions().INDENT_SIZE;
+        while (indent-- > 0) writer.write(' ');
     }
 
 }

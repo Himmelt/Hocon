@@ -6,9 +6,7 @@ import java.lang.annotation.*;
 @Target(ElementType.FIELD)
 @Documented
 public @interface Setting {
-
-    String value() default "";
+    String path() default "";
 
     String comment() default "";
-
 }

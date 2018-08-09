@@ -67,8 +67,8 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull TypeToken<?> type, URI uri) {
-            return new NodeBase(uri);
+        public Node serialize(@Nonnull TypeToken<?> type, URI uri, @Nonnull NodeOptions options) {
+            return new NodeBase(uri, options);
         }
     }
 
@@ -94,8 +94,8 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull TypeToken<?> type, URL url) {
-            return new NodeBase(url);
+        public Node serialize(@Nonnull TypeToken<?> type, URL url, @Nonnull NodeOptions options) {
+            return new NodeBase(url, options);
         }
     }
 
@@ -113,8 +113,8 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull TypeToken<?> type, UUID uuid) {
-            return new NodeBase(uuid);
+        public Node serialize(@Nonnull TypeToken<?> type, UUID uuid, @Nonnull NodeOptions options) {
+            return new NodeBase(uuid, options);
         }
     }
 
@@ -142,8 +142,8 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull TypeToken<?> type, Number value) {
-            return new NodeBase(value);
+        public Node serialize(@Nonnull TypeToken<?> type, Number value, @Nonnull NodeOptions options) {
+            return new NodeBase(value, options);
         }
     }
 
@@ -155,8 +155,8 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull TypeToken<?> type, String value) {
-            return new NodeBase(value);
+        public Node serialize(@Nonnull TypeToken<?> type, String value, @Nonnull NodeOptions options) {
+            return new NodeBase(value, options);
         }
     }
 
@@ -168,8 +168,8 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull TypeToken<?> type, Boolean value) {
-            return new NodeBase(value);
+        public Node serialize(@Nonnull TypeToken<?> type, Boolean value, @Nonnull NodeOptions options) {
+            return new NodeBase(value, options);
         }
     }
 
@@ -187,8 +187,8 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull TypeToken<?> type, Pattern pattern) {
-            return new NodeBase(pattern.pattern());
+        public Node serialize(@Nonnull TypeToken<?> type, Pattern pattern, @Nonnull NodeOptions options) {
+            return new NodeBase(pattern.pattern(), options);
         }
     }
 
@@ -222,7 +222,7 @@ public class TypeSerializers {
             return null;
         }
 
-        public Node serialize(@Nonnull TypeToken<?> type, Map<String, ?> value) throws ObjectMappingException {
+        public Node serialize(@Nonnull TypeToken<?> type, Map<String, ?> value, @Nonnull NodeOptions options) throws ObjectMappingException {
             if (!(type.getType() instanceof ParameterizedType)) {
                 throw new ObjectMappingException("Raw types are not supported for collections");
             }
@@ -239,13 +239,13 @@ public class TypeSerializers {
                 throw new ObjectMappingException("No type serializer available for type " + valToken);
             }
 
-            NodeMap node = new NodeMap();
+            NodeMap node = new NodeMap(options);
 
             for (Map.Entry<String, ?> entry : value.entrySet()) {
                 String key = entry.getKey();
                 Object obj = entry.getValue();
                 if (key != null && !key.isEmpty() && obj != null) {
-                    node.setNode(key, valSerial.serialize(valToken, obj));
+                    node.setNode(key, valSerial.serialize(valToken, obj, node.options));
                 }
             }
             return node;
@@ -284,7 +284,7 @@ public class TypeSerializers {
             return new ArrayList<>();
         }
 
-        public Node serialize(@Nonnull TypeToken<?> type, List<?> value) throws ObjectMappingException {
+        public Node serialize(@Nonnull TypeToken<?> type, List<?> value, @Nonnull NodeOptions options) throws ObjectMappingException {
             if (!(type.getType() instanceof ParameterizedType)) {
                 throw new ObjectMappingException("Raw types are not supported for collections");
             }
@@ -293,9 +293,9 @@ public class TypeSerializers {
             if (entrySerial == null) {
                 throw new ObjectMappingException("No applicable type serializer for type " + entryToken);
             }
-            NodeList node = new NodeList();
+            NodeList node = new NodeList(options);
             for (Object obj : value) {
-                node.add(entrySerial.serialize(entryToken, obj));
+                node.add(entrySerial.serialize(entryToken, obj, node.options));
             }
             return node;
         }
@@ -316,8 +316,8 @@ public class TypeSerializers {
             return null;
         }
 
-        public Node serialize(@Nonnull TypeToken<?> type, Enum<?> value) {
-            return new NodeBase(value.name());
+        public Node serialize(@Nonnull TypeToken<?> type, Enum<?> value, @Nonnull NodeOptions options) {
+            return new NodeBase(value.name(), options);
         }
     }
 

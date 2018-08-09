@@ -2,20 +2,23 @@ package org.soraworld.hocon;
 
 import com.google.common.reflect.TypeToken;
 
+import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.Type;
 import java.util.*;
 
 public class NodeMap implements Node {
 
-    private final LinkedHashMap<String, Node> value = new LinkedHashMap<>();
+    NodeOptions options;
     private final List<String> comments = new ArrayList<>();
+    private final LinkedHashMap<String, Node> value = new LinkedHashMap<>();
 
+    public NodeMap(NodeOptions options) {
+        this.options = options != null ? options : NodeOptions.defaults();
+    }
 
     public void clear() {
         value.clear();
@@ -24,7 +27,7 @@ public class NodeMap implements Node {
     public void setNode(String path, Object node) {
         // TODO cycle reference
         if (node instanceof Node) value.put(path, (Node) node);
-        else value.put(path, new NodeBase(node));
+        else value.put(path, new NodeBase(node, options));
     }
 
     public void setNode(String path, Object node, String comment) {
@@ -32,21 +35,19 @@ public class NodeMap implements Node {
         if (node instanceof Node) {
             ((Node) node).addComment(comment);
             value.put(path, (Node) node);
-        } else value.put(path, new NodeBase(String.valueOf(node), comment));
+        } else value.put(path, new NodeBase(node, comment, options));
     }
 
-    public void modify(Object object) throws Exception {
+    public void modify(@Nonnull Object object) throws Exception {
         List<Field> fields = Fields.getFields(object.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
-                String path = setting.value().isEmpty() ? field.getName() : setting.value();
+                String path = setting.path().isEmpty() ? field.getName() : setting.path();
                 Node node = getNode(path);
                 Class<?> type = field.getType();
-                AnnotatedType annotatedType = field.getAnnotatedType();
-                Type ttt = field.getGenericType();
-                TypeToken token = TypeToken.of(ttt);
-                TypeSerializer serializer = TypeSerializers.getDefaultSerializers().get(token);
+                TypeToken<?> token = TypeToken.of(field.getGenericType());
+                TypeSerializer serializer = options.getSerializers().get(token);
                 if (serializer != null) {
                     if (Map.class.isAssignableFrom(type)) {
                         try {
@@ -61,6 +62,30 @@ public class NodeMap implements Node {
                             field.set(object, serializer.deserialize(token, node));
                         }
                     } else field.set(object, serializer.deserialize(token, node));
+                }
+            }
+        }
+    }
+
+    public void extract(@Nonnull Object object) throws IllegalAccessException {
+        clear();
+        List<Field> fields = Fields.getFields(object.getClass());
+        for (Field field : fields) {
+            Setting setting = field.getAnnotation(Setting.class);
+            if (setting != null) {
+                Object value = field.get(object);
+                String path = setting.path().isEmpty() ? field.getName() : setting.path();
+                String comment = setting.comment().startsWith("comment.") ? options.getTranslator().apply(setting.comment()) : setting.comment();
+                if (value == null) {
+                    setNode(path, null, comment);
+                } else {
+                    TypeToken<?> token = TypeToken.of(field.getGenericType());
+                    TypeSerializer serializer = options.getSerializers().get(token);
+                    try {
+                        setNode(path, serializer.serialize(token, value, options), comment);
+                    } catch (ObjectMappingException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -91,19 +116,19 @@ public class NodeMap implements Node {
             if (line.startsWith("}") || line.startsWith("]")) return;
             if (line.isEmpty() || line.startsWith("#")) continue;
             if (line.contains("{")) {
-                NodeMap node = new NodeMap();
+                NodeMap node = new NodeMap(options);
                 String path = line.substring(0, line.indexOf('{') - 1).trim();
                 value.put(path, node);
                 if (!line.endsWith("}")) node.readValue(reader);
             } else if (line.contains("[")) {
-                NodeList list = new NodeList();
+                NodeList list = new NodeList(options);
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 value.put(path, list);
                 if (!line.endsWith("]")) list.readValue(reader);
             } else if (line.contains("=")) {
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 String base = line.substring(line.indexOf('=') + 1).trim();
-                NodeBase node = new NodeBase();
+                NodeBase node = new NodeBase(options);
                 node.readValue(base);
                 value.put(path, node);
             }
@@ -132,7 +157,7 @@ public class NodeMap implements Node {
                         }
                         writer.write('}');
                     } else if (node instanceof NodeList) {
-                        writer.write(Global.EQUAL_LIST);
+                        writer.write(options.EQUAL_LIST);
                         if (node.notEmpty()) {
                             writer.newLine();
                             node.writeValue(indent + 1, writer);
@@ -141,7 +166,7 @@ public class NodeMap implements Node {
                         }
                         writer.write(']');
                     } else {
-                        writer.write(Global.EQUAL);
+                        writer.write(options.EQUAL);
                         node.writeValue(indent + 1, writer);
                     }
                     if (it.hasNext()) writer.newLine();
@@ -189,6 +214,11 @@ public class NodeMap implements Node {
     @Override
     public void clearComments() {
         this.comments.clear();
+    }
+
+    @Override
+    public NodeOptions getOptions() {
+        return options;
     }
 
 }

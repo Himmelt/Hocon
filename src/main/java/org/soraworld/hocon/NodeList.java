@@ -13,6 +13,12 @@ public class NodeList implements Node {
     private final ArrayList<Node> value = new ArrayList<>();
     private final List<String> comments = new ArrayList<>();
 
+    NodeOptions options;
+
+    public NodeList(NodeOptions options) {
+        this.options = options != null ? options : NodeOptions.defaults();
+    }
+
     public void clear() {
         value.clear();
     }
@@ -39,16 +45,16 @@ public class NodeList implements Node {
             if (line.startsWith("]")) return;
             if (line.startsWith("#")) continue;
             if (line.startsWith("{")) {
-                NodeMap node = new NodeMap();
+                NodeMap node = new NodeMap(options);
                 value.add(node);
                 if (!line.endsWith("}")) node.readValue(reader);
             } else if (line.startsWith("[")) {
-                NodeList list = new NodeList();
+                NodeList list = new NodeList(options);
                 value.add(list);
                 if (!line.endsWith("]")) list.readValue(reader);
             } else {
                 // TODO ","
-                NodeBase node = new NodeBase();
+                NodeBase node = new NodeBase(options);
                 node.readValue(line.trim());
                 value.add(node);
             }
@@ -120,7 +126,13 @@ public class NodeList implements Node {
         this.comments.clear();
     }
 
+    @Override
+    public NodeOptions getOptions() {
+        return options;
+    }
+
     public List<Node> getValue() {
         return value;
     }
+
 }
