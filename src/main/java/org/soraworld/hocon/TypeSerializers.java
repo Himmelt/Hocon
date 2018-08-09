@@ -14,22 +14,36 @@ import java.util.regex.PatternSyntaxException;
 
 public class TypeSerializers {
 
-    public static final HashMap<TypeToken<?>, TypeSerializer<?>> DEFAULT_SERIALIZERS = new HashMap<>();
+    private static final TypeSerializerCollection DEFAULT_SERIALIZERS = new TypeSerializerCollection(null);
+
+    /**
+     * Gets the default {@link TypeSerializer}s.
+     *
+     * @return The default serializers
+     */
+    public static TypeSerializerCollection getDefaultSerializers() {
+        return DEFAULT_SERIALIZERS;
+    }
+
+    public static TypeSerializerCollection newCollection() {
+        return DEFAULT_SERIALIZERS.newChild();
+    }
 
     static {
-        DEFAULT_SERIALIZERS.put(TypeToken.of(URI.class), new URISerializer());
-        DEFAULT_SERIALIZERS.put(TypeToken.of(URL.class), new URLSerializer());
-        DEFAULT_SERIALIZERS.put(TypeToken.of(UUID.class), new UUIDSerializer());
-        DEFAULT_SERIALIZERS.put(TypeToken.of(Number.class), new NumberSerializer());
-        DEFAULT_SERIALIZERS.put(TypeToken.of(String.class), new StringSerializer());
-        DEFAULT_SERIALIZERS.put(TypeToken.of(Boolean.class), new BooleanSerializer());
-        DEFAULT_SERIALIZERS.put(TypeToken.of(Pattern.class), new PatternSerializer());
-        DEFAULT_SERIALIZERS.put(new TypeToken<Map<?, ?>>() {
+        DEFAULT_SERIALIZERS.registerType(TypeToken.of(URI.class), new URISerializer());
+        DEFAULT_SERIALIZERS.registerType(TypeToken.of(URL.class), new URLSerializer());
+        DEFAULT_SERIALIZERS.registerType(TypeToken.of(UUID.class), new UUIDSerializer());
+        //DEFAULT_SERIALIZERS.registerPredicate(input -> input.getRawType().isAnnotationPresent(ConfigSerializable.class), new AnnotatedObjectSerializer());
+        DEFAULT_SERIALIZERS.registerType(TypeToken.of(Number.class), new NumberSerializer());
+        DEFAULT_SERIALIZERS.registerType(TypeToken.of(String.class), new StringSerializer());
+        DEFAULT_SERIALIZERS.registerType(TypeToken.of(Boolean.class), new BooleanSerializer());
+        DEFAULT_SERIALIZERS.registerType(new TypeToken<Map<String, ?>>() {
         }, new MapSerializer());
-        DEFAULT_SERIALIZERS.put(new TypeToken<List<?>>() {
+        DEFAULT_SERIALIZERS.registerType(new TypeToken<List<?>>() {
         }, new ListSerializer());
-        DEFAULT_SERIALIZERS.put(new TypeToken<Enum<?>>() {
+        DEFAULT_SERIALIZERS.registerType(new TypeToken<Enum<?>>() {
         }, new EnumSerializer());
+        DEFAULT_SERIALIZERS.registerType(TypeToken.of(Pattern.class), new PatternSerializer());
     }
 
     private static class URISerializer implements TypeSerializer<URI> {

@@ -11,9 +11,14 @@ compileJava {
 
 repositories {
     jcenter()
+    maven {
+        name = 'sponge'
+        url = 'https://repo.spongepowered.org/maven'
+    }
 }
 
 dependencies {
     compile 'com.google.guava:guava:21.0'
     compile 'com.google.code.findbugs:jsr305:3.0.2'
+    compile 'org.spongepowered:configurate-hocon:3.6'
 }

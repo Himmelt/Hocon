@@ -1,9 +1,14 @@
 package org.soraworld.hocon;
 
+import com.google.common.reflect.TypeToken;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.*;
 
 public class NodeMap implements Node {
@@ -30,22 +35,32 @@ public class NodeMap implements Node {
         } else value.put(path, new NodeBase(String.valueOf(node), comment));
     }
 
-    public void modify(Object object) throws IllegalAccessException {
+    public void modify(Object object) throws Exception {
         List<Field> fields = Fields.getFields(object.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
                 String path = setting.value().isEmpty() ? field.getName() : setting.value();
                 Node node = getNode(path);
-                if (node instanceof NodeBase) {
-                    Class<?> type = field.getType();
-                    if (type.equals(int.class) || type.equals(Integer.class)) {
-                        field.set(object, ((NodeBase) node).getInt());
-                    } else if (type.equals(byte.class) || type.equals(Byte.class)) {
-                        field.set(object, (byte) ((NodeBase) node).getInt());
-                    } else if (type.equals(long.class) || type.equals(Long.class)) {
-                        field.set(object, ((NodeBase) node).getLong());
-                    }
+                Class<?> type = field.getType();
+                AnnotatedType annotatedType = field.getAnnotatedType();
+                Type ttt = field.getGenericType();
+                TypeToken token = TypeToken.of(ttt);
+                TypeSerializer serializer = TypeSerializers.getDefaultSerializers().get(token);
+                if (serializer != null) {
+                    if (Map.class.isAssignableFrom(type)) {
+                        try {
+                            Constructor constructor = type.getConstructor();
+                            Object instance = constructor.newInstance();
+                            Object value = serializer.deserialize(token, node);
+                            if (instance instanceof Map && value instanceof Map) {
+                                ((Map) instance).putAll((Map) value);
+                                field.set(object, instance);
+                            }
+                        } catch (Throwable e) {
+                            field.set(object, serializer.deserialize(token, node));
+                        }
+                    } else field.set(object, serializer.deserialize(token, node));
                 }
             }
         }
