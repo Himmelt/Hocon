@@ -61,6 +61,18 @@ public class NodeMap implements Node {
                         } catch (Throwable e) {
                             field.set(object, serializer.deserialize(token, node));
                         }
+                    } else if (List.class.isAssignableFrom(type)) {
+                        try {
+                            Constructor constructor = type.getConstructor();
+                            Object instance = constructor.newInstance();
+                            Object value = serializer.deserialize(token, node);
+                            if (instance instanceof List && value instanceof List) {
+                                ((List) instance).addAll((Collection) value);
+                                field.set(object, instance);
+                            }
+                        } catch (Throwable e) {
+                            field.set(object, serializer.deserialize(token, node));
+                        }
                     } else field.set(object, serializer.deserialize(token, node));
                 }
             }
