@@ -59,6 +59,10 @@ public class NodeMap implements Node {
         return !value.isEmpty();
     }
 
+    public LinkedHashMap<String, Node> getValue() {
+        return value;
+    }
+
     public void setValue(Object value) {
 
     }

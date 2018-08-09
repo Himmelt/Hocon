@@ -120,4 +120,7 @@ public class NodeList implements Node {
         this.comments.clear();
     }
 
+    public List<Node> getValue() {
+        return value;
+    }
 }
