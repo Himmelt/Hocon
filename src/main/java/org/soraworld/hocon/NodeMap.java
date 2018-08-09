@@ -115,6 +115,17 @@ public class NodeMap implements Node {
         return value;
     }
 
+    public HashMap<String, String> asStringMap() {
+        HashMap<String, String> map = new HashMap<>();
+        for (Map.Entry<String, Node> entry : value.entrySet()) {
+            Node node = entry.getValue();
+            if (node instanceof NodeBase) {
+                map.put(entry.getKey(), ((NodeBase) node).getString());
+            }
+        }
+        return map;
+    }
+
     public void setValue(Object value) {
 
     }
