@@ -87,7 +87,7 @@ public class NodeMap implements Node {
             if (setting != null) {
                 Object value = field.get(object);
                 String path = setting.path().isEmpty() ? field.getName() : setting.path();
-                String comment = setting.comment().startsWith("comment.") ? options.getTranslator().apply(setting.comment()) : setting.comment();
+                String comment = options.getTranslator().apply(setting.comment());
                 if (value == null) {
                     setNode(path, null, comment);
                 } else {
@@ -127,7 +127,6 @@ public class NodeMap implements Node {
     }
 
     public void setValue(Object value) {
-
     }
 
     @Override
