@@ -13,7 +13,7 @@ public class NodeList implements Node {
     private final ArrayList<Node> value = new ArrayList<>();
     private final List<String> comments = new ArrayList<>();
 
-    NodeOptions options;
+    private final NodeOptions options;
 
     public NodeList(NodeOptions options) {
         this.options = options != null ? options : NodeOptions.defaults();

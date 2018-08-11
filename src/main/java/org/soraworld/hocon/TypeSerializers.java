@@ -1,6 +1,6 @@
 package org.soraworld.hocon;
 
-import com.google.common.reflect.TypeToken;
+import org.soraworld.hocon.token.TypeToken;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.ParameterizedType;
@@ -16,11 +16,6 @@ public class TypeSerializers {
 
     private static final TypeSerializerCollection DEFAULT_SERIALIZERS = new TypeSerializerCollection(null);
 
-    /**
-     * Gets the default {@link TypeSerializer}s.
-     *
-     * @return The default serializers
-     */
     public static TypeSerializerCollection getDefaultSerializers() {
         return DEFAULT_SERIALIZERS;
     }
@@ -37,7 +32,7 @@ public class TypeSerializers {
         DEFAULT_SERIALIZERS.registerType(TypeToken.of(Number.class), new NumberSerializer());
         DEFAULT_SERIALIZERS.registerType(TypeToken.of(String.class), new StringSerializer());
         DEFAULT_SERIALIZERS.registerType(TypeToken.of(Boolean.class), new BooleanSerializer());
-        DEFAULT_SERIALIZERS.registerType(new TypeToken<Map<String, ?>>() {
+        DEFAULT_SERIALIZERS.registerType(new TypeToken<Map<Object, ?>>() {
         }, new MapSerializer());
         DEFAULT_SERIALIZERS.registerType(new TypeToken<List<?>>() {
         }, new ListSerializer());
@@ -192,29 +187,27 @@ public class TypeSerializers {
         }
     }
 
-    private static class MapSerializer implements TypeSerializer<Map<String, ?>> {
-        public Map<String, ?> deserialize(@Nonnull TypeToken<?> type, @Nonnull Node node) throws Exception {
+    private static class MapSerializer implements TypeSerializer<Map<Object, ?>> {
+        public Map<Object, ?> deserialize(@Nonnull TypeToken<?> type, @Nonnull Node node) throws Exception {
             if (node instanceof NodeMap) {
-                Map<String, Object> returnVal = new LinkedHashMap<>();
                 if (!(type.getType() instanceof ParameterizedType)) {
                     throw new ObjectMappingException("Raw types are not supported for collections");
                 }
-                TypeToken<?> keyToken = type.resolveType(Map.class.getTypeParameters()[0]);
-
-                // TODO
-                //if(!keyToken.getRawType().equals(String.class))return null;
-
-                TypeToken<?> valToken = type.resolveType(Map.class.getTypeParameters()[1]);
-                TypeSerializer<?> valSerial = DEFAULT_SERIALIZERS.get(valToken);
+                TypeToken<?> keyToken = type.getKeyType();
+                TypeToken<?> valToken = type.getValType();
+                TypeSerializer<?> keySerial = node.getOptions().getSerializers().get(keyToken);
+                TypeSerializer<?> valSerial = node.getOptions().getSerializers().get(valToken);
 
                 if (valSerial == null) {
                     throw new ObjectMappingException("No type serializer available for type " + valToken);
                 }
 
+                Map<Object, Object> returnVal = new LinkedHashMap<>();
+
                 for (Map.Entry<String, Node> entry : ((NodeMap) node).getValue().entrySet()) {
-                    String key = entry.getKey();
+                    Object key = keySerial.deserialize(keyToken, new NodeBase(entry.getKey(), node.getOptions()));
                     Object val = valSerial.deserialize(valToken, entry.getValue());
-                    if (key == null || key.isEmpty() || val == null) continue;
+                    if (key == null || val == null) continue;
                     returnVal.put(key, val);
                 }
                 return returnVal;
@@ -222,14 +215,14 @@ public class TypeSerializers {
             return null;
         }
 
-        public Node serialize(@Nonnull TypeToken<?> type, Map<String, ?> value, @Nonnull NodeOptions options) throws ObjectMappingException {
+        public Node serialize(@Nonnull TypeToken<?> type, Map<Object, ?> value, @Nonnull NodeOptions options) throws ObjectMappingException {
             if (!(type.getType() instanceof ParameterizedType)) {
                 throw new ObjectMappingException("Raw types are not supported for collections");
             }
-            TypeToken<?> keyToken = type.resolveType(Map.class.getTypeParameters()[0]);
-            TypeToken<?> valToken = type.resolveType(Map.class.getTypeParameters()[1]);
-            TypeSerializer keySerial = DEFAULT_SERIALIZERS.get(keyToken);
-            TypeSerializer valSerial = DEFAULT_SERIALIZERS.get(valToken);
+            TypeToken<?> keyToken = type.getKeyType();
+            TypeToken<?> valToken = type.getValType();
+            TypeSerializer keySerial = options.getSerializers().get(keyToken);
+            TypeSerializer valSerial = options.getSerializers().get(valToken);
 
             if (keySerial == null) {
                 throw new ObjectMappingException("No type serializer available for type " + keyToken);
@@ -241,11 +234,14 @@ public class TypeSerializers {
 
             NodeMap node = new NodeMap(options);
 
-            for (Map.Entry<String, ?> entry : value.entrySet()) {
-                String key = entry.getKey();
+            for (Map.Entry<Object, ?> entry : value.entrySet()) {
+                Object key = entry.getKey();
                 Object obj = entry.getValue();
-                if (key != null && !key.isEmpty() && obj != null) {
-                    node.setNode(key, valSerial.serialize(valToken, obj, node.options));
+                if (key != null && obj != null) {
+                    Node keyNode = keySerial.serialize(keyToken, key, options);
+                    if (keyNode instanceof NodeBase) {
+                        node.setNode(((NodeBase) keyNode).getString(), valSerial.serialize(valToken, obj, options));
+                    }
                 }
             }
             return node;
@@ -258,29 +254,17 @@ public class TypeSerializers {
                 if (!(type.getType() instanceof ParameterizedType)) {
                     throw new ObjectMappingException("Raw types are not supported for collections");
                 }
-                TypeToken<?> entryToken = type.resolveType(List.class.getTypeParameters()[0]);
-                TypeSerializer entrySerial = DEFAULT_SERIALIZERS.get(entryToken);
+                TypeToken<?> entryToken = type.getKeyType();
+                TypeSerializer entrySerial = node.getOptions().getSerializers().get(entryToken);
                 if (entrySerial == null) {
                     throw new ObjectMappingException("No applicable type serializer for type " + entryToken);
                 }
-
                 ArrayList<Object> list = new ArrayList<>();
-
                 for (Node element : ((NodeList) node).getValue()) {
                     list.add(entrySerial.deserialize(entryToken, element));
                 }
                 return list;
-
-/*                if (value.hasListChildren()) {
-
-                } else {
-                    Object unwrappedVal = value.getValue();
-                    if (unwrappedVal != null) {
-                        return Lists.newArrayList(entrySerial.deserialize(entryType, value));
-                    }
-                }*/
             }
-
             return new ArrayList<>();
         }
 
@@ -288,14 +272,14 @@ public class TypeSerializers {
             if (!(type.getType() instanceof ParameterizedType)) {
                 throw new ObjectMappingException("Raw types are not supported for collections");
             }
-            TypeToken<?> entryToken = type.resolveType(List.class.getTypeParameters()[0]);
-            TypeSerializer entrySerial = DEFAULT_SERIALIZERS.get(entryToken);
+            TypeToken<?> entryToken = type.getKeyType();
+            TypeSerializer entrySerial = options.getSerializers().get(entryToken);
             if (entrySerial == null) {
                 throw new ObjectMappingException("No applicable type serializer for type " + entryToken);
             }
             NodeList node = new NodeList(options);
             for (Object obj : value) {
-                node.add(entrySerial.serialize(entryToken, obj, node.options));
+                node.add(entrySerial.serialize(entryToken, obj, options));
             }
             return node;
         }
@@ -309,9 +293,12 @@ public class TypeSerializers {
                 if (name == null || name.trim().isEmpty()) {
                     throw new ObjectMappingException("No value present in node " + node);
                 }
-                Enum<?> value = Fields.getEnums(type.getRawType().asSubclass(Enum.class), name);
-                if (value != null) return value;
-                else throw new Exception();
+                Class<?> rawType = type.getRawType();
+                if (rawType != null) {
+                    Enum<?> value = Fields.getEnums(rawType.asSubclass(Enum.class), name);
+                    if (value != null) return value;
+                }
+                throw new Exception();
             }
             return null;
         }
@@ -320,5 +307,4 @@ public class TypeSerializers {
             return new NodeBase(value.name(), options);
         }
     }
-
 }

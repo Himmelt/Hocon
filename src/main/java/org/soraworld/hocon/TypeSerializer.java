@@ -1,6 +1,6 @@
 package org.soraworld.hocon;
 
-import com.google.common.reflect.TypeToken;
+import org.soraworld.hocon.token.TypeToken;
 
 import javax.annotation.Nonnull;
 

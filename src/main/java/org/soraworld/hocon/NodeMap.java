@@ -1,6 +1,6 @@
 package org.soraworld.hocon;
 
-import com.google.common.reflect.TypeToken;
+import org.soraworld.hocon.token.TypeToken;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedReader;
@@ -12,7 +12,7 @@ import java.util.*;
 
 public class NodeMap implements Node {
 
-    NodeOptions options;
+    private final NodeOptions options;
     private final List<String> comments = new ArrayList<>();
     private final LinkedHashMap<String, Node> value = new LinkedHashMap<>();
 
