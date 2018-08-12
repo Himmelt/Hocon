@@ -55,7 +55,7 @@ public class NodeList implements Node {
             } else {
                 // TODO ","
                 NodeBase node = new NodeBase(options);
-                node.readValue(line.trim());
+                node.readValue(line);
                 value.add(node);
             }
         }
@@ -88,7 +88,7 @@ public class NodeList implements Node {
                     writer.write("]");
                 } else node.writeValue(indent + 1, writer);
                 if (it.hasNext()) {
-                    writer.write(',');
+                    //writer.write(',');
                     writer.newLine();
                 }
             }

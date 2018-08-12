@@ -5,8 +5,9 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class TypeToken<T> {
 
@@ -18,8 +19,10 @@ public abstract class TypeToken<T> {
     private Class<?> rawType;
     private final Type runtimeType;
 
+    private static final ConcurrentHashMap<Type, TypeToken> cache = new ConcurrentHashMap<>();
+
     protected TypeToken() {
-        this.runtimeType = capture();
+        runtimeType = capture();
         if (runtimeType instanceof TypeVariable) {
             throw new IllegalStateException("Cannot construct a TypeToken for a type variable.\n"
                     + "You probably meant to call new TypeToken<"
@@ -29,10 +32,12 @@ public abstract class TypeToken<T> {
                     + "If you do need to create a TypeToken of a type variable, "
                     + "please use TypeToken.of() instead.");
         }
+        cache.put(runtimeType, this);
     }
 
     private TypeToken(@Nonnull Type type) {
         this.runtimeType = type;
+        cache.put(type, this);
     }
 
     private Type capture() {
@@ -44,11 +49,13 @@ public abstract class TypeToken<T> {
     }
 
     public static <T> TypeToken<T> of(@Nonnull Class<T> type) {
-        return new SimpleTypeToken<T>(type);
+        TypeToken token = cache.get(type);
+        return token != null ? token : new SimpleTypeToken<T>(type);
     }
 
     public static TypeToken<?> of(@Nonnull Type type) {
-        return new SimpleTypeToken<>(type);
+        TypeToken token = cache.get(type);
+        return token != null ? token : new SimpleTypeToken<>(type);
     }
 
     public final Type getType() {
@@ -81,23 +88,30 @@ public abstract class TypeToken<T> {
     }
 
     public final boolean isSuperTypeOf(@Nonnull TypeToken<?> type) {
-        if (isMap() && type.isMap()) {
-            return getKeyType().isSuperTypeOf(type.getKeyType()) && getValType().isSuperTypeOf(type.getValType());
-        }
-        if (isList() && type.isList()) {
-            return getKeyType().isSuperTypeOf(type.getKeyType());
-        }
-        if (isEnum() && type.isEnum()) {
-            return getKeyType().isSuperTypeOf(type.getKeyType());
-        }
-        if (runtimeType instanceof Class<?> && type.runtimeType instanceof Class<?>) {
-            return ((Class<?>) runtimeType).isAssignableFrom((Class<?>) type.runtimeType);
-        }
-        if (runtimeType instanceof WildcardType) {
-            return Bounds.getBounds(runtimeType).isSuperOf(Bounds.getBounds(type.runtimeType));
-        }
-        if (runtimeType instanceof TypeVariable) {
-            return Bounds.getBounds(runtimeType).isSuperOf(Bounds.getBounds(type.runtimeType));
+        // same level compare
+        if (getRawType().isAssignableFrom(type.getRawType())) {
+            if (runtimeType instanceof Class<?> && type.runtimeType instanceof Class<?>) {
+                return ((Class<?>) runtimeType).isAssignableFrom((Class<?>) type.runtimeType);
+            }
+            if (runtimeType instanceof WildcardType) {
+                return Bounds.getBounds(runtimeType).isSuperOf(Bounds.getBounds(type.runtimeType));
+            }
+            if (runtimeType instanceof TypeVariable) {
+                return Bounds.getBounds(runtimeType).isSuperOf(Bounds.getBounds(type.runtimeType));
+            }
+            if (runtimeType instanceof ParameterizedType) {
+                System.out.println("--- " + runtimeType);
+            }
+            if (isMap() && type.isMap()) {
+                // val type  ?  <>  int  =>    ?  has no raw type
+                return getKeyType().isSuperTypeOf(type.getKeyType()) && getValType().isSuperTypeOf(type.getValType());
+            }
+            if (isList() && type.isList()) {
+                return getKeyType().isSuperTypeOf(type.getKeyType());
+            }
+            if (isEnum() && type.isEnum()) {
+                return getKeyType().isSuperTypeOf(type.getKeyType());
+            }
         }
         return false;
     }
@@ -120,7 +134,7 @@ public abstract class TypeToken<T> {
         if (isList == null) {
             if (runtimeType instanceof ParameterizedType) {
                 Type[] types = ((ParameterizedType) runtimeType).getActualTypeArguments();
-                if (List.class.isAssignableFrom(getRawType()) && types != null && types.length == 1) {
+                if (Collection.class.isAssignableFrom(getRawType()) && types != null && types.length == 1) {
                     keyType = types[0];
                     isList = true;
                 } else isList = false;
@@ -133,7 +147,7 @@ public abstract class TypeToken<T> {
         if (isEnum == null) {
             if (runtimeType instanceof Class) {
                 isEnum = Enum.class.isAssignableFrom((Class<?>) runtimeType);
-                keyType = runtimeType;
+                if (isEnum) keyType = runtimeType;
             } else if (runtimeType instanceof ParameterizedType) {
                 Type[] types = ((ParameterizedType) runtimeType).getActualTypeArguments();
                 if (Enum.class.isAssignableFrom(getRawType()) && types != null && types.length == 1) {

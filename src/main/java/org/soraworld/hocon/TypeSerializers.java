@@ -34,7 +34,7 @@ public class TypeSerializers {
         DEFAULT_SERIALIZERS.registerType(TypeToken.of(Boolean.class), new BooleanSerializer());
         DEFAULT_SERIALIZERS.registerType(new TypeToken<Map<Object, ?>>() {
         }, new MapSerializer());
-        DEFAULT_SERIALIZERS.registerType(new TypeToken<List<?>>() {
+        DEFAULT_SERIALIZERS.registerType(new TypeToken<Collection<?>>() {
         }, new ListSerializer());
         DEFAULT_SERIALIZERS.registerType(new TypeToken<Enum<?>>() {
         }, new EnumSerializer());
@@ -248,8 +248,8 @@ public class TypeSerializers {
         }
     }
 
-    private static class ListSerializer implements TypeSerializer<List<?>> {
-        public List<?> deserialize(@Nonnull TypeToken<?> type, @Nonnull Node node) throws Exception {
+    private static class ListSerializer implements TypeSerializer<Collection<?>> {
+        public Collection<?> deserialize(@Nonnull TypeToken<?> type, @Nonnull Node node) throws Exception {
             if (node instanceof NodeList) {
                 if (!(type.getType() instanceof ParameterizedType)) {
                     throw new ObjectMappingException("Raw types are not supported for collections");
@@ -268,7 +268,7 @@ public class TypeSerializers {
             return new ArrayList<>();
         }
 
-        public Node serialize(@Nonnull TypeToken<?> type, List<?> value, @Nonnull NodeOptions options) throws ObjectMappingException {
+        public Node serialize(@Nonnull TypeToken<?> type, Collection<?> value, @Nonnull NodeOptions options) throws ObjectMappingException {
             if (!(type.getType() instanceof ParameterizedType)) {
                 throw new ObjectMappingException("Raw types are not supported for collections");
             }

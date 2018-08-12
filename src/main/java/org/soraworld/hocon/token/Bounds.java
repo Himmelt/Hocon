@@ -1,6 +1,7 @@
 package org.soraworld.hocon.token;
 
 import javax.annotation.Nonnull;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
@@ -26,6 +27,9 @@ public class Bounds {
             if (upper.length == 0) this.upper = Object.class;
             else this.upper = upper[0];
             lower = null;
+        } else if (type instanceof ParameterizedType) {
+            this.upper = ((ParameterizedType) type).getRawType();
+            this.lower = ((ParameterizedType) type).getRawType();
         } else {
             this.upper = type;
             this.lower = type;

@@ -6,7 +6,6 @@ import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.*;
 
@@ -38,63 +37,73 @@ public class NodeMap implements Node {
         } else value.put(path, new NodeBase(node, comment, options));
     }
 
-    public void modify(@Nonnull Object object) throws Exception {
-        List<Field> fields = Fields.getFields(object.getClass());
+    public void modify(@Nonnull Object target) throws Exception {
+        List<Field> fields = Fields.getFields(target.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
-                String path = setting.path().isEmpty() ? field.getName() : setting.path();
-                Node node = getNode(path);
-                Class<?> type = field.getType();
                 TypeToken<?> token = TypeToken.of(field.getGenericType());
                 TypeSerializer serializer = options.getSerializers().get(token);
                 if (serializer != null) {
-                    if (Map.class.isAssignableFrom(type)) {
-                        try {
-                            Constructor constructor = type.getConstructor();
-                            Object instance = constructor.newInstance();
-                            Object value = serializer.deserialize(token, node);
-                            if (instance instanceof Map && value instanceof Map) {
-                                ((Map) instance).putAll((Map) value);
-                                field.set(object, instance);
+                    Node node = getNode(setting.path().isEmpty() ? field.getName() : setting.path());
+                    Object value = serializer.deserialize(token, node);
+                    Object current = field.get(target);
+                    Class<?> type = current == null ? field.getType() : current.getClass();
+                    if (Map.class.isAssignableFrom(type) && value instanceof Map) {
+                        if (current instanceof Map) {
+                            ((Map) current).clear();
+                            ((Map) current).putAll((Map) value);
+                        } else {
+                            try {
+                                Object instance = type.getConstructor().newInstance();
+                                if (instance instanceof Map) {
+                                    ((Map) instance).putAll((Map) value);
+                                    field.set(target, instance);
+                                }
+                            } catch (Throwable e) {
+                                // TODO Exception type cast exception
+                                field.set(target, value);
                             }
-                        } catch (Throwable e) {
-                            field.set(object, serializer.deserialize(token, node));
                         }
-                    } else if (List.class.isAssignableFrom(type)) {
-                        try {
-                            Constructor constructor = type.getConstructor();
-                            Object instance = constructor.newInstance();
-                            Object value = serializer.deserialize(token, node);
-                            if (instance instanceof List && value instanceof List) {
-                                ((List) instance).addAll((Collection) value);
-                                field.set(object, instance);
+                    } else if (Collection.class.isAssignableFrom(type) && value instanceof Collection) {
+                        if (current instanceof Collection) {
+                            // TODO Exception not support method
+                            ((Collection) current).clear();
+                            ((Collection) current).addAll((Collection) value);
+                        } else {
+                            try {
+                                Object instance = type.getConstructor().newInstance();
+                                if (instance instanceof Collection) {
+                                    ((Collection) instance).addAll((Collection) value);
+                                    field.set(target, instance);
+                                }
+                            } catch (Throwable e) {
+                                // TODO Exception type cast exception
+                                field.set(target, value);
                             }
-                        } catch (Throwable e) {
-                            field.set(object, serializer.deserialize(token, node));
                         }
-                    } else field.set(object, serializer.deserialize(token, node));
+                    } else field.set(target, value);// TODO Exception type cast exception
                 }
             }
         }
     }
 
-    public void extract(@Nonnull Object object) throws IllegalAccessException {
+    public void extract(@Nonnull Object source) throws IllegalAccessException {
         clear();
-        List<Field> fields = Fields.getFields(object.getClass());
+        List<Field> fields = Fields.getFields(source.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
-                Object value = field.get(object);
+                Object current = field.get(source);
                 String path = setting.path().isEmpty() ? field.getName() : setting.path();
                 String comment = options.getTranslator().apply(setting.comment());
-                if (value == null) {
+                if (current == null) {
                     setNode(path, null, comment);
                 } else {
                     TypeToken<?> token = TypeToken.of(field.getGenericType());
                     TypeSerializer serializer = options.getSerializers().get(token);
                     try {
-                        setNode(path, serializer.serialize(token, value, options), comment);
+                        setNode(path, serializer.serialize(token, current, options), comment);
                     } catch (ObjectMappingException e) {
                         e.printStackTrace();
                     }
