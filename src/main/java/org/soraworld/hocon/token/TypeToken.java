@@ -14,6 +14,7 @@ public abstract class TypeToken<T> {
     private Type valType;
     private Boolean isMap;
     private Boolean isList;
+    private Boolean isEnum;
     private Class<?> rawType;
     private final Type runtimeType;
 
@@ -80,23 +81,32 @@ public abstract class TypeToken<T> {
     }
 
     public final boolean isSuperTypeOf(@Nonnull TypeToken<?> type) {
-        if (runtimeType instanceof Class<?> && type.runtimeType instanceof Class<?>) {
-            return ((Class<?>) runtimeType).isAssignableFrom((Class<?>) type.runtimeType);
-        }
         if (isMap() && type.isMap()) {
             return getKeyType().isSuperTypeOf(type.getKeyType()) && getValType().isSuperTypeOf(type.getValType());
         }
         if (isList() && type.isList()) {
             return getKeyType().isSuperTypeOf(type.getKeyType());
         }
-        return runtimeType instanceof WildcardType;
+        if (isEnum() && type.isEnum()) {
+            return getKeyType().isSuperTypeOf(type.getKeyType());
+        }
+        if (runtimeType instanceof Class<?> && type.runtimeType instanceof Class<?>) {
+            return ((Class<?>) runtimeType).isAssignableFrom((Class<?>) type.runtimeType);
+        }
+        if (runtimeType instanceof WildcardType) {
+            return Bounds.getBounds(runtimeType).isSuperOf(Bounds.getBounds(type.runtimeType));
+        }
+        if (runtimeType instanceof TypeVariable) {
+            return Bounds.getBounds(runtimeType).isSuperOf(Bounds.getBounds(type.runtimeType));
+        }
+        return false;
     }
 
     public boolean isMap() {
         if (isMap == null) {
             if (runtimeType instanceof ParameterizedType) {
                 Type[] types = ((ParameterizedType) runtimeType).getActualTypeArguments();
-                if (getRawType().equals(Map.class) && types != null && types.length == 2) {
+                if (Map.class.isAssignableFrom(getRawType()) && types != null && types.length == 2) {
                     keyType = types[0];
                     valType = types[1];
                     isMap = true;
@@ -110,7 +120,7 @@ public abstract class TypeToken<T> {
         if (isList == null) {
             if (runtimeType instanceof ParameterizedType) {
                 Type[] types = ((ParameterizedType) runtimeType).getActualTypeArguments();
-                if (getRawType().equals(List.class) && types != null && types.length == 1) {
+                if (List.class.isAssignableFrom(getRawType()) && types != null && types.length == 1) {
                     keyType = types[0];
                     isList = true;
                 } else isList = false;
@@ -119,9 +129,25 @@ public abstract class TypeToken<T> {
         return isList;
     }
 
-    /* Map Key Type && List Type*/
+    public boolean isEnum() {
+        if (isEnum == null) {
+            if (runtimeType instanceof Class) {
+                isEnum = Enum.class.isAssignableFrom((Class<?>) runtimeType);
+                keyType = runtimeType;
+            } else if (runtimeType instanceof ParameterizedType) {
+                Type[] types = ((ParameterizedType) runtimeType).getActualTypeArguments();
+                if (Enum.class.isAssignableFrom(getRawType()) && types != null && types.length == 1) {
+                    keyType = types[0];
+                    isEnum = true;
+                } else isEnum = false;
+            } else isEnum = false;
+        }
+        return isEnum;
+    }
+
+    /* Map Key Type && List Type && Enum Type */
     public TypeToken<?> getKeyType() {
-        return isMap() || isList() ? of(keyType) : null;
+        return isMap() || isList() || isEnum() ? of(keyType) : null;
     }
 
     public TypeToken<?> getValType() {
