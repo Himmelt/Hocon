@@ -116,6 +116,11 @@ public abstract class TypeToken<T> {
         return false;
     }
 
+    public static boolean isSuperOf(Type supTyp, Type subTyp) {
+        // TODO
+        return false;
+    }
+
     public boolean isMap() {
         if (isMap == null) {
             if (runtimeType instanceof ParameterizedType) {
