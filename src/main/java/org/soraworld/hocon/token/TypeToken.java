@@ -4,7 +4,6 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,34 +87,8 @@ public abstract class TypeToken<T> {
     }
 
     public final boolean isSuperTypeOf(@Nonnull TypeToken<?> type) {
-        // same level compare
-        if (getRawType().isAssignableFrom(type.getRawType())) {
-            if (runtimeType instanceof Class<?> && type.runtimeType instanceof Class<?>) {
-                return ((Class<?>) runtimeType).isAssignableFrom((Class<?>) type.runtimeType);
-            }
-            if (runtimeType instanceof WildcardType) {
-                return Bounds.getBounds(runtimeType).isSuperOf(Bounds.getBounds(type.runtimeType));
-            }
-            if (runtimeType instanceof TypeVariable) {
-                return Bounds.getBounds(runtimeType).isSuperOf(Bounds.getBounds(type.runtimeType));
-            }
-            if (runtimeType instanceof ParameterizedType) {
-                System.out.println("--- " + runtimeType);
-            }
-            if (isMap() && type.isMap()) {
-                // val type  ?  <>  int  =>    ?  has no raw type
-                return getKeyType().isSuperTypeOf(type.getKeyType()) && getValType().isSuperTypeOf(type.getValType());
-            }
-            if (isList() && type.isList()) {
-                return getKeyType().isSuperTypeOf(type.getKeyType());
-            }
-            if (isEnum() && type.isEnum()) {
-                return getKeyType().isSuperTypeOf(type.getKeyType());
-            }
-        }
-        return false;
+        return Bounds.isSuperOf(runtimeType, type.runtimeType);
     }
-
 
     public boolean isMap() {
         if (isMap == null) {
