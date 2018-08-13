@@ -1,12 +1,14 @@
-package org.soraworld.hocon;
+package org.soraworld.hocon.node;
 
-import org.soraworld.hocon.token.TypeToken;
+import org.soraworld.hocon.reflect.Reflects;
+import org.soraworld.hocon.serializer.TypeSerializer;
 
 import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.*;
 
 public class NodeMap implements Node {
@@ -38,15 +40,15 @@ public class NodeMap implements Node {
     }
 
     public void modify(@Nonnull Object target) throws Exception {
-        List<Field> fields = Fields.getFields(target.getClass());
+        List<Field> fields = Reflects.getFields(target.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
-                TypeToken<?> token = TypeToken.of(field.getGenericType());
-                TypeSerializer serializer = options.getSerializers().get(token);
+                Type fieldType = field.getGenericType();
+                TypeSerializer serializer = options.getSerializers().get(fieldType);
                 if (serializer != null) {
                     Node node = getNode(setting.path().isEmpty() ? field.getName() : setting.path());
-                    Object value = serializer.deserialize(token, node);
+                    Object value = serializer.deserialize(fieldType, node);
                     Object current = field.get(target);
                     Class<?> type = current == null ? field.getType() : current.getClass();
                     if (Map.class.isAssignableFrom(type) && value instanceof Map) {
@@ -90,7 +92,7 @@ public class NodeMap implements Node {
 
     public void extract(@Nonnull Object source) throws IllegalAccessException {
         clear();
-        List<Field> fields = Fields.getFields(source.getClass());
+        List<Field> fields = Reflects.getFields(source.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
@@ -100,11 +102,11 @@ public class NodeMap implements Node {
                 if (current == null) {
                     setNode(path, null, comment);
                 } else {
-                    TypeToken<?> token = TypeToken.of(field.getGenericType());
-                    TypeSerializer serializer = options.getSerializers().get(token);
+                    Type fieldType = field.getGenericType();
+                    TypeSerializer serializer = options.getSerializers().get(fieldType);
                     try {
-                        setNode(path, serializer.serialize(token, current, options), comment);
-                    } catch (ObjectMappingException e) {
+                        setNode(path, serializer.serialize(fieldType, current, options), comment);
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 }

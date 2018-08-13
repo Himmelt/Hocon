@@ -1,9 +1,10 @@
-package org.soraworld.hocon;
+package org.soraworld.hocon.serializer;
 
-import org.soraworld.hocon.token.TypeToken;
+import org.soraworld.hocon.reflect.Bounds;
+import org.soraworld.hocon.reflect.Primitives;
 
 import javax.annotation.Nonnull;
-import java.util.Map;
+import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -12,31 +13,33 @@ import java.util.function.Predicate;
 public class TypeSerializerCollection {
     private final TypeSerializerCollection parent;
     private final SerializerList serializers = new SerializerList();
-    private final Map<TypeToken<?>, TypeSerializer<?>> typeMatches = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Type, TypeSerializer<?>> typeMatches = new ConcurrentHashMap<>();
 
     TypeSerializerCollection(TypeSerializerCollection parent) {
         this.parent = parent;
     }
 
     @SuppressWarnings("unchecked")
-    public <T> TypeSerializer<T> get(@Nonnull TypeToken<T> type) {
-        type = type.wrap();
+    public TypeSerializer get(@Nonnull Type type) {
+        if (type instanceof Class) {
+            type = Primitives.wrap((Class) type);
+        }
         TypeSerializer<?> serial = typeMatches.computeIfAbsent(type, serializers);
         if (serial == null && parent != null) {
             serial = parent.get(type);
         }
-        return (TypeSerializer) serial;
+        return serial;
     }
 
-    public <T> TypeSerializerCollection registerType(@Nonnull TypeToken<T> type, @Nonnull TypeSerializer<? super T> serializer) {
+    public <T> TypeSerializerCollection registerType(@Nonnull Type type, @Nonnull TypeSerializer<? super T> serializer) {
         serializers.add(new RegisteredSerializer(type, serializer));
         typeMatches.clear();
         return this;
     }
 
     @SuppressWarnings("unchecked")
-    public <T> TypeSerializerCollection registerPredicate(@Nonnull Predicate<TypeToken<T>> test, @Nonnull TypeSerializer<? super T> serializer) {
-        serializers.add(new RegisteredSerializer((Predicate) test, serializer));
+    public <T> TypeSerializerCollection registerPredicate(@Nonnull Predicate<Type> test, @Nonnull TypeSerializer<? super T> serializer) {
+        serializers.add(new RegisteredSerializer(test, serializer));
         typeMatches.clear();
         return this;
     }
@@ -46,31 +49,31 @@ public class TypeSerializerCollection {
     }
 
     private static final class RegisteredSerializer {
-        private final Predicate<TypeToken<?>> predicate;
+        private final Predicate<Type> predicate;
         private final TypeSerializer<?> serializer;
 
-        private RegisteredSerializer(Predicate<TypeToken<?>> predicate, TypeSerializer<?> serializer) {
+        private RegisteredSerializer(Predicate<Type> predicate, TypeSerializer<?> serializer) {
             this.predicate = predicate;
             this.serializer = serializer;
         }
 
-        private RegisteredSerializer(TypeToken<?> type, TypeSerializer<?> serializer) {
+        private RegisteredSerializer(Type type, TypeSerializer<?> serializer) {
             this(new SuperTypePredicate(type), serializer);
         }
     }
 
-    private static final class SuperTypePredicate implements Predicate<TypeToken<?>> {
+    private static final class SuperTypePredicate implements Predicate<Type> {
 
-        private final TypeToken<?> type;
+        private final Type type;
 
-        SuperTypePredicate(TypeToken<?> type) {
+        SuperTypePredicate(Type type) {
             this.type = type;
         }
 
         @Override
-        public boolean test(TypeToken<?> token) {
+        public boolean test(Type type) {
             try {
-                return type.isSuperTypeOf(token);
+                return Bounds.isSuperOf(this.type, type);// type.isSuperTypeOf(type);
                 //SUPERTYPE_TEST.invoke(type, t);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -79,10 +82,10 @@ public class TypeSerializerCollection {
         }
     }
 
-    private static final class SerializerList extends CopyOnWriteArrayList<RegisteredSerializer> implements Function<TypeToken<?>, TypeSerializer<?>> {
+    private static final class SerializerList extends CopyOnWriteArrayList<RegisteredSerializer> implements Function<Type, TypeSerializer<?>> {
 
         @Override
-        public TypeSerializer<?> apply(TypeToken<?> type) {
+        public TypeSerializer<?> apply(Type type) {
             for (RegisteredSerializer serial : this) {
                 if (serial.predicate.test(type)) {
                     return serial.serializer;

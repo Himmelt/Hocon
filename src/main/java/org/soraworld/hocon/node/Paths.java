@@ -1,4 +1,4 @@
-package org.soraworld.hocon;
+package org.soraworld.hocon.node;
 
 public final class Paths {
 

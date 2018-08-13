@@ -1,4 +1,4 @@
-package org.soraworld.hocon;
+package org.soraworld.hocon.serializer;
 
 public class ObjectMappingException extends Exception {
     public ObjectMappingException(String message) {

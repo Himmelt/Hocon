@@ -1,4 +1,4 @@
-package org.soraworld.hocon.token;
+package org.soraworld.hocon.reflect;
 
 import javax.annotation.Nonnull;
 import java.util.Collections;

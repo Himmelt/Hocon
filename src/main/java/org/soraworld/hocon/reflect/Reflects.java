@@ -1,13 +1,12 @@
-package org.soraworld.hocon;
+package org.soraworld.hocon.reflect;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
 
-public class Fields {
+public class Reflects {
 
     private static final HashMap<Class<?>, List<Field>> CLAZZ_FIELDS = new HashMap<>();
     private static final HashMap<Class<? extends Enum<?>>, HashMap<String, Enum<?>>> ENUM_FIELDS = new HashMap<>();
@@ -37,6 +36,28 @@ public class Fields {
             ENUM_FIELDS.put(clazz, fields);
         }
         return (T) fields.get(name);
+    }
+
+    public static Class<?> getRawType(Type type) throws NonRawTypeException {
+        if (type instanceof Class) return (Class<?>) type;
+        if (type instanceof ParameterizedType) return (Class<?>) ((ParameterizedType) type).getRawType();
+        else throw new NonRawTypeException(type);
+    }
+
+    public static Type[] getMapParameter(ParameterizedType type) throws NonMapParamException {
+        if (Map.class.isAssignableFrom((Class<?>) type.getRawType())) {
+            Type[] types = type.getActualTypeArguments();
+            if (types.length == 2) return types;
+        }
+        throw new NonMapParamException();
+    }
+
+    public static Type getListParameter(ParameterizedType type) throws NonListParamException {
+        if (Collection.class.isAssignableFrom((Class<?>) type.getRawType())) {
+            Type[] types = type.getActualTypeArguments();
+            if (types.length == 1) return types[0];
+        }
+        throw new NonListParamException();
     }
 
 }

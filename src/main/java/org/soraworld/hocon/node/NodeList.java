@@ -1,4 +1,4 @@
-package org.soraworld.hocon;
+package org.soraworld.hocon.node;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

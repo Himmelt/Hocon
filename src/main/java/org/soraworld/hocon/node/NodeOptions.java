@@ -1,4 +1,7 @@
-package org.soraworld.hocon;
+package org.soraworld.hocon.node;
+
+import org.soraworld.hocon.serializer.TypeSerializerCollection;
+import org.soraworld.hocon.serializer.TypeSerializers;
 
 import java.util.function.Function;
 import java.util.regex.Pattern;
