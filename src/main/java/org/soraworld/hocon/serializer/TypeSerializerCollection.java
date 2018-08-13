@@ -1,7 +1,7 @@
 package org.soraworld.hocon.serializer;
 
-import org.soraworld.hocon.reflect.Bounds;
 import org.soraworld.hocon.reflect.Primitives;
+import org.soraworld.hocon.reflect.Reflects;
 
 import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
@@ -73,8 +73,7 @@ public class TypeSerializerCollection {
         @Override
         public boolean test(Type type) {
             try {
-                return Bounds.isSuperOf(this.type, type);// type.isSuperTypeOf(type);
-                //SUPERTYPE_TEST.invoke(type, t);
+                return Reflects.isSuperOf(this.type, type);
             } catch (Exception e) {
                 e.printStackTrace();
                 return false;

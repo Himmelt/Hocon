@@ -10,7 +10,9 @@ import java.util.List;
 
 public class NodeList implements Node {
 
+    // TODO set to null if empty
     private final ArrayList<Node> value = new ArrayList<>();
+    // TODO set to null if empty
     private final List<String> comments = new ArrayList<>();
 
     private final NodeOptions options;

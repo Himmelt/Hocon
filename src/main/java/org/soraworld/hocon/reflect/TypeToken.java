@@ -87,7 +87,7 @@ public abstract class TypeToken<T> {
     }
 
     public final boolean isSuperTypeOf(@Nonnull TypeToken<?> type) {
-        return Bounds.isSuperOf(runtimeType, type.runtimeType);
+        return Reflects.isSuperOf(runtimeType, type.runtimeType);
     }
 
     public boolean isMap() {

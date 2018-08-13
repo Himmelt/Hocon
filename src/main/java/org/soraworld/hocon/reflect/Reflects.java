@@ -1,12 +1,10 @@
 package org.soraworld.hocon.reflect;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import javax.annotation.Nonnull;
+import java.lang.reflect.*;
 import java.util.*;
 
-public class Reflects {
+public final class Reflects {
 
     private static final HashMap<Class<?>, List<Field>> CLAZZ_FIELDS = new HashMap<>();
     private static final HashMap<Class<? extends Enum<?>>, HashMap<String, Enum<?>>> ENUM_FIELDS = new HashMap<>();
@@ -60,4 +58,43 @@ public class Reflects {
         throw new NonListParamException();
     }
 
+    public static boolean isSuperOf(@Nonnull Type upper, @Nonnull Type lower) {
+        if (upper.equals(lower)) return true;
+        if (upper instanceof Class) {
+            if (lower instanceof Class) return ((Class<?>) upper).isAssignableFrom((Class<?>) lower);
+            return lower instanceof ParameterizedType && ((Class<?>) upper).isAssignableFrom((Class<?>) ((ParameterizedType) lower).getRawType());
+        }
+        if (upper instanceof ParameterizedType) {
+            Class<?> upperRaw = (Class) ((ParameterizedType) upper).getRawType();
+            Type[] upperTypes = ((ParameterizedType) upper).getActualTypeArguments();
+            if (lower instanceof ParameterizedType) {
+                Class<?> lowerRaw = (Class) ((ParameterizedType) lower).getRawType();
+                if (upperRaw.isAssignableFrom(lowerRaw)) {
+                    Type[] lowerTypes = ((ParameterizedType) lower).getActualTypeArguments();
+                    if (upperTypes.length == lowerTypes.length) {
+                        if (upperTypes.length > 0) {
+                            for (int i = 0; i < upperTypes.length; i++) {
+                                if (!isSuperOf(upperTypes[i], lowerTypes[i])) return false;
+                            }
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if (lower instanceof Class && upperRaw.isAssignableFrom((Class<?>) lower)) {
+                if (upperTypes.length > 0) {
+                    for (Type upperType : upperTypes) {
+                        if (!isSuperOf(upperType, Enum.class.isAssignableFrom((Class) lower) ? lower : Object.class)) return false;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+        if (upper instanceof WildcardType || upper instanceof TypeVariable) {
+            return Bounds.getBounds(upper).isSuperOf(Bounds.getBounds(lower));
+        }
+        return false;
+    }
 }

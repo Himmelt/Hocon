@@ -190,8 +190,8 @@ public class TypeSerializers {
         }
     }
 
-    private static class MapSerializer implements TypeSerializer<Map<Object, ?>> {
-        public Map<Object, ?> deserialize(@Nonnull Type type, @Nonnull Node node) throws Exception {
+    private static class MapSerializer implements TypeSerializer<Map<?, ?>> {
+        public Map<?, ?> deserialize(@Nonnull Type type, @Nonnull Node node) throws Exception {
             if (node instanceof NodeMap) {
                 if (type instanceof ParameterizedType) {
                     Type[] params = Reflects.getMapParameter((ParameterizedType) type);
@@ -216,7 +216,7 @@ public class TypeSerializers {
             return null;
         }
 
-        public Node serialize(@Nonnull Type type, Map<Object, ?> value, @Nonnull NodeOptions options) throws Exception {
+        public Node serialize(@Nonnull Type type, Map<?, ?> value, @Nonnull NodeOptions options) throws Exception {
             if (type instanceof ParameterizedType) {
                 Type[] params = Reflects.getMapParameter((ParameterizedType) type);
                 TypeSerializer keySerial = options.getSerializers().get(params[0]);
@@ -232,13 +232,15 @@ public class TypeSerializers {
 
                 NodeMap node = new NodeMap(options);
 
-                for (Map.Entry<Object, ?> entry : value.entrySet()) {
+                for (Map.Entry<?, ?> entry : value.entrySet()) {
                     Object key = entry.getKey();
                     Object obj = entry.getValue();
                     if (key != null && obj != null) {
                         Node keyNode = keySerial.serialize(params[0], key, options);
                         if (keyNode instanceof NodeBase) {
                             node.setNode(((NodeBase) keyNode).getString(), valSerial.serialize(params[1], obj, options));
+                        } else {
+                            // TODO console message Non NodeBase Key
                         }
                     }
                 }
@@ -249,21 +251,26 @@ public class TypeSerializers {
 
     private static class ListSerializer implements TypeSerializer<Collection<?>> {
         public Collection<?> deserialize(@Nonnull Type type, @Nonnull Node node) throws Exception {
-            if (node instanceof NodeList) {
-                if (type instanceof ParameterizedType) {
-                    Type paramType = Reflects.getListParameter((ParameterizedType) type);
-                    TypeSerializer keySerial = node.getOptions().getSerializers().get(paramType);
-                    if (keySerial == null) {
-                        throw new ObjectMappingException("No applicable type serializer for type " + paramType);
-                    }
-                    ArrayList<Object> list = new ArrayList<>();
-                    for (Node element : ((NodeList) node).getValue()) {
-                        list.add(keySerial.deserialize(paramType, element));
-                    }
-                    return list;
-                } else throw new ObjectMappingException("Raw types are not supported for collections");
+            if (node instanceof NodeList && type instanceof ParameterizedType) {
+                Class<?> rawType = (Class<?>) ((ParameterizedType) type).getRawType();
+                Type paramType = Reflects.getListParameter((ParameterizedType) type);
+                TypeSerializer keySerial = node.getOptions().getSerializers().get(paramType);
+                if (keySerial == null) {
+                    throw new ObjectMappingException("No applicable type serializer for type " + paramType);
+                }
+                // TODO Collection > List/Set/Queue...
+                Collection<Object> collection;
+                if (rawType.equals(List.class)) collection = new ArrayList<>();
+                else if (rawType.equals(Set.class)) collection = new HashSet<>();
+                else collection = new LinkedList<>();
+                for (Node element : ((NodeList) node).getValue()) {
+                    collection.add(keySerial.deserialize(paramType, element));
+                }
+                return collection;
             }
-            return new ArrayList<>();
+            // TODO console error message
+            // TODO ?? empty or null ??
+            return null;
         }
 
         public Node serialize(@Nonnull Type type, Collection<?> value, @Nonnull NodeOptions options) throws Exception {

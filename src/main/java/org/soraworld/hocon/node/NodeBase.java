@@ -11,6 +11,7 @@ import java.util.regex.Matcher;
 public class NodeBase implements Node {
 
     private String value;
+    // TODO set to null if empty
     private final List<String> comments = new ArrayList<>();
     private final NodeOptions options;
 

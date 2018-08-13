@@ -14,7 +14,9 @@ import java.util.*;
 public class NodeMap implements Node {
 
     private final NodeOptions options;
+    // TODO set to null if empty
     private final List<String> comments = new ArrayList<>();
+    // TODO set to null if empty
     private final LinkedHashMap<String, Node> value = new LinkedHashMap<>();
 
     public NodeMap(NodeOptions options) {
@@ -63,6 +65,7 @@ public class NodeMap implements Node {
                                     field.set(target, instance);
                                 }
                             } catch (Throwable e) {
+                                // TODO Interface or Abstract Class has no default non-arg constructor
                                 // TODO Exception type cast exception
                                 field.set(target, value);
                             }
@@ -80,6 +83,7 @@ public class NodeMap implements Node {
                                     field.set(target, instance);
                                 }
                             } catch (Throwable e) {
+                                // TODO Interface or Abstract Class has no default non-arg constructor
                                 // TODO Exception type cast exception
                                 field.set(target, value);
                             }

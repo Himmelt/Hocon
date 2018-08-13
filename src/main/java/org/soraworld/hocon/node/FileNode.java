@@ -9,6 +9,7 @@ import java.util.List;
 public class FileNode extends NodeMap {
 
     private File file;
+    // TODO set to null if empty
     private final List<String> heads = new ArrayList<>();
 
     public FileNode(File file) {

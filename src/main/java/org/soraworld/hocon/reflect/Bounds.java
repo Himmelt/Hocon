@@ -7,7 +7,7 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Bounds {
+public final class Bounds {
 
     private final Type upper;
     private final Type lower;
@@ -38,56 +38,13 @@ public class Bounds {
 
     public boolean isSuperOf(Bounds bounds) {
         if (lower != null) {
-            return bounds.lower != null && isSuperOf(upper, bounds.upper) && isSuperOf(bounds.lower, lower);
+            return bounds.lower != null && Reflects.isSuperOf(upper, bounds.upper) && Reflects.isSuperOf(bounds.lower, lower);
         }
-        return isSuperOf(upper, bounds.upper);
+        return Reflects.isSuperOf(upper, bounds.upper);
     }
 
     public static Bounds getBounds(@Nonnull Type type) {
         return cache.computeIfAbsent(type, Bounds::new);
     }
 
-    public static boolean isSuperOf(@Nonnull Type upper, @Nonnull Type lower) {
-        if (upper.equals(lower)) return true;
-        if (upper instanceof Class && lower instanceof Class) {
-            return ((Class<?>) upper).isAssignableFrom((Class<?>) lower);
-        }
-        if (upper instanceof ParameterizedType && lower instanceof ParameterizedType) {
-            // raw type isSuper than compare parameter
-            Class<?> upperRaw = (Class) ((ParameterizedType) upper).getRawType();
-            Class<?> lowerRaw = (Class) ((ParameterizedType) lower).getRawType();
-            if (upperRaw.isAssignableFrom(lowerRaw)) {
-                /*if (Map.class.isAssignableFrom(upperRaw) && Map.class.isAssignableFrom(lowerRaw)) {
-                    //compare parameter type
-                    Type[] upperTypes = ((ParameterizedType) upper).getActualTypeArguments();
-                    Type[] lowerTypes = ((ParameterizedType) lower).getActualTypeArguments();
-                    if (upperTypes.length == 2 && lowerTypes.length == 2) {
-                        return isSuperOf(upperTypes[0], lowerTypes[0]) && isSuperOf(upperTypes[1], lowerTypes[1]);
-                    }
-                } else if (Collection.class.isAssignableFrom(upperRaw) && Collection.class.isAssignableFrom(lowerRaw)) {
-                    //compare parameter type
-                    Type[] upperTypes = ((ParameterizedType) upper).getActualTypeArguments();
-                    Type[] lowerTypes = ((ParameterizedType) lower).getActualTypeArguments();
-                    if (upperTypes.length == 1 && lowerTypes.length == 1) {
-                        return isSuperOf(upperTypes[0], lowerTypes[0]);
-                    }
-                }*/
-                Type[] upperTypes = ((ParameterizedType) upper).getActualTypeArguments();
-                Type[] lowerTypes = ((ParameterizedType) lower).getActualTypeArguments();
-                if (upperTypes.length == lowerTypes.length) {
-                    if (upperTypes.length > 0) {
-                        for (int i = 0; i < upperTypes.length; i++) {
-                            if (!isSuperOf(upperTypes[i], lowerTypes[i])) return false;
-                        }
-                    }
-                    return true;
-                }
-            }
-            return false;
-        }
-        if (upper instanceof WildcardType || upper instanceof TypeVariable) {
-            return getBounds(upper).isSuperOf(getBounds(lower));
-        }
-        return false;
-    }
 }
