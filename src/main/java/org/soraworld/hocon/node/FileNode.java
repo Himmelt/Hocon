@@ -45,7 +45,6 @@ public class FileNode extends NodeMap {
     public void load() throws IOException {
         // TODO backup copy
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
-        clear();
         readValue(reader);
     }
 

@@ -15,18 +15,18 @@ public class NodeBase implements Node {
     private final List<String> comments = new ArrayList<>();
     private final NodeOptions options;
 
-    public NodeBase(NodeOptions options) {
+    public NodeBase(NodeOptions options, Object value, boolean parse) {
         this.options = options != null ? options : NodeOptions.defaults();
+        if (value != null) {
+            this.value = (parse && value instanceof String) ? parse((String) value) : value.toString();
+        }
     }
 
-    public NodeBase(Object value, NodeOptions options) {
+    public NodeBase(NodeOptions options, Object value, boolean parse, String comment) {
         this.options = options != null ? options : NodeOptions.defaults();
-        this.value = value == null ? null : value.toString();
-    }
-
-    public NodeBase(Object value, String comment, NodeOptions options) {
-        this.options = options != null ? options : NodeOptions.defaults();
-        this.value = value == null ? null : value.toString();
+        if (value != null) {
+            this.value = (parse && value instanceof String) ? parse((String) value) : value.toString();
+        }
         if (comment != null && !comment.isEmpty()) {
             comments.addAll(Arrays.asList(comment.split("[\n\r]")));
             comments.removeIf(String::isEmpty);
@@ -44,20 +44,13 @@ public class NodeBase implements Node {
 
     @Override
     public void readValue(BufferedReader reader) {
-
     }
 
-    public void readValue(String text) {
-        if (text != null) {
-            if (text.equals("null")) {
-                this.value = null;
-                return;
-            }
-            if (text.startsWith("\"")) text = text.substring(1);
-            if (text.endsWith("\"")) text = text.substring(0, text.length() - 2);
-            text = text.replace("\\\"", "\"").replace("\\\\", "\\");
-        }
-        this.value = text;
+    private String parse(String text) {
+        if (text.equals("null")) return null;
+        if (text.startsWith("\"")) text = text.substring(1);
+        if (text.endsWith("\"")) text = text.substring(0, text.length() - 2);
+        return text.replace("\\\"", "\"").replace("\\\\", "\\");
     }
 
     @Override
@@ -65,7 +58,7 @@ public class NodeBase implements Node {
         if (value == null) writer.write("null");
         else {
             Matcher matcher = options.ILLEGAL.matcher(value);
-            if (matcher.matches() || value.equals("null")) {
+            if (matcher.matches() || value.equals("null") || value.endsWith(" ")) {
                 String target = value.replace("\\", "\\\\").replace("\"", "\\\"");
                 writer.write('"' + target + '"');
             } else writer.write(value);

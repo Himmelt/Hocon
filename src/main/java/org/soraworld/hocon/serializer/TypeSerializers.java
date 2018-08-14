@@ -67,7 +67,7 @@ public class TypeSerializers {
 
         @Override
         public Node serialize(@Nonnull Type type, URI uri, @Nonnull NodeOptions options) {
-            return new NodeBase(uri, options);
+            return new NodeBase(options, uri, false);
         }
     }
 
@@ -94,7 +94,7 @@ public class TypeSerializers {
 
         @Override
         public Node serialize(@Nonnull Type type, URL url, @Nonnull NodeOptions options) {
-            return new NodeBase(url, options);
+            return new NodeBase(options, url, false);
         }
     }
 
@@ -113,7 +113,7 @@ public class TypeSerializers {
 
         @Override
         public Node serialize(@Nonnull Type type, UUID uuid, @Nonnull NodeOptions options) {
-            return new NodeBase(uuid, options);
+            return new NodeBase(options, uuid, false);
         }
     }
 
@@ -141,7 +141,7 @@ public class TypeSerializers {
 
         @Override
         public Node serialize(@Nonnull Type type, Number value, @Nonnull NodeOptions options) {
-            return new NodeBase(value, options);
+            return new NodeBase(options, value, false);
         }
     }
 
@@ -154,7 +154,7 @@ public class TypeSerializers {
 
         @Override
         public Node serialize(@Nonnull Type type, String value, @Nonnull NodeOptions options) {
-            return new NodeBase(value, options);
+            return new NodeBase(options, value, false);
         }
     }
 
@@ -167,7 +167,7 @@ public class TypeSerializers {
 
         @Override
         public Node serialize(@Nonnull Type type, Boolean value, @Nonnull NodeOptions options) {
-            return new NodeBase(value, options);
+            return new NodeBase(options, value, false);
         }
     }
 
@@ -186,7 +186,7 @@ public class TypeSerializers {
 
         @Override
         public Node serialize(@Nonnull Type type, Pattern pattern, @Nonnull NodeOptions options) {
-            return new NodeBase(pattern.pattern(), options);
+            return new NodeBase(options, pattern.pattern(), false);
         }
     }
 
@@ -205,7 +205,7 @@ public class TypeSerializers {
                     Map<Object, Object> returnVal = new LinkedHashMap<>();
 
                     for (Map.Entry<String, Node> entry : ((NodeMap) node).getValue().entrySet()) {
-                        Object key = keySerial.deserialize(params[0], new NodeBase(entry.getKey(), node.getOptions()));
+                        Object key = keySerial.deserialize(params[0], new NodeBase(node.getOptions(), entry.getKey(), false));
                         Object val = valSerial.deserialize(params[1], entry.getValue());
                         if (key == null || val == null) continue;
                         returnVal.put(key, val);
@@ -308,7 +308,7 @@ public class TypeSerializers {
         }
 
         public Node serialize(@Nonnull Type type, Enum<?> value, @Nonnull NodeOptions options) {
-            return new NodeBase(value.name(), options);
+            return new NodeBase(options, value.name(), false);
         }
     }
 }

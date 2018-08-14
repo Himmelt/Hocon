@@ -55,10 +55,7 @@ public class NodeList implements Node {
                 value.add(list);
                 if (!line.endsWith("]")) list.readValue(reader);
             } else {
-                // TODO ","
-                NodeBase node = new NodeBase(options);
-                node.readValue(line);
-                value.add(node);
+                value.add(new NodeBase(options, line, true));
             }
         }
     }

@@ -27,18 +27,18 @@ public class NodeMap implements Node {
         value.clear();
     }
 
-    public void setNode(String path, Object node) {
+    public void setNode(String path, Object obj) {
         // TODO cycle reference
-        if (node instanceof Node) value.put(path, (Node) node);
-        else value.put(path, new NodeBase(node, options));
+        if (obj instanceof Node) value.put(path, (Node) obj);
+        else value.put(path, new NodeBase(options, obj, false));
     }
 
-    public void setNode(String path, Object node, String comment) {
+    public void setNode(String path, Object obj, String comment) {
         // TODO cycle reference
-        if (node instanceof Node) {
-            ((Node) node).addComment(comment);
-            value.put(path, (Node) node);
-        } else value.put(path, new NodeBase(node, comment, options));
+        if (obj instanceof Node) {
+            ((Node) obj).addComment(comment);
+            value.put(path, (Node) obj);
+        } else value.put(path, new NodeBase(options, obj, false, comment));
     }
 
     public void modify(@Nonnull Object target) throws Exception {
@@ -152,22 +152,21 @@ public class NodeMap implements Node {
             line = line.trim();
             if (line.startsWith("}") || line.startsWith("]")) return;
             if (line.isEmpty() || line.startsWith("#")) continue;
-            if (line.contains("{")) {
+            // text maybe contains { [ ] } ...
+            if (line.endsWith("{") || (line.contains("{") && line.endsWith("}"))) {
                 NodeMap node = new NodeMap(options);
                 String path = line.substring(0, line.indexOf('{') - 1).trim();
                 value.put(path, node);
                 if (!line.endsWith("}")) node.readValue(reader);
-            } else if (line.contains("[")) {
+            } else if (line.contains("=") && (line.endsWith("[") || (line.contains("[") && line.endsWith("]")))) {
                 NodeList list = new NodeList(options);
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 value.put(path, list);
                 if (!line.endsWith("]")) list.readValue(reader);
             } else if (line.contains("=")) {
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
-                String base = line.substring(line.indexOf('=') + 1).trim();
-                NodeBase node = new NodeBase(options);
-                node.readValue(base);
-                value.put(path, node);
+                String text = line.substring(line.indexOf('=') + 1).trim();
+                value.put(path, new NodeBase(options, text, true));
             }
         }
     }
