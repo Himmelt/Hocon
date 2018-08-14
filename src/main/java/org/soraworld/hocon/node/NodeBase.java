@@ -49,7 +49,7 @@ public class NodeBase implements Node {
     private String parse(String text) {
         if (text.equals("null")) return null;
         if (text.startsWith("\"")) text = text.substring(1);
-        if (text.endsWith("\"")) text = text.substring(0, text.length() - 2);
+        if (text.endsWith("\"")) text = text.substring(0, text.length() - 1);
         return text.replace("\\\"", "\"").replace("\\\\", "\\");
     }
 

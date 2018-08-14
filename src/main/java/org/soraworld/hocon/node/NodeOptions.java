@@ -43,6 +43,10 @@ public class NodeOptions {
         return TypeSerializers.getDefaultSerializers();
     }
 
+    public void setTranslator(Function<String, String> function) {
+        if (function != null) translator = function;
+    }
+
     public Function<String, String> getTranslator() {
         return translator;
     }

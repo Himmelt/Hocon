@@ -133,9 +133,13 @@ public class NodeMap implements Node {
     public HashMap<String, String> asStringMap() {
         HashMap<String, String> map = new HashMap<>();
         for (Map.Entry<String, Node> entry : value.entrySet()) {
+            String key = entry.getKey();
             Node node = entry.getValue();
             if (node instanceof NodeBase) {
-                map.put(entry.getKey(), ((NodeBase) node).getString());
+                map.put(key, ((NodeBase) node).getString());
+            } else if (node instanceof NodeMap) {
+                HashMap<String, String> sub = ((NodeMap) node).asStringMap();
+                sub.forEach((subKey, value) -> map.put(key + '.' + subKey, value));
             }
         }
         return map;
