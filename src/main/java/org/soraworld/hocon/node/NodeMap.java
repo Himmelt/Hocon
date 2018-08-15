@@ -118,7 +118,7 @@ public class NodeMap implements Node {
         }
     }
 
-    private Node getNode(String path) {
+    public Node getNode(String path) {
         return value.get(path);
     }
 
