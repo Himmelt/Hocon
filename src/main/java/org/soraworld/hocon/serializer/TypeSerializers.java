@@ -236,9 +236,9 @@ public class TypeSerializers {
 
                     Map<Object, Object> returnVal = new LinkedHashMap<>();
 
-                    for (Map.Entry<String, Node> entry : ((NodeMap) node).getValue().entrySet()) {
-                        Object key = keySerial.deserialize(params[0], new NodeBase(node.options(), entry.getKey(), false));
-                        Object val = valSerial.deserialize(params[1], entry.getValue());
+                    for (String path : ((NodeMap) node).getKeys()) {
+                        Object key = keySerial.deserialize(params[0], new NodeBase(node.options(), path, false));
+                        Object val = valSerial.deserialize(params[1], ((NodeMap) node).getNode(path));
                         if (key == null || val == null) continue;
                         returnVal.put(key, val);
                     }
@@ -301,8 +301,9 @@ public class TypeSerializers {
                 if (rawType.equals(List.class)) collection = new ArrayList<>();
                 else if (rawType.equals(Set.class)) collection = new HashSet<>();
                 else collection = new LinkedList<>();
-                for (Node element : ((NodeList) node).getValue()) {
-                    collection.add(keySerial.deserialize(paramType, element));
+                int size = ((NodeList) node).size();
+                for (int i = 0; i < size; i++) {
+                    collection.add(keySerial.deserialize(paramType, ((NodeList) node).getNode(i)));
                 }
                 return collection;
             }

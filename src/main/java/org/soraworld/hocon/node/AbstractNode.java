@@ -23,8 +23,19 @@ public abstract class AbstractNode<T> implements Node {
         addComment(comment);
     }
 
-    public final T getValue() {
-        return value;
+    public boolean checkCycle(Node node) {
+        if (this.equals(node)) return false;
+        if (node instanceof NodeMap) {
+            for (Node sub : ((NodeMap) node).value.values()) {
+                if (!checkCycle(sub)) return false;
+            }
+            return true;
+        } else if (node instanceof NodeList) {
+            for (Node sub : ((NodeList) node).value) {
+                if (!checkCycle(sub)) return false;
+            }
+            return true;
+        } else return true;
     }
 
     public final void addComment(String comment) {

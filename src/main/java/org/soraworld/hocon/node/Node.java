@@ -9,6 +9,8 @@ public interface Node {
 
     boolean notEmpty();
 
+    boolean checkCycle(Node node);
+
     void readValue(BufferedReader reader) throws IOException;
 
     void writeValue(int indent, BufferedWriter writer) throws IOException;

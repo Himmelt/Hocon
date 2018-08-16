@@ -26,14 +26,13 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     public void setNode(String path, Object obj) {
-        // TODO cycle reference
-        if (obj instanceof Node) value.put(path, (Node) obj);
-        else value.put(path, new NodeBase(options, obj, false));
+        if (obj instanceof Node && checkCycle((Node) obj)) {
+            value.put(path, (Node) obj);
+        } else value.put(path, new NodeBase(options, obj, false));
     }
 
     public void setNode(String path, Object obj, String comment) {
-        // TODO cycle reference
-        if (obj instanceof Node) {
+        if (obj instanceof Node && checkCycle((Node) obj)) {
             ((Node) obj).addComment(comment);
             value.put(path, (Node) obj);
         } else value.put(path, new NodeBase(options, obj, false, comment));
@@ -123,11 +122,15 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     public Node getNode(String... paths) {
         Node node = this;
         for (String path : paths) {
-            if(node instanceof NodeMap){
+            if (node instanceof NodeMap) {
                 node = ((NodeMap) node).getNode(path);
-            }else return null;
+            } else return null;
         }
         return node;
+    }
+
+    public Set<String> getKeys() {
+        return value.keySet();
     }
 
     public boolean notEmpty() {
@@ -185,6 +188,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 if (path != null && !path.isEmpty() && node != null) {
                     node.writeComment(indent, writer);
                     writeIndent(indent, writer);
+                    // TODO path with illegal characters
                     writer.write(path);
                     if (node instanceof NodeMap) {
                         writer.write(" {");

@@ -28,6 +28,15 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
         return value != null && !value.isEmpty();
     }
 
+    public int size() {
+        return value.size();
+    }
+
+    public Node getNode(int index) {
+        if (index >= 0 && index < value.size()) return value.get(index);
+        else return null;
+    }
+
     public void readValue(BufferedReader reader) throws IOException {
         value.clear();
         String line;

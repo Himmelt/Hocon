@@ -8,11 +8,11 @@ import java.util.Set;
 
 public class Settings {
 
-    @Setting(comment = "comment abc")
+    @Setting(comment = "comment.abc")
     public int abc;
-    @Setting(comment = "comment string")
+    @Setting(comment = "comment.string")
     public String string;
-    @Setting(comment = "comment maps")
+    @Setting(comment = "comment.maps")
     public Map<String, Integer> maps;
     @Setting(comment = "Gusk \nsdddd\r\\\\\"")
     //public HashSet<List<Integer>> set;

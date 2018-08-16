@@ -10,12 +10,12 @@ import java.util.*;
 public class FileNodeTest {
 
     private Settings settings = new Settings();
-
-    private FileNode fileNode = new FileNode(new File("build/test.conf"));
+    private Options options = Options.build();
+    private FileNode fileNode = new FileNode(new File("build/test.conf"), options);
 
     {
         settings.abc = 123;
-        settings.string = "String Test";
+        settings.string = "Str#ing & \" :Test";
         settings.maps = new HashMap<>();
         settings.maps.put("key1", 234);
         settings.maps.put("key2", 7899);
@@ -25,6 +25,9 @@ public class FileNodeTest {
         settings.set.add(new ArrayList<>(Arrays.asList(4, 5, 6, 7, 9)));
         settings.set.add(new LinkedList<>());
         settings.subEnum = SubEnum.SUB_ENUM_2;
+        options.setIndent(3);
+        options.setHeadLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        options.setTranslator(s -> s.replace('.', '-'));
     }
 
     @Test
@@ -35,6 +38,7 @@ public class FileNodeTest {
             e.printStackTrace();
         }
         try {
+            fileNode.clearHeads();
             fileNode.addHead("             Head Test Line 1");
             fileNode.addHead("             Head Test Line 2");
             fileNode.addHead("             Head Test Line 3");
