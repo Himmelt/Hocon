@@ -1,8 +1,10 @@
 package org.soraworld.hocon.node;
 
+import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.serializer.TypeSerializerCollection;
 import org.soraworld.hocon.serializer.TypeSerializers;
 
+import javax.annotation.Nonnull;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -27,7 +29,7 @@ public class NodeOptions {
 
     private static final NodeOptions defaults = new NodeOptions(true);
 
-    public NodeOptions(boolean seal) {
+    private NodeOptions(boolean seal) {
         this.seal = seal;
     }
 
@@ -41,6 +43,10 @@ public class NodeOptions {
 
     public TypeSerializerCollection getSerializers() {
         return TypeSerializers.getDefaultSerializers();
+    }
+
+    public <T> TypeSerializerCollection registerType(@Nonnull TypeSerializer<? super T> serializer) {
+        return getSerializers().registerType(serializer);
     }
 
     public void setTranslator(Function<String, String> function) {

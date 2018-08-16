@@ -29,20 +29,17 @@ public class TypeSerializers {
     }
 
     static {
-        DEFAULT_SERIALIZERS.registerType(Number.class, new NumberSerializer());
-        DEFAULT_SERIALIZERS.registerType(String.class, new StringSerializer());
-        DEFAULT_SERIALIZERS.registerType(Boolean.class, new BooleanSerializer());
-        DEFAULT_SERIALIZERS.registerType(UUID.class, new UUIDSerializer());
-        DEFAULT_SERIALIZERS.registerType(Pattern.class, new PatternSerializer());
+        DEFAULT_SERIALIZERS.registerType(new NumberSerializer());
+        DEFAULT_SERIALIZERS.registerType(new StringSerializer());
+        DEFAULT_SERIALIZERS.registerType(new BooleanSerializer());
+        DEFAULT_SERIALIZERS.registerType(new UUIDSerializer());
+        DEFAULT_SERIALIZERS.registerType(new PatternSerializer());
+        DEFAULT_SERIALIZERS.registerType(new MapSerializer());
+        DEFAULT_SERIALIZERS.registerType(new ListSerializer());
+        DEFAULT_SERIALIZERS.registerType(new EnumSerializer());
+        DEFAULT_SERIALIZERS.registerType(new URISerializer());
+        DEFAULT_SERIALIZERS.registerType(new URLSerializer());
         //DEFAULT_SERIALIZERS.registerPredicate(input -> input.getRawType().isAnnotationPresent(ConfigSerializable.class), new AnnotatedObjectSerializer());
-        DEFAULT_SERIALIZERS.registerType(new TypeToken<Map<Object, ?>>() {
-        }.getType(), new MapSerializer());
-        DEFAULT_SERIALIZERS.registerType(new TypeToken<Collection<?>>() {
-        }.getType(), new ListSerializer());
-        DEFAULT_SERIALIZERS.registerType(new TypeToken<Enum<?>>() {
-        }.getType(), new EnumSerializer());
-        DEFAULT_SERIALIZERS.registerType(URI.class, new URISerializer());
-        DEFAULT_SERIALIZERS.registerType(URL.class, new URLSerializer());
     }
 
     private static class URISerializer implements TypeSerializer<URI> {
@@ -68,6 +65,11 @@ public class TypeSerializers {
         @Override
         public Node serialize(@Nonnull Type type, URI uri, @Nonnull NodeOptions options) {
             return new NodeBase(options, uri, false);
+        }
+
+        @Nonnull
+        public Type getRegType() {
+            return URI.class;
         }
     }
 
@@ -96,6 +98,11 @@ public class TypeSerializers {
         public Node serialize(@Nonnull Type type, URL url, @Nonnull NodeOptions options) {
             return new NodeBase(options, url, false);
         }
+
+        @Nonnull
+        public Type getRegType() {
+            return URL.class;
+        }
     }
 
     private static class UUIDSerializer implements TypeSerializer<UUID> {
@@ -114,6 +121,11 @@ public class TypeSerializers {
         @Override
         public Node serialize(@Nonnull Type type, UUID uuid, @Nonnull NodeOptions options) {
             return new NodeBase(options, uuid, false);
+        }
+
+        @Nonnull
+        public Type getRegType() {
+            return UUID.class;
         }
     }
 
@@ -143,6 +155,11 @@ public class TypeSerializers {
         public Node serialize(@Nonnull Type type, Number value, @Nonnull NodeOptions options) {
             return new NodeBase(options, value, false);
         }
+
+        @Nonnull
+        public Type getRegType() {
+            return Number.class;
+        }
     }
 
     private static class StringSerializer implements TypeSerializer<String> {
@@ -156,6 +173,11 @@ public class TypeSerializers {
         public Node serialize(@Nonnull Type type, String value, @Nonnull NodeOptions options) {
             return new NodeBase(options, value, false);
         }
+
+        @Nonnull
+        public Type getRegType() {
+            return String.class;
+        }
     }
 
     private static class BooleanSerializer implements TypeSerializer<Boolean> {
@@ -168,6 +190,11 @@ public class TypeSerializers {
         @Override
         public Node serialize(@Nonnull Type type, Boolean value, @Nonnull NodeOptions options) {
             return new NodeBase(options, value, false);
+        }
+
+        @Nonnull
+        public Type getRegType() {
+            return Boolean.class;
         }
     }
 
@@ -187,6 +214,11 @@ public class TypeSerializers {
         @Override
         public Node serialize(@Nonnull Type type, Pattern pattern, @Nonnull NodeOptions options) {
             return new NodeBase(options, pattern.pattern(), false);
+        }
+
+        @Nonnull
+        public Type getRegType() {
+            return Pattern.class;
         }
     }
 
@@ -247,6 +279,12 @@ public class TypeSerializers {
                 return node;
             } else throw new ObjectMappingException("Raw types are not supported for collections");
         }
+
+        @Nonnull
+        public Type getRegType() {
+            return new TypeToken<Map<?, ?>>() {
+            }.getType();
+        }
     }
 
     private static class ListSerializer implements TypeSerializer<Collection<?>> {
@@ -287,6 +325,12 @@ public class TypeSerializers {
                 return node;
             } else throw new ObjectMappingException("Raw types are not supported for collections");
         }
+
+        @Nonnull
+        public Type getRegType() {
+            return new TypeToken<Collection<?>>() {
+            }.getType();
+        }
     }
 
     private static class EnumSerializer implements TypeSerializer<Enum<?>> {
@@ -309,6 +353,12 @@ public class TypeSerializers {
 
         public Node serialize(@Nonnull Type type, Enum<?> value, @Nonnull NodeOptions options) {
             return new NodeBase(options, value.name(), false);
+        }
+
+        @Nonnull
+        public Type getRegType() {
+            return new TypeToken<Enum<?>>() {
+            }.getType();
         }
     }
 }

@@ -10,4 +10,7 @@ public interface TypeSerializer<T> {
     T deserialize(@Nonnull Type type, @Nonnull Node node) throws Exception;
 
     Node serialize(@Nonnull Type type, T value, @Nonnull NodeOptions options) throws Exception;
+
+    @Nonnull
+    Type getRegType();
 }

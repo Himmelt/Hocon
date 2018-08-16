@@ -31,8 +31,8 @@ public class TypeSerializerCollection {
         return serial;
     }
 
-    public <T> TypeSerializerCollection registerType(@Nonnull Type type, @Nonnull TypeSerializer<? super T> serializer) {
-        serializers.add(new RegisteredSerializer(type, serializer));
+    public <T> TypeSerializerCollection registerType(@Nonnull TypeSerializer<? super T> serializer) {
+        serializers.add(new RegisteredSerializer(serializer.getRegType(), serializer));
         typeMatches.clear();
         return this;
     }
