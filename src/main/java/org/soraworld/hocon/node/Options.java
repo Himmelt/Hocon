@@ -6,27 +6,14 @@ import org.soraworld.hocon.serializer.TypeSerializers;
 
 import javax.annotation.Nonnull;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 
 public class Options {
 
-    public final String COMMENT_HEAD = "# ";
-    public final String TAB_SPACE = "    ";
-    public final String EQUAL = " = ";
-    public final String EQUAL_NODE = " = {";
-    public final String EQUAL_LIST = " = [";
-    public final char END_NODE = '}';
-    public final char END_LIST = ']';
-    public final String LINE = "-------------------------------------";
-
-    public int INDENT_SIZE = 2;
-
-    public final Pattern ILLEGAL = Pattern.compile(".*[\":=,+?`!@#$^&*{}\\[\\]\\\\].*");
-
-    private final boolean seal;
-
+    private int indent = 2;
+    private String headLine = "---------------------------------------------";
     private Function<String, String> translator = key -> key;
 
+    private final boolean seal;
     private static final Options defaults = new Options(true);
 
     private Options(boolean seal) {
@@ -37,7 +24,7 @@ public class Options {
         return defaults;
     }
 
-    public static Options newOptions() {
+    public static Options build() {
         return new Options(false);
     }
 
@@ -49,12 +36,28 @@ public class Options {
         return getSerializers().registerType(serializer);
     }
 
-    public void setTranslator(Function<String, String> function) {
-        if (function != null) translator = function;
+
+    public int getIndent() {
+        return indent;
+    }
+
+    public void setIndent(int indent) {
+        if (!seal) this.indent = indent;
+    }
+
+    public String getHeadLine() {
+        return headLine == null ? "" : headLine;
+    }
+
+    public void setHeadLine(String headLine) {
+        if (!seal) this.headLine = headLine;
     }
 
     public Function<String, String> getTranslator() {
         return translator;
     }
 
+    public void setTranslator(Function<String, String> function) {
+        if (!seal && function != null) translator = function;
+    }
 }

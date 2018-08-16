@@ -19,10 +19,10 @@ public interface Node {
 
     void writeComment(int indent, BufferedWriter writer) throws IOException;
 
-    Options getOptions();
+    Options options();
 
     default void writeIndent(int indent, BufferedWriter writer) throws IOException {
-        indent *= getOptions().INDENT_SIZE;
+        indent *= options().getIndent();
         while (indent-- > 0) writer.write(' ');
     }
 }

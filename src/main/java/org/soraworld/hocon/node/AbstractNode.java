@@ -53,7 +53,7 @@ public abstract class AbstractNode<T> implements Node {
         }
     }
 
-    public final Options getOptions() {
+    public final Options options() {
         return options;
     }
 }

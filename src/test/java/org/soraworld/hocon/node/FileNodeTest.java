@@ -35,6 +35,9 @@ public class FileNodeTest {
             e.printStackTrace();
         }
         try {
+            fileNode.addHead("             Head Test Line 1");
+            fileNode.addHead("             Head Test Line 2");
+            fileNode.addHead("             Head Test Line 3");
             fileNode.save();
         } catch (IOException e) {
             e.printStackTrace();

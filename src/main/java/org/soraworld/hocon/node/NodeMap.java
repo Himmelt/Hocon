@@ -17,7 +17,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         super(options, new LinkedHashMap<>());
     }
 
-    protected NodeMap(Options options, String comment) {
+    public NodeMap(Options options, String comment) {
         super(options, new LinkedHashMap<>(), comment);
     }
 
@@ -196,7 +196,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                         }
                         writer.write('}');
                     } else if (node instanceof NodeList) {
-                        writer.write(options.EQUAL_LIST);
+                        writer.write(" = [");
                         if (node.notEmpty()) {
                             writer.newLine();
                             node.writeValue(indent + 1, writer);
@@ -205,7 +205,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                         }
                         writer.write(']');
                     } else {
-                        writer.write(options.EQUAL);
+                        writer.write(" = ");
                         node.writeValue(indent + 1, writer);
                     }
                     if (it.hasNext()) writer.newLine();

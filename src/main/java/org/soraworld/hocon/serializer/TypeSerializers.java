@@ -227,8 +227,8 @@ public class TypeSerializers {
             if (node instanceof NodeMap) {
                 if (type instanceof ParameterizedType) {
                     Type[] params = Reflects.getMapParameter((ParameterizedType) type);
-                    TypeSerializer<?> keySerial = node.getOptions().getSerializers().get(params[0]);
-                    TypeSerializer<?> valSerial = node.getOptions().getSerializers().get(params[1]);
+                    TypeSerializer<?> keySerial = node.options().getSerializers().get(params[0]);
+                    TypeSerializer<?> valSerial = node.options().getSerializers().get(params[1]);
 
                     if (valSerial == null) {
                         throw new ObjectMappingException("No type serializer available for type " + params[1]);
@@ -237,7 +237,7 @@ public class TypeSerializers {
                     Map<Object, Object> returnVal = new LinkedHashMap<>();
 
                     for (Map.Entry<String, Node> entry : ((NodeMap) node).getValue().entrySet()) {
-                        Object key = keySerial.deserialize(params[0], new NodeBase(node.getOptions(), entry.getKey(), false));
+                        Object key = keySerial.deserialize(params[0], new NodeBase(node.options(), entry.getKey(), false));
                         Object val = valSerial.deserialize(params[1], entry.getValue());
                         if (key == null || val == null) continue;
                         returnVal.put(key, val);
@@ -292,7 +292,7 @@ public class TypeSerializers {
             if (node instanceof NodeList && type instanceof ParameterizedType) {
                 Class<?> rawType = (Class<?>) ((ParameterizedType) type).getRawType();
                 Type paramType = Reflects.getListParameter((ParameterizedType) type);
-                TypeSerializer keySerial = node.getOptions().getSerializers().get(paramType);
+                TypeSerializer keySerial = node.options().getSerializers().get(paramType);
                 if (keySerial == null) {
                     throw new ObjectMappingException("No applicable type serializer for type " + paramType);
                 }

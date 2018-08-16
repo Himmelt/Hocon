@@ -8,11 +8,11 @@ import java.util.Iterator;
 
 public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
 
-    protected NodeList(Options options) {
+    public NodeList(Options options) {
         super(options, new ArrayList<>());
     }
 
-    protected NodeList(Options options, String comment) {
+    public NodeList(Options options, String comment) {
         super(options, new ArrayList<>(), comment);
     }
 
@@ -74,10 +74,7 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
                     }
                     writer.write("]");
                 } else node.writeValue(indent + 1, writer);
-                if (it.hasNext()) {
-                    //writer.write(',');
-                    writer.newLine();
-                }
+                if (it.hasNext()) writer.newLine();
             }
         }
     }

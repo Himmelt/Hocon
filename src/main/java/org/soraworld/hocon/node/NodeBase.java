@@ -4,8 +4,11 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NodeBase extends AbstractNode<String> implements Node {
+
+    private static final Pattern ILLEGAL = Pattern.compile(".*[\":=,+?`!@#$^&*{}\\[\\]\\\\].*");
 
     public NodeBase(Options options, Object obj, boolean parse) {
         super(options, obj == null ? null : parse && obj instanceof String ? parse((String) obj) : obj.toString());
@@ -27,7 +30,7 @@ public class NodeBase extends AbstractNode<String> implements Node {
     public void writeValue(int indent, BufferedWriter writer) throws IOException {
         if (value == null) writer.write("null");
         else {
-            Matcher matcher = options.ILLEGAL.matcher(value);
+            Matcher matcher = ILLEGAL.matcher(value);
             if (matcher.matches() || value.equals("null") || value.endsWith(" ")) {
                 String target = value.replace("\\", "\\\\").replace("\"", "\\\"");
                 writer.write('"' + target + '"');

@@ -25,13 +25,13 @@ public class FileNode extends NodeMap {
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
 
         if (heads != null && !heads.isEmpty()) {
-            writer.write("# " + getOptions().LINE);
+            writer.write("# " + options.getHeadLine());
             writer.newLine();
             for (String head : heads) {
                 writer.write("# " + head);
                 writer.newLine();
             }
-            writer.write("# " + getOptions().LINE);
+            writer.write("# " + options.getHeadLine());
             writer.newLine();
             if (notEmpty()) writer.newLine();
         }
