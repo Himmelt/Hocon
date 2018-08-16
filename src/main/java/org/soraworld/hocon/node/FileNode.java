@@ -8,16 +8,15 @@ import java.util.List;
 
 public class FileNode extends NodeMap {
 
-    private File file;
-    // TODO set to null if empty
-    private final List<String> heads = new ArrayList<>();
+    private final File file;
+    private List<String> heads;
 
     public FileNode(File file) {
-        super(NodeOptions.defaults());
+        super(Options.defaults());
         this.file = file;
     }
 
-    public FileNode(File file, NodeOptions options) {
+    public FileNode(File file, Options options) {
         super(options);
         this.file = file;
     }
@@ -25,7 +24,7 @@ public class FileNode extends NodeMap {
     public void save() throws IOException {
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
 
-        if (!heads.isEmpty()) {
+        if (heads != null && !heads.isEmpty()) {
             writer.write("# " + getOptions().LINE);
             writer.newLine();
             for (String head : heads) {
@@ -49,22 +48,22 @@ public class FileNode extends NodeMap {
     }
 
     public void setHeads(List<String> heads) {
-        this.heads.clear();
-        if (heads != null) {
+        if (heads != null && !heads.isEmpty()) {
+            this.heads = new ArrayList<>();
             heads.forEach(s -> this.heads.addAll(Arrays.asList(s.split("[\n\r]"))));
             this.heads.removeIf(String::isEmpty);
-        }
+        } else this.heads = null;
     }
 
     public void addHead(String head) {
         if (head != null && !head.isEmpty()) {
+            if (heads == null) heads = new ArrayList<>();
             heads.addAll(Arrays.asList(head.split("[\n\r]")));
             heads.removeIf(String::isEmpty);
         }
     }
 
     public void clearHeads() {
-        this.heads.clear();
+        this.heads = null;
     }
-
 }

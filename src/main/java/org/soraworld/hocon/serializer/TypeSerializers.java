@@ -63,7 +63,7 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull Type type, URI uri, @Nonnull NodeOptions options) {
+        public Node serialize(@Nonnull Type type, URI uri, @Nonnull Options options) {
             return new NodeBase(options, uri, false);
         }
 
@@ -95,7 +95,7 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull Type type, URL url, @Nonnull NodeOptions options) {
+        public Node serialize(@Nonnull Type type, URL url, @Nonnull Options options) {
             return new NodeBase(options, url, false);
         }
 
@@ -119,7 +119,7 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull Type type, UUID uuid, @Nonnull NodeOptions options) {
+        public Node serialize(@Nonnull Type type, UUID uuid, @Nonnull Options options) {
             return new NodeBase(options, uuid, false);
         }
 
@@ -152,7 +152,7 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull Type type, Number value, @Nonnull NodeOptions options) {
+        public Node serialize(@Nonnull Type type, Number value, @Nonnull Options options) {
             return new NodeBase(options, value, false);
         }
 
@@ -170,7 +170,7 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull Type type, String value, @Nonnull NodeOptions options) {
+        public Node serialize(@Nonnull Type type, String value, @Nonnull Options options) {
             return new NodeBase(options, value, false);
         }
 
@@ -188,7 +188,7 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull Type type, Boolean value, @Nonnull NodeOptions options) {
+        public Node serialize(@Nonnull Type type, Boolean value, @Nonnull Options options) {
             return new NodeBase(options, value, false);
         }
 
@@ -212,7 +212,7 @@ public class TypeSerializers {
         }
 
         @Override
-        public Node serialize(@Nonnull Type type, Pattern pattern, @Nonnull NodeOptions options) {
+        public Node serialize(@Nonnull Type type, Pattern pattern, @Nonnull Options options) {
             return new NodeBase(options, pattern.pattern(), false);
         }
 
@@ -248,7 +248,7 @@ public class TypeSerializers {
             return null;
         }
 
-        public Node serialize(@Nonnull Type type, Map<?, ?> value, @Nonnull NodeOptions options) throws Exception {
+        public Node serialize(@Nonnull Type type, Map<?, ?> value, @Nonnull Options options) throws Exception {
             if (type instanceof ParameterizedType) {
                 Type[] params = Reflects.getMapParameter((ParameterizedType) type);
                 TypeSerializer keySerial = options.getSerializers().get(params[0]);
@@ -311,7 +311,7 @@ public class TypeSerializers {
             return null;
         }
 
-        public Node serialize(@Nonnull Type type, Collection<?> value, @Nonnull NodeOptions options) throws Exception {
+        public Node serialize(@Nonnull Type type, Collection<?> value, @Nonnull Options options) throws Exception {
             if (type instanceof ParameterizedType) {
                 Type keyType = Reflects.getListParameter((ParameterizedType) type);
                 TypeSerializer keySerial = options.getSerializers().get(keyType);
@@ -351,7 +351,7 @@ public class TypeSerializers {
             return null;
         }
 
-        public Node serialize(@Nonnull Type type, Enum<?> value, @Nonnull NodeOptions options) {
+        public Node serialize(@Nonnull Type type, Enum<?> value, @Nonnull Options options) {
             return new NodeBase(options, value.name(), false);
         }
 

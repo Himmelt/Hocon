@@ -9,8 +9,6 @@ public interface Node {
 
     boolean notEmpty();
 
-    void setValue(Object value);
-
     void readValue(BufferedReader reader) throws IOException;
 
     void writeValue(int indent, BufferedWriter writer) throws IOException;
@@ -21,13 +19,10 @@ public interface Node {
 
     void writeComment(int indent, BufferedWriter writer) throws IOException;
 
-    void clearComments();
-
-    NodeOptions getOptions();
+    Options getOptions();
 
     default void writeIndent(int indent, BufferedWriter writer) throws IOException {
         indent *= getOptions().INDENT_SIZE;
         while (indent-- > 0) writer.write(' ');
     }
-
 }

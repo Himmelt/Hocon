@@ -8,7 +8,7 @@ import javax.annotation.Nonnull;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
-public class NodeOptions {
+public class Options {
 
     public final String COMMENT_HEAD = "# ";
     public final String TAB_SPACE = "    ";
@@ -27,18 +27,18 @@ public class NodeOptions {
 
     private Function<String, String> translator = key -> key;
 
-    private static final NodeOptions defaults = new NodeOptions(true);
+    private static final Options defaults = new Options(true);
 
-    private NodeOptions(boolean seal) {
+    private Options(boolean seal) {
         this.seal = seal;
     }
 
-    public static NodeOptions defaults() {
+    public static Options defaults() {
         return defaults;
     }
 
-    public static NodeOptions newOptions() {
-        return new NodeOptions(false);
+    public static Options newOptions() {
+        return new Options(false);
     }
 
     public TypeSerializerCollection getSerializers() {

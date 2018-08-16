@@ -11,16 +11,14 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
 
-public class NodeMap implements Node {
+public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node {
 
-    private final NodeOptions options;
-    // TODO set to null if empty
-    private final List<String> comments = new ArrayList<>();
-    // TODO set to null if empty
-    private final LinkedHashMap<String, Node> value = new LinkedHashMap<>();
+    public NodeMap(Options options) {
+        super(options, new LinkedHashMap<>());
+    }
 
-    public NodeMap(NodeOptions options) {
-        this.options = options != null ? options : NodeOptions.defaults();
+    protected NodeMap(Options options, String comment) {
+        super(options, new LinkedHashMap<>(), comment);
     }
 
     public void clear() {
@@ -122,12 +120,18 @@ public class NodeMap implements Node {
         return value.get(path);
     }
 
-    public boolean notEmpty() {
-        return !value.isEmpty();
+    public Node getNode(String... paths) {
+        Node node = this;
+        for (String path : paths) {
+            if(node instanceof NodeMap){
+                node = ((NodeMap) node).getNode(path);
+            }else return null;
+        }
+        return node;
     }
 
-    public LinkedHashMap<String, Node> getValue() {
-        return value;
+    public boolean notEmpty() {
+        return value != null && !value.isEmpty();
     }
 
     public HashMap<String, String> asStringMap() {
@@ -145,10 +149,6 @@ public class NodeMap implements Node {
         return map;
     }
 
-    public void setValue(Object value) {
-    }
-
-    @Override
     public void readValue(BufferedReader reader) throws IOException {
         value.clear();
         String line;
@@ -175,7 +175,6 @@ public class NodeMap implements Node {
         }
     }
 
-    @Override
     public void writeValue(int indent, BufferedWriter writer) throws IOException {
         if (notEmpty()) {
             Iterator<Map.Entry<String, Node>> it = value.entrySet().iterator();
@@ -224,41 +223,4 @@ public class NodeMap implements Node {
         Node node = value.get(path);
         if (node != null) node.setComments(comments);
     }
-
-    @Override
-    public void addComment(String comment) {
-        if (comment != null && !comment.isEmpty()) {
-            comments.addAll(Arrays.asList(comment.split("[\n\r]")));
-            comments.removeIf(String::isEmpty);
-        }
-    }
-
-    @Override
-    public void setComments(List<String> comments) {
-        this.comments.clear();
-        if (comments != null) {
-            comments.forEach(s -> this.comments.addAll(Arrays.asList(s.split("[\n\r]"))));
-            this.comments.removeIf(String::isEmpty);
-        }
-    }
-
-    @Override
-    public void writeComment(int indent, BufferedWriter writer) throws IOException {
-        for (String comment : comments) {
-            writeIndent(indent, writer);
-            writer.write("# " + comment);
-            writer.newLine();
-        }
-    }
-
-    @Override
-    public void clearComments() {
-        this.comments.clear();
-    }
-
-    @Override
-    public NodeOptions getOptions() {
-        return options;
-    }
-
 }
