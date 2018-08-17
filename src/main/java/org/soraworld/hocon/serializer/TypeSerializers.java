@@ -33,14 +33,8 @@ public class TypeSerializers {
         DEFAULT_SERIALIZERS.registerType(new NumberSerializer());
         DEFAULT_SERIALIZERS.registerType(new StringSerializer());
         DEFAULT_SERIALIZERS.registerType(new BooleanSerializer());
-        DEFAULT_SERIALIZERS.registerType(new UUIDSerializer());
-        DEFAULT_SERIALIZERS.registerType(new PatternSerializer());
         DEFAULT_SERIALIZERS.registerType(new MapSerializer());
         DEFAULT_SERIALIZERS.registerType(new ListSerializer());
-        DEFAULT_SERIALIZERS.registerType(new EnumSerializer());
-        DEFAULT_SERIALIZERS.registerType(new URISerializer());
-        DEFAULT_SERIALIZERS.registerType(new URLSerializer());
-        //DEFAULT_SERIALIZERS.registerPredicate(input -> input.getRawType().isAnnotationPresent(ConfigSerializable.class), new AnnotatedObjectSerializer());
     }
 
     private static class URISerializer implements TypeSerializer<URI> {
