@@ -97,7 +97,9 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     } catch (Throwable e) {
                         e.printStackTrace();
                     }
-                }
+                } else System.out.println("No TypeSerializer for the type of field "
+                        + field.getDeclaringClass().getTypeName() + "." + field.getName()
+                        + " with @Setting.");
             }
         }
     }
@@ -113,7 +115,10 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     String comment = options.getTranslator().apply(setting.comment());
                     Type fieldType = field.getGenericType();
                     TypeSerializer serializer = options.getSerializers().get(fieldType);
-                    setNode(path, serializer.serialize(fieldType, field.get(source), options), comment);
+                    if (serializer != null) setNode(path, serializer.serialize(fieldType, field.get(source), options), comment);
+                    else System.out.println("No TypeSerializer for the type of field "
+                            + field.getDeclaringClass().getTypeName() + "." + field.getName()
+                            + " with @Setting.");
                 } catch (SerializeException | NotMatchException | IllegalAccessException e) {
                     e.printStackTrace();
                 }
