@@ -1,5 +1,9 @@
 package org.soraworld.hocon.reflect;
 
+import org.soraworld.hocon.exception.NonRawTypeException;
+import org.soraworld.hocon.exception.NotParamListException;
+import org.soraworld.hocon.exception.NotParamMapException;
+
 import javax.annotation.Nonnull;
 import java.lang.reflect.*;
 import java.util.*;
@@ -42,20 +46,20 @@ public final class Reflects {
         else throw new NonRawTypeException(type);
     }
 
-    public static Type[] getMapParameter(ParameterizedType type) throws NonMapParamException {
+    public static Type[] getMapParameter(ParameterizedType type) throws NotParamMapException {
         if (Map.class.isAssignableFrom((Class<?>) type.getRawType())) {
             Type[] types = type.getActualTypeArguments();
             if (types.length == 2) return types;
         }
-        throw new NonMapParamException();
+        throw new NotParamMapException(type);
     }
 
-    public static Type getListParameter(ParameterizedType type) throws NonListParamException {
+    public static Type getListParameter(ParameterizedType type) throws NotParamListException {
         if (Collection.class.isAssignableFrom((Class<?>) type.getRawType())) {
             Type[] types = type.getActualTypeArguments();
             if (types.length == 1) return types[0];
         }
-        throw new NonListParamException();
+        throw new NotParamListException(type);
     }
 
     public static boolean isSuperOf(@Nonnull Type upper, @Nonnull Type lower) {

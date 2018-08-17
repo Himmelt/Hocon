@@ -1,5 +1,9 @@
 package org.soraworld.hocon.node;
 
+import org.soraworld.hocon.exception.DeserializeException;
+import org.soraworld.hocon.exception.NotBaseException;
+import org.soraworld.hocon.exception.NotMatchException;
+import org.soraworld.hocon.exception.NullValueException;
 import org.soraworld.hocon.reflect.Reflects;
 import org.soraworld.hocon.serializer.TypeSerializer;
 
@@ -38,7 +42,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         } else value.put(path, new NodeBase(options, obj, false, comment));
     }
 
-    public void modify(@Nonnull Object target) throws Exception {
+    public void modify(@Nonnull Object target) throws NullValueException, NotMatchException, NotBaseException, DeserializeException, IllegalAccessException {
         List<Field> fields = Reflects.getFields(target.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
@@ -108,6 +112,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     try {
                         setNode(path, serializer.serialize(fieldType, current, options), comment);
                     } catch (Exception e) {
+                        // TODO throw or print ???
                         e.printStackTrace();
                     }
                 }
