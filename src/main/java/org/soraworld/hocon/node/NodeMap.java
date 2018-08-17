@@ -1,9 +1,7 @@
 package org.soraworld.hocon.node;
 
-import org.soraworld.hocon.exception.DeserializeException;
-import org.soraworld.hocon.exception.NotBaseException;
 import org.soraworld.hocon.exception.NotMatchException;
-import org.soraworld.hocon.exception.NullValueException;
+import org.soraworld.hocon.exception.SerializeException;
 import org.soraworld.hocon.reflect.Reflects;
 import org.soraworld.hocon.serializer.TypeSerializer;
 
@@ -42,7 +40,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         } else value.put(path, new NodeBase(options, obj, false, comment));
     }
 
-    public void modify(@Nonnull Object target) throws NullValueException, NotMatchException, NotBaseException, DeserializeException, IllegalAccessException {
+    public void modify(@Nonnull Object target) {
         List<Field> fields = Reflects.getFields(target.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
@@ -51,70 +49,73 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 TypeSerializer serializer = options.getSerializers().get(fieldType);
                 if (serializer != null) {
                     Node node = getNode(setting.path().isEmpty() ? field.getName() : setting.path());
-                    Object value = serializer.deserialize(fieldType, node);
-                    Object current = field.get(target);
-                    Class<?> type = current == null ? field.getType() : current.getClass();
-                    if (Map.class.isAssignableFrom(type) && value instanceof Map) {
-                        if (current instanceof Map) {
-                            ((Map) current).clear();
-                            ((Map) current).putAll((Map) value);
-                        } else {
-                            try {
-                                Object instance = type.getConstructor().newInstance();
-                                if (instance instanceof Map) {
-                                    ((Map) instance).putAll((Map) value);
-                                    field.set(target, instance);
-                                }
-                            } catch (Throwable e) {
-                                // TODO Interface or Abstract Class has no default non-arg constructor
-                                // TODO Exception type cast exception
-                                field.set(target, value);
+                    try {
+                        Object current = field.get(target);
+                        Class<?> type = current == null ? field.getType() : current.getClass();
+                        Object value = serializer.deserialize(fieldType, node);
+                        if (Map.class.isAssignableFrom(type) && value instanceof Map) {
+                            if (current instanceof Map) {
+                                ((Map) current).clear();
+                                ((Map<?, ?>) current).putAll((Map) value);
+                                continue;
                             }
-                        }
-                    } else if (Collection.class.isAssignableFrom(type) && value instanceof Collection) {
-                        if (current instanceof Collection) {
-                            // TODO Exception not support method
-                            ((Collection) current).clear();
-                            ((Collection) current).addAll((Collection) value);
-                        } else {
-                            try {
-                                Object instance = type.getConstructor().newInstance();
-                                if (instance instanceof Collection) {
-                                    ((Collection) instance).addAll((Collection) value);
-                                    field.set(target, instance);
+                            if (current == null) {
+                                try {
+                                    Map<?, ?> newInstance = (Map) type.getConstructor().newInstance();
+                                    newInstance.putAll((Map) value);
+                                    field.set(target, newInstance);
+                                } catch (Throwable e) {
+                                    //e.printStackTrace();
+                                    field.set(target, value);
                                 }
-                            } catch (Throwable e) {
-                                // TODO Interface or Abstract Class has no default non-arg constructor
-                                // TODO Exception type cast exception
-                                field.set(target, value);
+                                continue;
                             }
+                            field.set(target, value);
+                            continue;
                         }
-                    } else field.set(target, value);// TODO Exception type cast exception
+                        if (Collection.class.isAssignableFrom(type) && value instanceof Collection) {
+                            if (current instanceof Collection) {
+                                ((Collection) current).clear();
+                                ((Collection<?>) current).addAll((Collection) value);
+                                continue;
+                            }
+                            if (current == null) {
+                                try {
+                                    Collection<?> newInstance = (Collection<?>) type.getConstructor().newInstance();
+                                    newInstance.addAll((Collection) value);
+                                    field.set(target, newInstance);
+                                } catch (Throwable e) {
+                                    //e.printStackTrace();
+                                    field.set(target, value);
+                                }
+                                continue;
+                            }
+                            field.set(target, value);
+                            continue;
+                        }
+                        field.set(target, value);
+                    } catch (Throwable e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
     }
 
-    public void extract(@Nonnull Object source) throws IllegalAccessException {
-        clear();
+    public void extract(@Nonnull Object source) {
+        value.clear();
         List<Field> fields = Reflects.getFields(source.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
-                Object current = field.get(source);
-                String path = setting.path().isEmpty() ? field.getName() : setting.path();
-                String comment = options.getTranslator().apply(setting.comment());
-                if (current == null) {
-                    setNode(path, null, comment);
-                } else {
+                try {
+                    String path = setting.path().isEmpty() ? field.getName() : setting.path();
+                    String comment = options.getTranslator().apply(setting.comment());
                     Type fieldType = field.getGenericType();
                     TypeSerializer serializer = options.getSerializers().get(fieldType);
-                    try {
-                        setNode(path, serializer.serialize(fieldType, current, options), comment);
-                    } catch (Exception e) {
-                        // TODO throw or print ???
-                        e.printStackTrace();
-                    }
+                    setNode(path, serializer.serialize(fieldType, field.get(source), options), comment);
+                } catch (SerializeException | NotMatchException | IllegalAccessException e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -157,7 +158,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return map;
     }
 
-    public void readValue(BufferedReader reader) throws IOException {
+    public void readValue(BufferedReader reader) throws Exception {
         value.clear();
         String line;
         while ((line = reader.readLine()) != null) {

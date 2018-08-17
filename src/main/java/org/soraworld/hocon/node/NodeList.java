@@ -37,7 +37,7 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
         else return null;
     }
 
-    public void readValue(BufferedReader reader) throws IOException {
+    public void readValue(BufferedReader reader) throws Exception {
         value.clear();
         String line;
         while ((line = reader.readLine()) != null) {

@@ -11,7 +11,7 @@ public interface Node {
 
     boolean checkCycle(Node node);
 
-    void readValue(BufferedReader reader) throws IOException;
+    void readValue(BufferedReader reader) throws Exception;
 
     void writeValue(int indent, BufferedWriter writer) throws IOException;
 

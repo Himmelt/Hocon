@@ -11,10 +11,6 @@ compileJava {
 
 repositories {
     jcenter()
-    maven {
-        name = 'sponge'
-        url = 'https://repo.spongepowered.org/maven'
-    }
 }
 
 dependencies {

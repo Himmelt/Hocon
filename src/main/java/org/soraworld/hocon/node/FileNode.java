@@ -1,15 +1,29 @@
 package org.soraworld.hocon.node;
 
 import java.io.*;
+import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 public class FileNode extends NodeMap {
 
     private final File file;
     private List<String> heads;
+
+    private static final Field FD_VALUE;
+
+    static {
+        Field field = null;
+        try {
+            field = AbstractNode.class.getDeclaredField("value");
+            field.setAccessible(true);
+        } catch (NoSuchFieldException ignored) {
+        }
+        FD_VALUE = field;
+    }
 
     public FileNode(File file) {
         super(Options.defaults());
@@ -41,10 +55,25 @@ public class FileNode extends NodeMap {
         writer.close();
     }
 
-    public void load() throws IOException {
-        // TODO backup copy
+    public void load(boolean backup) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
-        readValue(reader);
+        if (backup && FD_VALUE != null) {
+            Object value = this.value;
+            try {
+                FD_VALUE.set(this, new LinkedHashMap<>());
+                readValue(reader);
+            } catch (IllegalAccessException ignored) {
+                System.out.println("IllegalAccessException backup will not work !!!");
+                readValue(reader);
+            } catch (Exception e) {
+                try {
+                    FD_VALUE.set(this, value);
+                } catch (IllegalAccessException ignored) {
+                    System.out.println("IllegalAccessException recover failed !!!");
+                    throw e;
+                }
+            }
+        } else readValue(reader);
     }
 
     public void setHeads(List<String> heads) {

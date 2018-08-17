@@ -202,8 +202,8 @@ public class TypeSerializers {
             throw new NotBaseException(getRegType());
         }
 
-        public Node serialize(@Nonnull Type type, Pattern pattern, @Nonnull Options options) {
-            return new NodeBase(options, pattern.pattern(), false);
+        public Node serialize(@Nonnull Type type, Pattern value, @Nonnull Options options) {
+            return new NodeBase(options, value == null ? null : value.pattern(), false);
         }
 
         @Nonnull
@@ -235,6 +235,7 @@ public class TypeSerializers {
         }
 
         public Node serialize(@Nonnull Type type, Map<?, ?> value, @Nonnull Options options) throws NotMatchException, SerializeException {
+            if (value == null || value.isEmpty()) return new NodeMap(options);
             if (type instanceof ParameterizedType) {
                 try {
                     Type[] params = Reflects.getMapParameter((ParameterizedType) type);
@@ -248,9 +249,7 @@ public class TypeSerializers {
                             Node keyNode = keySerial.serialize(params[0], key, options);
                             if (keyNode instanceof NodeBase) {
                                 node.setNode(((NodeBase) keyNode).getString(), valSerial.serialize(params[1], obj, options));
-                            } else {
-                                // TODO console message Non NodeBase Key
-                            }
+                            } else throw new NotBaseException(key.getClass());
                         }
                     }
                     return node;
@@ -275,10 +274,9 @@ public class TypeSerializers {
                     Class<?> rawType = (Class<?>) ((ParameterizedType) type).getRawType();
                     Type paramType = Reflects.getListParameter((ParameterizedType) type);
                     TypeSerializer keySerial = node.options().getSerializers().get(paramType);
-                    // TODO Collection > List/Set/Queue...
                     Collection<Object> collection;
-                    if (rawType.equals(List.class)) collection = new ArrayList<>();
-                    else if (rawType.equals(Set.class)) collection = new HashSet<>();
+                    if (rawType.isAssignableFrom(ArrayList.class)) collection = new ArrayList<>();
+                    else if (rawType.isAssignableFrom(HashSet.class)) collection = new HashSet<>();
                     else collection = new LinkedList<>();
                     int size = ((NodeList) node).size();
                     for (int i = 0; i < size; i++) {
@@ -293,6 +291,7 @@ public class TypeSerializers {
         }
 
         public Node serialize(@Nonnull Type type, Collection<?> value, @Nonnull Options options) throws NotMatchException, SerializeException {
+            if (value == null || value.isEmpty()) return new NodeList(options);
             if (type instanceof ParameterizedType) {
                 try {
                     Type keyType = Reflects.getListParameter((ParameterizedType) type);
@@ -334,7 +333,7 @@ public class TypeSerializers {
         }
 
         public Node serialize(@Nonnull Type type, Enum<?> value, @Nonnull Options options) {
-            return new NodeBase(options, value.name(), false);
+            return new NodeBase(options, value == null ? null : value.name(), false);
         }
 
         @Nonnull

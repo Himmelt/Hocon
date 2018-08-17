@@ -32,11 +32,7 @@ public class FileNodeTest {
 
     @Test
     public void save() {
-        try {
-            fileNode.extract(settings);
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
+        fileNode.extract(settings);
         try {
             fileNode.clearHeads();
             fileNode.addHead("             Head Test Line 1");
@@ -51,8 +47,9 @@ public class FileNodeTest {
     @Test
     public void load() {
         try {
-            fileNode.load();
-        } catch (IOException e) {
+            fileNode.setNode("xxx", 123);
+            fileNode.load(true);
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
