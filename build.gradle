@@ -1,7 +1,7 @@
 apply plugin: 'java'
 
 group = 'hocon'
-version = '1.0.1'
+version = '1.0.3'
 archivesBaseName = "Hocon"
 
 sourceCompatibility = targetCompatibility = 1.8

@@ -1,7 +1,7 @@
 package org.soraworld.hocon.node;
 
+import org.soraworld.hocon.serializer.SerializerCollection;
 import org.soraworld.hocon.serializer.TypeSerializer;
-import org.soraworld.hocon.serializer.TypeSerializerCollection;
 import org.soraworld.hocon.serializer.TypeSerializers;
 
 import javax.annotation.Nonnull;
@@ -9,11 +9,13 @@ import java.util.function.Function;
 
 public class Options {
 
+    private boolean seal;
     private int indent = 2;
+    private boolean debug = false;
     private String headLine = "---------------------------------------------";
     private Function<String, String> translator = key -> key;
+    private final SerializerCollection serializers = TypeSerializers.build();
 
-    private final boolean seal;
     private static final Options defaults = new Options(true);
 
     private Options(boolean seal) {
@@ -28,14 +30,9 @@ public class Options {
         return new Options(false);
     }
 
-    public TypeSerializerCollection getSerializers() {
-        return TypeSerializers.getDefaultSerializers();
+    public void seal() {
+        this.seal = true;
     }
-
-    public <T> TypeSerializerCollection registerType(@Nonnull TypeSerializer<? super T> serializer) {
-        return getSerializers().registerType(serializer);
-    }
-
 
     public int getIndent() {
         return indent;
@@ -43,6 +40,14 @@ public class Options {
 
     public void setIndent(int indent) {
         if (!seal) this.indent = indent;
+    }
+
+    public boolean isDebug() {
+        return debug;
+    }
+
+    public void setDebug(boolean debug) {
+        if (!seal) this.debug = debug;
     }
 
     public String getHeadLine() {
@@ -59,5 +64,13 @@ public class Options {
 
     public void setTranslator(Function<String, String> function) {
         if (!seal && function != null) translator = function;
+    }
+
+    public SerializerCollection getSerializers() {
+        return serializers;
+    }
+
+    public <T> void registerType(@Nonnull TypeSerializer<? super T> serializer) {
+        if (!seal) serializers.registerType(serializer);
     }
 }
