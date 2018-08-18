@@ -39,7 +39,7 @@ public class FileNodeTest {
             fileNode.addHead("             Head Test Line 2");
             fileNode.addHead("             Head Test Line 3");
             fileNode.save();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

@@ -13,7 +13,7 @@ public interface Node {
 
     void readValue(BufferedReader reader) throws Exception;
 
-    void writeValue(int indent, BufferedWriter writer) throws IOException;
+    void writeValue(int indent, BufferedWriter writer) throws Exception;
 
     void addComment(String comment);
 

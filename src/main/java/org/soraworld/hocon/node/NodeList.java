@@ -58,7 +58,7 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
         }
     }
 
-    public void writeValue(int indent, BufferedWriter writer) throws IOException {
+    public void writeValue(int indent, BufferedWriter writer) throws Exception {
         if (notEmpty()) {
             Iterator<Node> it = value.iterator();
             while (it.hasNext()) {

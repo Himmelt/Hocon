@@ -8,7 +8,6 @@ import org.soraworld.hocon.serializer.TypeSerializer;
 import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
@@ -29,27 +28,39 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
 
     public boolean addNode(String path, Object obj) {
         if (value.get(path) != null) return false;
-        setNode(path, obj);
-        return true;
+        return setNode(path, obj);
     }
 
     public boolean addNode(String path, Object obj, String comment) {
         if (value.get(path) != null) return false;
-        setNode(path, obj, comment);
+        return setNode(path, obj, comment);
+    }
+
+    public boolean setNode(String path, Object obj) {
+        if (obj instanceof Node) {
+            if (checkCycle((Node) obj)) {
+                value.put(path, (Node) obj);
+                return true;
+            }
+            if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
+            return false;
+        }
+        value.put(path, new NodeBase(options, obj, false));
         return true;
     }
 
-    public void setNode(String path, Object obj) {
-        if (obj instanceof Node && checkCycle((Node) obj)) {
-            value.put(path, (Node) obj);
-        } else value.put(path, new NodeBase(options, obj, false));
-    }
-
-    public void setNode(String path, Object obj, String comment) {
-        if (obj instanceof Node && checkCycle((Node) obj)) {
-            ((Node) obj).addComment(comment);
-            value.put(path, (Node) obj);
-        } else value.put(path, new NodeBase(options, obj, false, comment));
+    public boolean setNode(String path, Object obj, String comment) {
+        if (obj instanceof Node) {
+            if (checkCycle((Node) obj)) {
+                ((Node) obj).addComment(comment);
+                value.put(path, (Node) obj);
+                return true;
+            }
+            if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
+            return false;
+        }
+        value.put(path, new NodeBase(options, obj, false, comment));
+        return true;
     }
 
     public void modify(@Nonnull Object target) {
@@ -77,7 +88,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                                     newInstance.putAll((Map) value);
                                     field.set(target, newInstance);
                                 } catch (Throwable e) {
-                                    //e.printStackTrace();
+                                    if (options.isDebug()) e.printStackTrace();
                                     field.set(target, value);
                                 }
                                 continue;
@@ -97,7 +108,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                                     newInstance.addAll((Collection) value);
                                     field.set(target, newInstance);
                                 } catch (Throwable e) {
-                                    //e.printStackTrace();
+                                    if (options.isDebug()) e.printStackTrace();
                                     field.set(target, value);
                                 }
                                 continue;
@@ -107,9 +118,9 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                         }
                         field.set(target, value);
                     } catch (Throwable e) {
-                        e.printStackTrace();
+                        if (options.isDebug()) e.printStackTrace();
                     }
-                } else System.out.println("No TypeSerializer for the type of field "
+                } else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
                         + field.getDeclaringClass().getTypeName() + "." + field.getName()
                         + " with @Setting.");
             }
@@ -128,11 +139,11 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     Type fieldType = field.getGenericType();
                     TypeSerializer serializer = options.getSerializers().get(fieldType);
                     if (serializer != null) setNode(path, serializer.serialize(fieldType, field.get(source), options), comment);
-                    else System.out.println("No TypeSerializer for the type of field "
+                    else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
                             + field.getDeclaringClass().getTypeName() + "." + field.getName()
                             + " with @Setting.");
                 } catch (SerializeException | NotMatchException | IllegalAccessException e) {
-                    e.printStackTrace();
+                    if (options.isDebug()) e.printStackTrace();
                 }
             }
         }
@@ -201,7 +212,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         }
     }
 
-    public void writeValue(int indent, BufferedWriter writer) throws IOException {
+    public void writeValue(int indent, BufferedWriter writer) throws Exception {
         if (notEmpty()) {
             Iterator<Map.Entry<String, Node>> it = value.entrySet().iterator();
             while (it.hasNext()) {

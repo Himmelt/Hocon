@@ -35,7 +35,7 @@ public class FileNode extends NodeMap {
         this.file = file;
     }
 
-    public void save() throws IOException {
+    public void save() throws Exception {
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
 
         if (heads != null && !heads.isEmpty()) {
@@ -68,6 +68,7 @@ public class FileNode extends NodeMap {
             } catch (Exception e) {
                 try {
                     FD_VALUE.set(this, value);
+                    if (options.isDebug()) System.out.println("Fail-Recover success.");
                 } catch (IllegalAccessException ignored) {
                     System.out.println("IllegalAccessException recover failed !!!");
                     throw e;

@@ -1,8 +1,7 @@
 package org.soraworld.hocon.node;
 
-import org.soraworld.hocon.serializer.SerializerCollection;
-import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.serializer.TypeSerializers;
+import org.soraworld.hocon.serializer.TypeSerializer;
 
 import javax.annotation.Nonnull;
 import java.util.function.Function;
@@ -14,7 +13,7 @@ public class Options {
     private boolean debug = false;
     private String headLine = "---------------------------------------------";
     private Function<String, String> translator = key -> key;
-    private final SerializerCollection serializers = TypeSerializers.build();
+    private final TypeSerializers serializers = TypeSerializers.build();
 
     private static final Options defaults = new Options(true);
 
@@ -66,7 +65,7 @@ public class Options {
         if (!seal && function != null) translator = function;
     }
 
-    public SerializerCollection getSerializers() {
+    public TypeSerializers getSerializers() {
         return serializers;
     }
 

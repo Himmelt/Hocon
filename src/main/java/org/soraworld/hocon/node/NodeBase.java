@@ -27,11 +27,11 @@ public class NodeBase extends AbstractNode<String> implements Node {
     }
 
     @Override
-    public void writeValue(int indent, BufferedWriter writer) throws IOException {
+    public void writeValue(int indent, BufferedWriter writer) throws Exception {
         if (value == null) writer.write("null");
         else {
             Matcher matcher = ILLEGAL.matcher(value);
-            if (matcher.matches() || value.equals("null") || value.endsWith(" ")) {
+            if (matcher.matches() || value.equals("null") || value.startsWith(" ") || value.endsWith(" ")) {
                 String target = value.replace("\\", "\\\\").replace("\"", "\\\"");
                 writer.write('"' + target + '"');
             } else writer.write(value);
