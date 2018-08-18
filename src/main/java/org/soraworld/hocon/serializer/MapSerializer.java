@@ -22,8 +22,8 @@ public class MapSerializer implements TypeSerializer<Map<?, ?>> {
         if (node instanceof NodeMap && type instanceof ParameterizedType) {
             try {
                 Type[] params = Reflects.getMapParameter((ParameterizedType) type);
-                TypeSerializer<?> keySerial = node.options().getSerializers().get(params[0]);
-                TypeSerializer<?> valSerial = node.options().getSerializers().get(params[1]);
+                TypeSerializer<?> keySerial = node.options().getSerializer(params[0]);
+                TypeSerializer<?> valSerial = node.options().getSerializer(params[1]);
                 Map<Object, Object> returnVal = new LinkedHashMap<>();
                 for (String path : ((NodeMap) node).keys()) {
                     Object key = keySerial.deserialize(params[0], new NodeBase(node.options(), path, false));
@@ -44,8 +44,8 @@ public class MapSerializer implements TypeSerializer<Map<?, ?>> {
         if (type instanceof ParameterizedType) {
             try {
                 Type[] params = Reflects.getMapParameter((ParameterizedType) type);
-                TypeSerializer keySerial = options.getSerializers().get(params[0]);
-                TypeSerializer valSerial = options.getSerializers().get(params[1]);
+                TypeSerializer keySerial = options.getSerializer(params[0]);
+                TypeSerializer valSerial = options.getSerializer(params[1]);
                 NodeMap node = new NodeMap(options);
                 for (Map.Entry<?, ?> entry : value.entrySet()) {
                     Object key = entry.getKey();

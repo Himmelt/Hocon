@@ -4,21 +4,24 @@ import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.serializer.TypeSerializers;
 
 import javax.annotation.Nonnull;
+import java.lang.reflect.Type;
 import java.util.function.Function;
 
 public class Options {
 
     private boolean seal;
+    private int deep = 0;
     private int indent = 2;
     private boolean debug = false;
     private String headLine = "---------------------------------------------";
     private Function<String, String> translator = key -> key;
-    private final TypeSerializers serializers = TypeSerializers.build();
+    private final TypeSerializers[] serializers = new TypeSerializers[5];
 
     private static final Options defaults = new Options(true);
 
     private Options(boolean seal) {
         this.seal = seal;
+        serializers[0] = TypeSerializers.build();
     }
 
     public static Options defaults() {
@@ -65,11 +68,24 @@ public class Options {
         if (!seal && function != null) translator = function;
     }
 
-    public TypeSerializers getSerializers() {
-        return serializers;
+    public TypeSerializer getSerializer(@Nonnull Type type) {
+        return serializers[deep].get(type);
     }
 
     public <T> void registerType(@Nonnull TypeSerializer<? super T> serializer) {
-        if (!seal) serializers.registerType(serializer);
+        if (!seal) serializers[0].registerType(serializer);
+    }
+
+    public <T> void registerType(@Nonnull TypeSerializer<? super T> serializer, int level) {
+        if (!seal && level >= 0) {
+            level = level > 4 ? 4 : level;
+            if (level > deep) {
+                deep = level;
+                for (int i = 1; i <= deep; i++) {
+                    if (serializers[i] == null) serializers[i] = serializers[i - 1].newChild();
+                }
+                serializers[deep].registerType(serializer);
+            } else serializers[level].registerType(serializer);
+        }
     }
 }

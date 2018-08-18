@@ -28,7 +28,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
                 Type fieldType = field.getGenericType();
-                TypeSerializer serializer = options.getSerializers().get(fieldType);
+                TypeSerializer serializer = options.getSerializer(fieldType);
                 if (serializer != null) {
                     Node node = get(setting.path().isEmpty() ? field.getName() : setting.path());
                     try {
@@ -96,7 +96,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     String path = setting.path().isEmpty() ? field.getName() : setting.path();
                     String comment = options.getTranslator().apply(setting.comment());
                     Type fieldType = field.getGenericType();
-                    TypeSerializer serializer = options.getSerializers().get(fieldType);
+                    TypeSerializer serializer = options.getSerializer(fieldType);
                     if (serializer != null) set(path, serializer.serialize(fieldType, field.get(source), options), comment);
                     else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
                             + field.getDeclaringClass().getTypeName() + "." + field.getName()

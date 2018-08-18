@@ -26,7 +26,12 @@ public class TypeSerializers {
     }
 
     private TypeSerializers(TypeSerializers parent) {
-        this.parent = parent;
+        this.parent = checkCycle(parent) ? parent : null;
+    }
+
+    private boolean checkCycle(TypeSerializers another) {
+        if (another == null) return true;
+        return this != another && checkCycle(another.parent);
     }
 
     public TypeSerializer get(@Nonnull Type type) {
@@ -50,7 +55,7 @@ public class TypeSerializers {
         typeMatches.clear();
     }
 
-    public TypeSerializers child() {
+    public TypeSerializers newChild() {
         return new TypeSerializers(this);
     }
 
@@ -59,6 +64,6 @@ public class TypeSerializers {
     }
 
     public static TypeSerializers build() {
-        return SERIALIZERS.child();
+        return SERIALIZERS.newChild();
     }
 }

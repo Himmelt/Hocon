@@ -23,7 +23,7 @@ public class ListSerializer implements TypeSerializer<Collection<?>> {
             try {
                 Class<?> rawType = (Class<?>) ((ParameterizedType) type).getRawType();
                 Type paramType = Reflects.getListParameter((ParameterizedType) type);
-                TypeSerializer keySerial = node.options().getSerializers().get(paramType);
+                TypeSerializer keySerial = node.options().getSerializer(paramType);
                 Collection<Object> collection;
                 if (rawType.isAssignableFrom(ArrayList.class)) collection = new ArrayList<>();
                 else if (rawType.isAssignableFrom(HashSet.class)) collection = new HashSet<>();
@@ -45,7 +45,7 @@ public class ListSerializer implements TypeSerializer<Collection<?>> {
         if (type instanceof ParameterizedType) {
             try {
                 Type keyType = Reflects.getListParameter((ParameterizedType) type);
-                TypeSerializer keySerial = options.getSerializers().get(keyType);
+                TypeSerializer keySerial = options.getSerializer(keyType);
                 NodeList node = new NodeList(options);
                 for (Object obj : value) {
                     node.add(keySerial.serialize(keyType, obj, options));
