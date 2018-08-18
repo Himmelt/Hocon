@@ -27,6 +27,18 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         value.clear();
     }
 
+    public boolean addNode(String path, Object obj) {
+        if (value.get(path) != null) return false;
+        setNode(path, obj);
+        return true;
+    }
+
+    public boolean addNode(String path, Object obj, String comment) {
+        if (value.get(path) != null) return false;
+        setNode(path, obj, comment);
+        return true;
+    }
+
     public void setNode(String path, Object obj) {
         if (obj instanceof Node && checkCycle((Node) obj)) {
             value.put(path, (Node) obj);
