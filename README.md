@@ -1,6 +1,4 @@
 # Hocon
-Simple Hocon
+Simple Hocon Library
 
-cached fields
-
-path illegal characters
+轻量 Hocon 配置库
