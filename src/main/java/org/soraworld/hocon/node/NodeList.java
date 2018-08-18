@@ -2,7 +2,6 @@ package org.soraworld.hocon.node;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -34,7 +33,7 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
 
     public Node getNode(int index) {
         if (index >= 0 && index < value.size()) return value.get(index);
-        else return null;
+        return null;
     }
 
     public void readValue(BufferedReader reader) throws Exception {

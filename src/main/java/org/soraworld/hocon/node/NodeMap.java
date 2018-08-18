@@ -197,17 +197,17 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             if (line.endsWith("{") || (line.contains("{") && line.endsWith("}"))) {
                 NodeMap node = new NodeMap(options);
                 String path = line.substring(0, line.indexOf('{') - 1).trim();
-                value.put(path, node);
+                value.put(unquotation(path), node);
                 if (!line.endsWith("}")) node.readValue(reader);
             } else if (line.contains("=") && (line.endsWith("[") || (line.contains("[") && line.endsWith("]")))) {
                 NodeList list = new NodeList(options);
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
-                value.put(path, list);
+                value.put(unquotation(path), list);
                 if (!line.endsWith("]")) list.readValue(reader);
             } else if (line.contains("=")) {
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 String text = line.substring(line.indexOf('=') + 1).trim();
-                value.put(path, new NodeBase(options, text, true));
+                value.put(unquotation(path), new NodeBase(options, text, true));
             }
         }
     }
@@ -222,8 +222,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 if (path != null && !path.isEmpty() && node != null) {
                     node.writeComment(indent, writer);
                     writeIndent(indent, writer);
-                    // TODO path with illegal characters
-                    writer.write(path);
+                    writer.write(quotation(path));
                     if (node instanceof NodeMap) {
                         writer.write(" {");
                         if (node.notEmpty()) {

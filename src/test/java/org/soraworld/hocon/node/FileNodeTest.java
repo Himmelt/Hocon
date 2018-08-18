@@ -17,9 +17,10 @@ public class FileNodeTest {
         settings.abc = 123;
         settings.string = "Str#ing & \" :Test";
         settings.maps = new HashMap<>();
-        settings.maps.put("key1", 234);
-        settings.maps.put("key2", 7899);
-        settings.maps.put("key3", 88970);
+        settings.maps.put("ke:y&1", 234);
+        settings.maps.put("ke\"y2", 7899);
+        settings.maps.put("key3 ", 88970);
+        settings.maps.put(" key4", 88970);
         settings.set = new LinkedHashSet<>();
         settings.set.add(Arrays.asList(1, 2, 3, 4, 5, 6));
         settings.set.add(new ArrayList<>(Arrays.asList(4, 5, 6, 7, 9)));

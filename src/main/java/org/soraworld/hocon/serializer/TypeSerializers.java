@@ -22,6 +22,7 @@ public class TypeSerializers {
         SERIALIZERS.registerType(new MapSerializer());
         SERIALIZERS.registerType(new ListSerializer());
         SERIALIZERS.registerType(new NodeSerializer());
+        SERIALIZERS.registerType(new EnumSerializer());
     }
 
     private TypeSerializers(TypeSerializers parent) {

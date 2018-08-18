@@ -1,7 +1,7 @@
 package org.soraworld.hocon.node;
 
-import org.soraworld.hocon.serializer.TypeSerializers;
 import org.soraworld.hocon.serializer.TypeSerializer;
+import org.soraworld.hocon.serializer.TypeSerializers;
 
 import javax.annotation.Nonnull;
 import java.util.function.Function;
