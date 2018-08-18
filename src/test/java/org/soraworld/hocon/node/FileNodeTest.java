@@ -4,7 +4,6 @@ import org.junit.Test;
 import org.soraworld.hocon.reflect.SubEnum;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 
 public class FileNodeTest {
@@ -48,7 +47,7 @@ public class FileNodeTest {
     @Test
     public void load() {
         try {
-            fileNode.setNode("xxx", 123);
+            fileNode.set("xxx", 123);
             fileNode.load(true);
         } catch (Exception e) {
             e.printStackTrace();

@@ -23,8 +23,5 @@ public interface Node {
 
     Options options();
 
-    default void writeIndent(int indent, BufferedWriter writer) throws IOException {
-        indent *= options().getIndent();
-        while (indent-- > 0) writer.write(' ');
-    }
+    void writeIndent(int indent, BufferedWriter writer) throws IOException;
 }

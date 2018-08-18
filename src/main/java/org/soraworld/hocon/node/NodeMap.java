@@ -22,47 +22,6 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         super(options, new LinkedHashMap<>(), comment);
     }
 
-    public void clear() {
-        value.clear();
-    }
-
-    public boolean addNode(String path, Object obj) {
-        if (value.get(path) != null) return false;
-        return setNode(path, obj);
-    }
-
-    public boolean addNode(String path, Object obj, String comment) {
-        if (value.get(path) != null) return false;
-        return setNode(path, obj, comment);
-    }
-
-    public boolean setNode(String path, Object obj) {
-        if (obj instanceof Node) {
-            if (checkCycle((Node) obj)) {
-                value.put(path, (Node) obj);
-                return true;
-            }
-            if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
-            return false;
-        }
-        value.put(path, new NodeBase(options, obj, false));
-        return true;
-    }
-
-    public boolean setNode(String path, Object obj, String comment) {
-        if (obj instanceof Node) {
-            if (checkCycle((Node) obj)) {
-                ((Node) obj).addComment(comment);
-                value.put(path, (Node) obj);
-                return true;
-            }
-            if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
-            return false;
-        }
-        value.put(path, new NodeBase(options, obj, false, comment));
-        return true;
-    }
-
     public void modify(@Nonnull Object target) {
         List<Field> fields = Reflects.getFields(target.getClass());
         for (Field field : fields) {
@@ -71,7 +30,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 Type fieldType = field.getGenericType();
                 TypeSerializer serializer = options.getSerializers().get(fieldType);
                 if (serializer != null) {
-                    Node node = getNode(setting.path().isEmpty() ? field.getName() : setting.path());
+                    Node node = get(setting.path().isEmpty() ? field.getName() : setting.path());
                     try {
                         Object current = field.get(target);
                         Class<?> type = current == null ? field.getType() : current.getClass();
@@ -138,7 +97,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     String comment = options.getTranslator().apply(setting.comment());
                     Type fieldType = field.getGenericType();
                     TypeSerializer serializer = options.getSerializers().get(fieldType);
-                    if (serializer != null) setNode(path, serializer.serialize(fieldType, field.get(source), options), comment);
+                    if (serializer != null) set(path, serializer.serialize(fieldType, field.get(source), options), comment);
                     else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
                             + field.getDeclaringClass().getTypeName() + "." + field.getName()
                             + " with @Setting.");
@@ -149,26 +108,85 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         }
     }
 
-    public Node getNode(String path) {
+    public Set<String> keys() {
+        return value.keySet();
+    }
+
+    public void clear() {
+        value.clear();
+    }
+
+    public int size() {
+        return value.size();
+    }
+
+    public boolean put(String path, Object obj) {
+        if (value.get(path) != null) return false;
+        return set(path, obj);
+    }
+
+    public boolean put(String path, Object obj, String comment) {
+        if (value.get(path) != null) return false;
+        return set(path, obj, comment);
+    }
+
+    public Node get(String path) {
         return value.get(path);
     }
 
-    public Node getNode(String... paths) {
+    public Node get(String... paths) {
         Node node = this;
         for (String path : paths) {
             if (node instanceof NodeMap) {
-                node = ((NodeMap) node).getNode(path);
+                node = ((NodeMap) node).get(path);
             } else return null;
         }
         return node;
     }
 
-    public Set<String> getKeys() {
-        return value.keySet();
+    public boolean set(String path, Object obj) {
+        if (obj instanceof Node) {
+            if (checkCycle((Node) obj)) {
+                value.put(path, (Node) obj);
+                return true;
+            }
+            if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
+            return false;
+        }
+        value.put(path, new NodeBase(options, obj, false));
+        return true;
     }
 
-    public boolean notEmpty() {
-        return value != null && !value.isEmpty();
+    public boolean set(String path, Object obj, String comment) {
+        if (obj instanceof Node) {
+            if (checkCycle((Node) obj)) {
+                ((Node) obj).addComment(comment);
+                value.put(path, (Node) obj);
+                return true;
+            }
+            if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
+            return false;
+        }
+        value.put(path, new NodeBase(options, obj, false, comment));
+        return true;
+    }
+
+    public void remove(String path) {
+        value.remove(path);
+    }
+
+    public void remove(String path, Node node) {
+        value.remove(path, node);
+    }
+
+    public void addComment(String path, String comment) {
+        Node node = value.get(path);
+        if (node != null) node.addComment(comment);
+    }
+
+    public void setComments(String path, List<String> comments) {
+        Node node = value.get(path);
+        if (node != null) node.setComments(comments);
     }
 
     public HashMap<String, String> asStringMap() {
@@ -184,6 +202,10 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             }
         }
         return map;
+    }
+
+    public boolean notEmpty() {
+        return value != null && !value.isEmpty();
     }
 
     public void readValue(BufferedReader reader) throws Exception {
@@ -249,15 +271,5 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 }
             }
         }
-    }
-
-    public void addComment(String path, String comment) {
-        Node node = value.get(path);
-        if (node != null) node.addComment(comment);
-    }
-
-    public void setComments(String path, List<String> comments) {
-        Node node = value.get(path);
-        if (node != null) node.setComments(comments);
     }
 }

@@ -84,4 +84,9 @@ public abstract class AbstractNode<T> implements Node {
         if (text.endsWith("\"")) text = text.substring(0, text.length() - 1);
         return text.replace("\\\"", "\"").replace("\\\\", "\\");
     }
+
+    public void writeIndent(int indent, BufferedWriter writer) throws IOException {
+        indent *= options.getIndent();
+        while (indent-- > 0) writer.write(' ');
+    }
 }

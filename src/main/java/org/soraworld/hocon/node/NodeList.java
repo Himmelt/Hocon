@@ -19,21 +19,33 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
         value.clear();
     }
 
-    public void add(Node node) {
-        value.add(node);
-    }
-
-    public boolean notEmpty() {
-        return value != null && !value.isEmpty();
-    }
-
     public int size() {
         return value.size();
     }
 
-    public Node getNode(int index) {
+    public void add(Node node) {
+        value.add(node);
+    }
+
+    public Node get(int index) {
         if (index >= 0 && index < value.size()) return value.get(index);
         return null;
+    }
+
+    public void set(int index, Node node) {
+        value.set(index, node);
+    }
+
+    public void remove(int index) {
+        if (index >= 0 && index < value.size()) value.remove(index);
+    }
+
+    public void remove(Node node) {
+        value.remove(node);
+    }
+
+    public boolean notEmpty() {
+        return value != null && !value.isEmpty();
     }
 
     public void readValue(BufferedReader reader) throws Exception {

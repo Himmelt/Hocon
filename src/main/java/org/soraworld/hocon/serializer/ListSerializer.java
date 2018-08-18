@@ -30,7 +30,7 @@ public class ListSerializer implements TypeSerializer<Collection<?>> {
                 else collection = new LinkedList<>();
                 int size = ((NodeList) node).size();
                 for (int i = 0; i < size; i++) {
-                    collection.add(keySerial.deserialize(paramType, ((NodeList) node).getNode(i)));
+                    collection.add(keySerial.deserialize(paramType, ((NodeList) node).get(i)));
                 }
                 return collection;
             } catch (Throwable e) {

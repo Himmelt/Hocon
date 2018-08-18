@@ -25,9 +25,9 @@ public class MapSerializer implements TypeSerializer<Map<?, ?>> {
                 TypeSerializer<?> keySerial = node.options().getSerializers().get(params[0]);
                 TypeSerializer<?> valSerial = node.options().getSerializers().get(params[1]);
                 Map<Object, Object> returnVal = new LinkedHashMap<>();
-                for (String path : ((NodeMap) node).getKeys()) {
+                for (String path : ((NodeMap) node).keys()) {
                     Object key = keySerial.deserialize(params[0], new NodeBase(node.options(), path, false));
-                    Object val = valSerial.deserialize(params[1], ((NodeMap) node).getNode(path));
+                    Object val = valSerial.deserialize(params[1], ((NodeMap) node).get(path));
                     if (key == null || val == null) continue;
                     returnVal.put(key, val);
                 }
@@ -53,7 +53,7 @@ public class MapSerializer implements TypeSerializer<Map<?, ?>> {
                     if (key != null && obj != null) {
                         Node keyNode = keySerial.serialize(params[0], key, options);
                         if (keyNode instanceof NodeBase) {
-                            node.setNode(((NodeBase) keyNode).getString(), valSerial.serialize(params[1], obj, options));
+                            node.set(((NodeBase) keyNode).getString(), valSerial.serialize(params[1], obj, options));
                         } else throw new NotBaseException(key.getClass());
                     }
                 }
