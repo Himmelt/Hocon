@@ -10,6 +10,7 @@ public class TypeSerializers {
         DEFAULT_SERIALIZERS.registerType(new BooleanSerializer());
         DEFAULT_SERIALIZERS.registerType(new MapSerializer());
         DEFAULT_SERIALIZERS.registerType(new ListSerializer());
+        DEFAULT_SERIALIZERS.registerType(new NodeSerializer());
     }
 
     public static SerializerCollection defaults() {
