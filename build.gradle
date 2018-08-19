@@ -1,6 +1,11 @@
-apply plugin: 'java'
+plugins {
+    id "com.jfrog.bintray" version "1.8.0"
+}
 
-group = 'hocon'
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+group = 'org.soraworld'
 version = '1.0.3'
 archivesBaseName = "Hocon"
 
@@ -16,5 +21,56 @@ repositories {
 dependencies {
     compile 'com.google.code.findbugs:jsr305:3.0.2'
     testCompile 'junit:junit:4.12'
-    //testCompile 'com.google.guava:guava:21.0'
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allJava
+}
+
+javadoc{
+    options.encoding = 'UTF-8'
+    options.locale = 'en'
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives jar
+    archives javadocJar
+    archives sourcesJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            groupId = 'org.soraworld'
+            artifactId = 'hocon'
+            version = project.version
+            artifact sourcesJar
+            artifact javadocJar
+        }
+    }
+}
+
+bintray {
+    key = BINTRAY_KEY
+    user = BINTRAY_USER
+    publications = ['mavenJava']
+    pkg {
+        repo = 'Minecraft'
+        name = 'Hocon'
+        licenses = ['MIT']
+        vcsUrl = 'https://github.com/Himmelt/Hocon.git'
+        publicDownloadNumbers = true
+        version {
+            name = project.version
+            desc = 'Simple Hocon Library.'
+            released = new Date()
+        }
+    }
 }
