@@ -13,7 +13,7 @@ Simple Hocon Configuration Library
 使用 NodeMap 的 `void extract(Object source);` 方法，可以提取源对象对应名称用 `@Setting` 注解的字段的值到结点。
 另外该库支持对注释内容的翻译，可通过设置翻译器实现本地化效果。
 
-具体使用方法可以查看 [Javadoc]()
+具体使用方法可以查看 [Javadoc](https://docs.soraworld.org/hocon/)
 
 #### Maven 使用 jcenter
 ```xml
