@@ -11,6 +11,9 @@ import org.soraworld.hocon.reflect.Primitives;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 
+/**
+ * 数值类型序列化器.
+ */
 public class NumberSerializer implements TypeSerializer<Number> {
     public Number deserialize(@Nonnull Type type, @Nonnull Node node) throws DeserializeException, NullValueException, NotMatchException {
         if (node instanceof NodeBase && type instanceof Class) {

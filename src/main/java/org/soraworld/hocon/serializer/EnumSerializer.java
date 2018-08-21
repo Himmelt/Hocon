@@ -12,6 +12,9 @@ import org.soraworld.hocon.reflect.TypeToken;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 
+/**
+ * 枚举类型序列化器.
+ */
 public class EnumSerializer implements TypeSerializer<Enum<?>> {
     public Enum<?> deserialize(@Nonnull Type type, @Nonnull Node node) throws NotBaseException, NullValueException, DeserializeException {
         if (node instanceof NodeBase) {
@@ -19,7 +22,7 @@ public class EnumSerializer implements TypeSerializer<Enum<?>> {
             if (name == null) throw new NullValueException(getRegType());
             try {
                 Class<?> rawType = Reflects.getRawType(type);
-                Enum<?> value = Reflects.getEnums(rawType.asSubclass(Enum.class), name);
+                Enum<?> value = Reflects.getEnum(rawType.asSubclass(Enum.class), name);
                 if (value != null) return value;
                 else throw new DeserializeException("Non Enum Value " + name + " for " + rawType.getName());
             } catch (Throwable e) {

@@ -12,16 +12,35 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
 
+/**
+ * 映射结点类.
+ */
 public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node {
 
+    /**
+     * 实例化一个新的映射结点.
+     *
+     * @param options 配置选项
+     */
     public NodeMap(Options options) {
         super(options, new LinkedHashMap<>());
     }
 
+    /**
+     * 实例化一个新的映射结点.
+     *
+     * @param options 配置选项
+     * @param comment 注释
+     */
     public NodeMap(Options options, String comment) {
         super(options, new LinkedHashMap<>(), comment);
     }
 
+    /**
+     * 用map里结点的值修改对象 {@link Setting} 修饰的字段.
+     *
+     * @param target 修改对象
+     */
     public void modify(@Nonnull Object target) {
         List<Field> fields = Reflects.getFields(target.getClass());
         for (Field field : fields) {
@@ -86,6 +105,11 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         }
     }
 
+    /**
+     * 提取对象{@link Setting} 修饰的字段的值到map对应的结点.
+     *
+     * @param source 源对象
+     */
     public void extract(@Nonnull Object source) {
         value.clear();
         List<Field> fields = Reflects.getFields(source.getClass());
@@ -108,32 +132,74 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         }
     }
 
+    /**
+     * map 的键集合.
+     *
+     * @return 键集合
+     */
     public Set<String> keys() {
         return value.keySet();
     }
 
+    /**
+     * 清空 map.
+     */
     public void clear() {
         value.clear();
     }
 
+    /**
+     * 获取 map 大小.
+     *
+     * @return size
+     */
     public int size() {
         return value.size();
     }
 
+    /**
+     * 添加一个新的结点映射.
+     * 如果对应路径上已有非空结点，则失败.
+     *
+     * @param path 路径
+     * @param obj  对象
+     * @return 是否成功
+     */
     public boolean put(String path, Object obj) {
         if (value.get(path) != null) return false;
         return set(path, obj);
     }
 
+    /**
+     * 添加一个新的结点映射.
+     * 如果对应路径上已有非空结点，则失败.
+     *
+     * @param path    路径
+     * @param obj     对象
+     * @param comment 注释
+     * @return 是否成功
+     */
     public boolean put(String path, Object obj, String comment) {
         if (value.get(path) != null) return false;
         return set(path, obj, comment);
     }
 
+    /**
+     * 获取路径对应的结点.
+     *
+     * @param path 路径
+     * @return 对应结点
+     */
     public Node get(String path) {
         return value.get(path);
     }
 
+    /**
+     * 获取路径树对应的结点.
+     *
+     * @param paths 路径树
+     * @return 对应结点
+     */
     public Node get(String... paths) {
         Node node = this;
         for (String path : paths) {
@@ -144,6 +210,14 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return node;
     }
 
+    /**
+     * 设置路径对应结点.
+     * 如果存在循环引用则失败.
+     *
+     * @param path 路径
+     * @param obj  对象
+     * @return 是否成功
+     */
     public boolean set(String path, Object obj) {
         if (obj instanceof Node) {
             if (checkCycle((Node) obj)) {
@@ -157,6 +231,15 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return true;
     }
 
+    /**
+     * 设置路径对应结点.
+     * 如果存在循环引用则失败.
+     *
+     * @param path    路径
+     * @param obj     对象
+     * @param comment 注释
+     * @return 是否成功
+     */
     public boolean set(String path, Object obj, String comment) {
         if (obj instanceof Node) {
             if (checkCycle((Node) obj)) {
@@ -171,24 +254,54 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return true;
     }
 
+    /**
+     * 移除路径对应结点.
+     *
+     * @param path 路径
+     */
     public void remove(String path) {
         value.remove(path);
     }
 
+    /**
+     * 移除路径和结点.
+     *
+     * @param path 路径
+     * @param node 结点
+     */
     public void remove(String path, Node node) {
         value.remove(path, node);
     }
 
+    /**
+     * 为对应路径的结点添加注释.
+     *
+     * @param path    路径
+     * @param comment 注释
+     */
     public void addComment(String path, String comment) {
         Node node = value.get(path);
         if (node != null) node.addComment(comment);
     }
 
+    /**
+     * 为对应路径的结点设置多行注释.
+     *
+     * @param path     路径
+     * @param comments 多行注释
+     */
     public void setComments(String path, List<String> comments) {
         Node node = value.get(path);
         if (node != null) node.setComments(comments);
     }
 
+    /**
+     * 获取全部基础结点的字符串映射集合.
+     * 路径树用'.'连接作为键.
+     * 例: {@code path1.path2.path3 -> node3.toString() }
+     *
+     * @return 字符串映射集合
+     */
     public HashMap<String, String> asStringMap() {
         HashMap<String, String> map = new HashMap<>();
         for (Map.Entry<String, Node> entry : value.entrySet()) {

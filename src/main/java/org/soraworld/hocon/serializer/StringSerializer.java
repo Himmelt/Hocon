@@ -9,6 +9,9 @@ import org.soraworld.hocon.node.Options;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 
+/**
+ * 字符串类型序列化器.
+ */
 public class StringSerializer implements TypeSerializer<String> {
     public String deserialize(@Nonnull Type type, @Nonnull Node node) throws NullValueException, NotBaseException {
         if (node instanceof NodeBase) {

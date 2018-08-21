@@ -17,6 +17,9 @@ import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * 映射类型序列化器.
+ */
 public class MapSerializer implements TypeSerializer<Map<?, ?>> {
     public Map<?, ?> deserialize(@Nonnull Type type, @Nonnull Node node) throws DeserializeException, NotMatchException {
         if (node instanceof NodeMap && type instanceof ParameterizedType) {

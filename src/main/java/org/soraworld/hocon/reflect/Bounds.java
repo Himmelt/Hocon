@@ -7,6 +7,9 @@ import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * 泛型类型边界.
+ */
 public final class Bounds {
 
     private final Type upper;
@@ -36,6 +39,12 @@ public final class Bounds {
         }
     }
 
+    /**
+     * 是否是其他边界的超集.
+     *
+     * @param bounds 其他边界
+     * @return 是否超集
+     */
     public boolean isSuperOf(Bounds bounds) {
         if (lower != null) {
             return bounds.lower != null && Reflects.isSuperOf(upper, bounds.upper) && Reflects.isSuperOf(bounds.lower, lower);
@@ -43,8 +52,13 @@ public final class Bounds {
         return Reflects.isSuperOf(upper, bounds.upper);
     }
 
+    /**
+     * 获取类型对应边界.
+     *
+     * @param type 类型
+     * @return 边界
+     */
     public static Bounds getBounds(@Nonnull Type type) {
         return cache.computeIfAbsent(type, Bounds::new);
     }
-
 }

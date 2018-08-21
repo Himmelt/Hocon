@@ -6,7 +6,7 @@ apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 group = 'org.soraworld'
-version = '1.0.3'
+version = '1.0.4'
 archivesBaseName = "Hocon"
 
 sourceCompatibility = targetCompatibility = 1.8
@@ -23,14 +23,18 @@ dependencies {
     testCompile 'junit:junit:4.12'
 }
 
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
 task sourcesJar(type: Jar) {
     classifier = 'sources'
     from sourceSets.main.allJava
 }
 
-javadoc{
+javadoc {
     options.encoding = 'UTF-8'
-    options.locale = 'en'
+    options.charSet = 'UTF-8'
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
@@ -69,7 +73,7 @@ bintray {
         publicDownloadNumbers = true
         version {
             name = project.version
-            desc = 'Simple Hocon Library.'
+            desc = 'Simple Hocon Configuration Library.'
             released = new Date()
         }
     }

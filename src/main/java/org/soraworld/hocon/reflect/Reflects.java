@@ -8,11 +8,20 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.*;
 import java.util.*;
 
+/**
+ * 反射工具.
+ */
 public final class Reflects {
 
     private static final HashMap<Class<?>, List<Field>> CLAZZ_FIELDS = new HashMap<>();
     private static final HashMap<Class<? extends Enum<?>>, HashMap<String, Enum<?>>> ENUM_FIELDS = new HashMap<>();
 
+    /**
+     * 获取类的非静态字段.
+     *
+     * @param clazz 类
+     * @return 字段列表
+     */
     public static List<Field> getFields(Class<?> clazz) {
         if (clazz == null) return new ArrayList<>();
         if (CLAZZ_FIELDS.containsKey(clazz)) return CLAZZ_FIELDS.get(clazz);
@@ -24,7 +33,15 @@ public final class Reflects {
         return fields;
     }
 
-    public static <T extends Enum<T>> T getEnums(Class<T> clazz, String name) {
+    /**
+     * 按名字获取枚举类型的实例.
+     *
+     * @param <T>   枚举类型
+     * @param clazz 实例类
+     * @param name  名字
+     * @return 枚举实例
+     */
+    public static <T extends Enum<T>> T getEnum(Class<T> clazz, String name) {
         if (clazz == null) return null;
         HashMap<String, Enum<?>> fields = ENUM_FIELDS.get(clazz);
         if (fields == null) {
@@ -40,12 +57,26 @@ public final class Reflects {
         return (T) fields.get(name);
     }
 
+    /**
+     * 获取原始类型.
+     *
+     * @param type 类型
+     * @return 原始类型
+     * @throws NonRawTypeException 无原始类型异常
+     */
     public static Class<?> getRawType(Type type) throws NonRawTypeException {
         if (type instanceof Class) return (Class<?>) type;
         if (type instanceof ParameterizedType) return (Class<?>) ((ParameterizedType) type).getRawType();
         else throw new NonRawTypeException(type);
     }
 
+    /**
+     * 获取映射类型的类型参数数组.
+     *
+     * @param type 参数化类型
+     * @return 类型参数
+     * @throws NotParamMapException 非映射参数化类型异常
+     */
     public static Type[] getMapParameter(ParameterizedType type) throws NotParamMapException {
         if (Map.class.isAssignableFrom((Class<?>) type.getRawType())) {
             Type[] types = type.getActualTypeArguments();
@@ -54,6 +85,13 @@ public final class Reflects {
         throw new NotParamMapException(type);
     }
 
+    /**
+     * 获取集合类型的类型参数数组.
+     *
+     * @param type 参数化类型
+     * @return 类型参数
+     * @throws NotParamListException 非集合参数化类型异常
+     */
     public static Type getListParameter(ParameterizedType type) throws NotParamListException {
         if (Collection.class.isAssignableFrom((Class<?>) type.getRawType())) {
             Type[] types = type.getActualTypeArguments();
@@ -62,6 +100,13 @@ public final class Reflects {
         throw new NotParamListException(type);
     }
 
+    /**
+     * 是否是超类型.
+     *
+     * @param upper 预计超类型
+     * @param lower 预计子类型
+     * @return 是否超类型
+     */
     public static boolean isSuperOf(@Nonnull Type upper, @Nonnull Type lower) {
         if (upper.equals(lower)) return true;
         if (upper instanceof Class) {

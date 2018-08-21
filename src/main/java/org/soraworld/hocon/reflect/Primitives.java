@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * 原生类型工具.
+ */
 public final class Primitives {
 
     private Primitives() {
@@ -42,24 +45,54 @@ public final class Primitives {
         backward.put(value, key);
     }
 
+    /**
+     * 全部原生类型集合.
+     *
+     * @return 集合
+     */
     public static Set<Class<?>> allPrimitiveTypes() {
         return PRIMITIVE_TO_WRAPPER_TYPE.keySet();
     }
 
+    /**
+     * 全部封装类型集合.
+     *
+     * @return 集合
+     */
     public static Set<Class<?>> allWrapperTypes() {
         return WRAPPER_TO_PRIMITIVE_TYPE.keySet();
     }
 
+    /**
+     * 是否是封装类型.
+     *
+     * @param type 类型
+     * @return 是否封装
+     */
     public static boolean isWrapperType(@Nonnull Class<?> type) {
         return WRAPPER_TO_PRIMITIVE_TYPE.containsKey(type);
     }
 
+    /**
+     * 获取封装类型.
+     *
+     * @param <T>  类型参数
+     * @param type 类型
+     * @return 封装类
+     */
     public static <T> Class<T> wrap(@Nonnull Class<T> type) {
         @SuppressWarnings("unchecked")
         Class<T> wrapped = (Class<T>) PRIMITIVE_TO_WRAPPER_TYPE.get(type);
         return (wrapped == null) ? type : wrapped;
     }
 
+    /**
+     * 去除封装.
+     *
+     * @param <T>  参数类型
+     * @param type 类型
+     * @return 解除封装后的类型
+     */
     public static <T> Class<T> unwrap(@Nonnull Class<T> type) {
         @SuppressWarnings("unchecked")
         Class<T> unwrapped = (Class<T>) WRAPPER_TO_PRIMITIVE_TYPE.get(type);

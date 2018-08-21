@@ -17,6 +17,10 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+/**
+ * 集合类型序列化器.
+ * 目前支持 {@link java.util.List} {@link java.util.Set} {@link java.util.Queue}
+ */
 public class ListSerializer implements TypeSerializer<Collection<?>> {
     public Collection<?> deserialize(@Nonnull Type type, @Nonnull Node node) throws NotMatchException, DeserializeException {
         if (node instanceof NodeList && type instanceof ParameterizedType) {

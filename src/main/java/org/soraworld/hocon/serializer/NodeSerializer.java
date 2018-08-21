@@ -6,6 +6,9 @@ import org.soraworld.hocon.node.Options;
 import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 
+/**
+ * 结点类型序列化器.
+ */
 public class NodeSerializer implements TypeSerializer<Node> {
     public Node deserialize(@Nonnull Type type, @Nonnull Node node) {
         return node;

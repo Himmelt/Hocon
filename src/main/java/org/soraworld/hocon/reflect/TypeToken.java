@@ -5,10 +5,18 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 
+/**
+ * 类型标记类.
+ *
+ * @param <T> 参数类型
+ */
 public abstract class TypeToken<T> {
 
     private final Type runtimeType;
 
+    /**
+     * 实例化一个类型标记.
+     */
     protected TypeToken() {
         runtimeType = capture();
         if (runtimeType instanceof TypeVariable) {
@@ -29,10 +37,21 @@ public abstract class TypeToken<T> {
         return ((ParameterizedType) superclass).getActualTypeArguments()[0];
     }
 
+    /**
+     * 获取类型.
+     *
+     * @return 类型
+     */
     public final Type getType() {
         return runtimeType;
     }
 
+    /**
+     * 是否是超类型.
+     *
+     * @param type 类型标记
+     * @return 是否超类型
+     */
     public final boolean isSuperTypeOf(@Nonnull TypeToken<?> type) {
         return Reflects.isSuperOf(runtimeType, type.runtimeType);
     }
