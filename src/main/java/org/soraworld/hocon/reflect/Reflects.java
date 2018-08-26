@@ -7,14 +7,15 @@ import org.soraworld.hocon.exception.NotParamMapException;
 import javax.annotation.Nonnull;
 import java.lang.reflect.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 反射工具.
  */
 public final class Reflects {
 
-    private static final HashMap<Class<?>, List<Field>> CLAZZ_FIELDS = new HashMap<>();
-    private static final HashMap<Class<? extends Enum<?>>, HashMap<String, Enum<?>>> ENUM_FIELDS = new HashMap<>();
+    private static final ConcurrentHashMap<Class<?>, List<Field>> CLAZZ_FIELDS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<? extends Enum<?>>, HashMap<String, Enum<?>>> ENUM_FIELDS = new ConcurrentHashMap<>();
 
     /**
      * 获取类的非静态字段.
