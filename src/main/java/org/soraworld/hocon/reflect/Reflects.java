@@ -8,14 +8,15 @@ import javax.annotation.Nonnull;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 反射工具.
  */
 public final class Reflects {
 
-    private static final ConcurrentHashMap<Class<?>, List<Field>> CLAZZ_FIELDS = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<Class<? extends Enum<?>>, HashMap<String, Enum<?>>> ENUM_FIELDS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<?>, CopyOnWriteArrayList<Field>> CLAZZ_FIELDS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<? extends Enum<?>>, ConcurrentHashMap<String, Enum<?>>> ENUM_FIELDS = new ConcurrentHashMap<>();
 
     /**
      * 获取类的非静态字段.
@@ -26,7 +27,7 @@ public final class Reflects {
     public static List<Field> getFields(Class<?> clazz) {
         if (clazz == null) return new ArrayList<>();
         if (CLAZZ_FIELDS.containsKey(clazz)) return CLAZZ_FIELDS.get(clazz);
-        ArrayList<Field> fields = new ArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
+        CopyOnWriteArrayList<Field> fields = new CopyOnWriteArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         fields.removeIf(field -> Modifier.isStatic(field.getModifiers()));
         fields.addAll(0, getFields(clazz.getSuperclass()));
         fields.forEach(field -> field.setAccessible(true));
@@ -44,9 +45,9 @@ public final class Reflects {
      */
     public static <T extends Enum<T>> T getEnum(Class<T> clazz, String name) {
         if (clazz == null) return null;
-        HashMap<String, Enum<?>> fields = ENUM_FIELDS.get(clazz);
+        ConcurrentHashMap<String, Enum<?>> fields = ENUM_FIELDS.get(clazz);
         if (fields == null) {
-            fields = new HashMap<>();
+            fields = new ConcurrentHashMap<>();
             Enum[] vals = clazz.getEnumConstants();
             if (vals != null) {
                 for (Enum field : vals) {
