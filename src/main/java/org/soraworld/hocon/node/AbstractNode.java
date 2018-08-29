@@ -128,6 +128,8 @@ public abstract class AbstractNode<T> implements Node {
     public static String unquotation(@Nonnull String text) {
         if (text.startsWith("\"")) text = text.substring(1);
         if (text.endsWith("\"")) text = text.substring(0, text.length() - 1);
+        // TODO fix \r\n\b\t\xxx\ooo
+        // TODO 需要把所有的转义字符都处理掉
         return text.replace("\\\"", "\"").replace("\\\\", "\\");
     }
 
