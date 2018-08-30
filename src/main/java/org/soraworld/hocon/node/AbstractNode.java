@@ -112,7 +112,13 @@ public abstract class AbstractNode<T> implements Node {
      */
     public static String quotation(@Nonnull String text) {
         if (text.equals("null") || text.startsWith(" ") || text.endsWith(" ") || ILLEGAL.matcher(text).matches()) {
-            String target = text.replace("\\", "\\\\").replace("\"", "\\\"");
+            String target = text
+                    .replace("\b", "\\b")
+                    .replace("\n", "\\n")
+                    .replace("\r", "\\r")
+                    .replace("\t", "\\t")
+                    .replace("\"", "\\\"")
+                    .replace("\\", "\\\\");
             return '"' + target + '"';
         }
         return text;
@@ -128,9 +134,13 @@ public abstract class AbstractNode<T> implements Node {
     public static String unquotation(@Nonnull String text) {
         if (text.startsWith("\"")) text = text.substring(1);
         if (text.endsWith("\"")) text = text.substring(0, text.length() - 1);
-        // TODO fix \r\n\b\t\xxx\ooo
-        // TODO 需要把所有的转义字符都处理掉
-        return text.replace("\\\"", "\"").replace("\\\\", "\\");
+        return text
+                .replace("\\b", "\b")
+                .replace("\\n", "\n")
+                .replace("\\r", "\r")
+                .replace("\\t", "\t")
+                .replace("\\\"", "\"")
+                .replace("\\\\", "\\");
     }
 
     public void writeIndent(int indent, BufferedWriter writer) throws IOException {
