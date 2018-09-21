@@ -101,6 +101,7 @@ public class FileNode extends NodeMap {
                 }
             }
         } else readValue(reader);
+        reader.close();
     }
 
     /**

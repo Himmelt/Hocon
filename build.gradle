@@ -6,7 +6,7 @@ apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 group = 'org.soraworld'
-version = '1.0.5'
+version = '1.0.6'
 archivesBaseName = "Hocon"
 
 sourceCompatibility = targetCompatibility = 1.8
@@ -19,7 +19,7 @@ repositories {
 }
 
 dependencies {
-    compile 'com.google.code.findbugs:jsr305:3.0.2'
+    compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
     testCompile 'junit:junit:4.12'
 }
 
