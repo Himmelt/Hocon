@@ -20,14 +20,14 @@ Simple Hocon Configuration Library
 <dependency>
   <groupId>org.soraworld</groupId>
   <artifactId>hocon</artifactId>
-  <version>1.0.6</version>
+  <version>1.0.7</version>
   <type>pom</type>
 </dependency>
 ```
 
 #### Gradle 使用 jcenter
 ```groovy
-compile 'org.soraworld:hocon:1.0.6'
+compile 'org.soraworld:hocon:1.0.7'
 ```
 
 #### 手动添加请下载
