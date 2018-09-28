@@ -8,16 +8,16 @@ import java.util.Set;
 
 public class Settings {
 
-    @Setting(comment = "comment.abc")
+    @Setting(path = "parent.abc", comment = "comment.abc")
     public int abc;
-    @Setting(comment = "comment.string")
+    @Setting(path = "parent.string", comment = "comment.string")
     public String string;
     @Setting(comment = "comment.maps")
     public Map<String, Integer> maps;
     @Setting(comment = "Gusk \nsdddd\r\\\\\"")
     //public HashSet<List<Integer>> set;
     public Set<List<Integer>> set;
-    @Setting
+    @Setting(path = "parent2.abc.def")
     public SubEnum subEnum;
 
 }
