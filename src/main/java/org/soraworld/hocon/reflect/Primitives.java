@@ -1,6 +1,5 @@
 package org.soraworld.hocon.reflect;
 
-import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -69,7 +68,7 @@ public final class Primitives {
      * @param type 类型
      * @return 是否封装
      */
-    public static boolean isWrapperType(@Nonnull Class<?> type) {
+    public static boolean isWrapperType(Class<?> type) {
         return WRAPPER_TO_PRIMITIVE_TYPE.containsKey(type);
     }
 
@@ -80,7 +79,7 @@ public final class Primitives {
      * @param type 类型
      * @return 封装类
      */
-    public static <T> Class<T> wrap(@Nonnull Class<T> type) {
+    public static <T> Class<T> wrap(Class<T> type) {
         @SuppressWarnings("unchecked")
         Class<T> wrapped = (Class<T>) PRIMITIVE_TO_WRAPPER_TYPE.get(type);
         return (wrapped == null) ? type : wrapped;
@@ -93,7 +92,7 @@ public final class Primitives {
      * @param type 类型
      * @return 解除封装后的类型
      */
-    public static <T> Class<T> unwrap(@Nonnull Class<T> type) {
+    public static <T> Class<T> unwrap(Class<T> type) {
         @SuppressWarnings("unchecked")
         Class<T> unwrapped = (Class<T>) WRAPPER_TO_PRIMITIVE_TYPE.get(type);
         return (unwrapped == null) ? type : unwrapped;

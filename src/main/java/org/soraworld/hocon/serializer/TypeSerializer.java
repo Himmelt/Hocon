@@ -1,10 +1,9 @@
 package org.soraworld.hocon.serializer;
 
-import org.soraworld.hocon.exception.*;
+import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.Options;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 
 /**
@@ -15,34 +14,32 @@ import java.lang.reflect.Type;
 public interface TypeSerializer<T> {
     /**
      * 反序列化.
+     * 此方法第一行应该检查 node 是否为空
+     * {@code if (node == null) throw new NullNodeException();}
      *
      * @param type 实例类型
      * @param node 结点
      * @return 反序列化后的对象
-     * @throws NullValueException   空值异常
-     * @throws DeserializeException 反序列化异常
-     * @throws NotBaseException     非基础结点异常
-     * @throws NotMatchException    类型不匹配异常
+     * @throws HoconException Hocon操作异常
      */
-    T deserialize(@Nonnull Type type, @Nonnull Node node) throws NullValueException, DeserializeException, NotBaseException, NotMatchException;
+    T deserialize(Type type, Node node) throws HoconException;
 
     /**
      * 序列化.
+     * 此方法可以抛出异常，但不应该返回空值.
      *
      * @param type    实例类型
      * @param value   序列化对象
      * @param options 配置选项
      * @return 序列化后的结点
-     * @throws NotMatchException  类型不匹配异常
-     * @throws SerializeException 序列化异常
+     * @throws HoconException Hocon操作异常
      */
-    Node serialize(@Nonnull Type type, T value, @Nonnull Options options) throws NotMatchException, SerializeException;
+    Node serialize(Type type, T value, Options options) throws HoconException;
 
     /**
      * 获取注册类型.
      *
      * @return 注册类型
      */
-    @Nonnull
     Type getRegType();
 }

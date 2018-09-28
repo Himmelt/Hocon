@@ -1,32 +1,29 @@
 package org.soraworld.hocon.serializer;
 
-import org.soraworld.hocon.exception.NotBaseException;
-import org.soraworld.hocon.exception.NullValueException;
+import org.soraworld.hocon.exception.HoconException;
+import org.soraworld.hocon.exception.NotMatchException;
+import org.soraworld.hocon.exception.NullNodeException;
 import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.Options;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 
 /**
  * 字符串类型序列化器.
  */
 public class StringSerializer implements TypeSerializer<String> {
-    public String deserialize(@Nonnull Type type, @Nonnull Node node) throws NullValueException, NotBaseException {
+    public String deserialize(Type type, Node node) throws HoconException {
+        if (node == null) throw new NullNodeException();
         if (node instanceof NodeBase) {
-            String string = ((NodeBase) node).getString();
-            if (string == null) throw new NullValueException(getRegType());
-            else return string;
-        }
-        throw new NotBaseException(getRegType());
+            return ((NodeBase) node).getString();
+        } else throw new NotMatchException("String type need NodeBase");
     }
 
-    public Node serialize(@Nonnull Type type, String value, @Nonnull Options options) {
+    public Node serialize(Type type, String value, Options options) {
         return new NodeBase(options, value, false);
     }
 
-    @Nonnull
     public Type getRegType() {
         return String.class;
     }

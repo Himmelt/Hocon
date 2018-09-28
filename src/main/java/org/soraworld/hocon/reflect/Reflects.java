@@ -4,7 +4,6 @@ import org.soraworld.hocon.exception.NonRawTypeException;
 import org.soraworld.hocon.exception.NotParamListException;
 import org.soraworld.hocon.exception.NotParamMapException;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -109,7 +108,7 @@ public final class Reflects {
      * @param lower 预计子类型
      * @return 是否超类型
      */
-    public static boolean isSuperOf(@Nonnull Type upper, @Nonnull Type lower) {
+    public static boolean isSuperOf(Type upper, Type lower) {
         if (upper.equals(lower)) return true;
         if (upper instanceof Class) {
             if (lower instanceof Class) return ((Class<?>) upper).isAssignableFrom((Class<?>) lower);

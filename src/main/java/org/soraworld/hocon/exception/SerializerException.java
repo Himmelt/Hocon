@@ -1,15 +1,15 @@
 package org.soraworld.hocon.exception;
 
 /**
- * 反序列化异常.
+ * 序列化反序列化异常.
  */
-public class DeserializeException extends Exception {
+public class SerializerException extends HoconException {
     /**
      * 实例化异常.
      *
      * @param e 引发异常来源
      */
-    public DeserializeException(Throwable e) {
+    public SerializerException(Throwable e) {
         super(e);
     }
 
@@ -18,7 +18,7 @@ public class DeserializeException extends Exception {
      *
      * @param message 异常消息
      */
-    public DeserializeException(String message) {
+    public SerializerException(String message) {
         super(message);
     }
 }

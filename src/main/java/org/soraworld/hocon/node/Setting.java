@@ -10,9 +10,9 @@ import java.lang.annotation.*;
 @Documented
 public @interface Setting {
     /**
-     * 路径.
+     * 路径树, 以 . 分隔
      *
-     * @return 路径
+     * @return 路径树
      */
     String path() default "";
 

@@ -1,6 +1,5 @@
 package org.soraworld.hocon.reflect;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -17,7 +16,7 @@ public final class Bounds {
 
     private static final ConcurrentHashMap<Type, Bounds> cache = new ConcurrentHashMap<>();
 
-    private Bounds(@Nonnull Type type) {
+    private Bounds(Type type) {
         if (type instanceof WildcardType) {
             Type[] upper = ((WildcardType) type).getUpperBounds();
             Type[] lower = ((WildcardType) type).getLowerBounds();
@@ -58,7 +57,7 @@ public final class Bounds {
      * @param type 类型
      * @return 边界
      */
-    public static Bounds getBounds(@Nonnull Type type) {
+    public static Bounds getBounds(Type type) {
         return cache.computeIfAbsent(type, Bounds::new);
     }
 }

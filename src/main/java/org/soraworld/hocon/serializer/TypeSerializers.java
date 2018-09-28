@@ -3,7 +3,6 @@ package org.soraworld.hocon.serializer;
 import org.soraworld.hocon.reflect.Primitives;
 import org.soraworld.hocon.reflect.Reflects;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -43,7 +42,7 @@ public class TypeSerializers {
      * @param type 类型
      * @return 序列化器
      */
-    public TypeSerializer get(@Nonnull Type type) {
+    public TypeSerializer get(Type type) {
         if (type instanceof Class) {
             type = Primitives.wrap((Class<?>) type);
         }
@@ -65,7 +64,7 @@ public class TypeSerializers {
      * @param <T>        序列化器类型参数
      * @param serializer 序列化器
      */
-    public <T> void registerType(@Nonnull TypeSerializer<? super T> serializer) {
+    public <T> void registerType(TypeSerializer<? super T> serializer) {
         serializers.add(serializer);
         typeMatches.clear();
     }

@@ -1,6 +1,5 @@
 package org.soraworld.hocon.reflect;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -52,7 +51,7 @@ public abstract class TypeToken<T> {
      * @param type 类型标记
      * @return 是否超类型
      */
-    public final boolean isSuperTypeOf(@Nonnull TypeToken<?> type) {
+    public final boolean isSuperTypeOf(TypeToken<?> type) {
         return Reflects.isSuperOf(runtimeType, type.runtimeType);
     }
 }

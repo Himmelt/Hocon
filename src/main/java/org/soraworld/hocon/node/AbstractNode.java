@@ -1,6 +1,5 @@
 package org.soraworld.hocon.node;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -110,15 +109,15 @@ public abstract class AbstractNode<T> implements Node {
      * @param text 文本内容
      * @return 处理后的文本
      */
-    public static String quotation(@Nonnull String text) {
+    public static String quotation(String text) {
         if (text.equals("null") || text.startsWith(" ") || text.endsWith(" ") || ILLEGAL.matcher(text).matches()) {
             String target = text
+                    .replace("\\", "\\\\")
                     .replace("\b", "\\b")
                     .replace("\n", "\\n")
                     .replace("\r", "\\r")
                     .replace("\t", "\\t")
-                    .replace("\"", "\\\"")
-                    .replace("\\", "\\\\");
+                    .replace("\"", "\\\"");
             return '"' + target + '"';
         }
         return text;
@@ -131,7 +130,7 @@ public abstract class AbstractNode<T> implements Node {
      * @param text 文本内容
      * @return 处理后的文本
      */
-    public static String unquotation(@Nonnull String text) {
+    public static String unquotation(String text) {
         if (text.startsWith("\"")) text = text.substring(1);
         if (text.endsWith("\"")) text = text.substring(0, text.length() - 1);
         return text

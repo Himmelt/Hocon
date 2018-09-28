@@ -1,42 +1,41 @@
 package org.soraworld.hocon.serializer;
 
-import org.soraworld.hocon.exception.DeserializeException;
-import org.soraworld.hocon.exception.NotBaseException;
-import org.soraworld.hocon.exception.NullValueException;
+import org.soraworld.hocon.exception.HoconException;
+import org.soraworld.hocon.exception.NotMatchException;
+import org.soraworld.hocon.exception.NullNodeException;
+import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.Options;
 import org.soraworld.hocon.reflect.Reflects;
 import org.soraworld.hocon.reflect.TypeToken;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 
 /**
  * 枚举类型序列化器.
  */
 public class EnumSerializer implements TypeSerializer<Enum<?>> {
-    public Enum<?> deserialize(@Nonnull Type type, @Nonnull Node node) throws NotBaseException, NullValueException, DeserializeException {
+    public Enum<?> deserialize(Type type, Node node) throws HoconException {
+        if (node == null) throw new NullNodeException();
         if (node instanceof NodeBase) {
             String name = ((NodeBase) node).getString();
-            if (name == null) throw new NullValueException(getRegType());
+            if (name == null) return null;
             try {
                 Class<?> rawType = Reflects.getRawType(type);
                 Enum<?> value = Reflects.getEnum(rawType.asSubclass(Enum.class), name);
                 if (value != null) return value;
-                else throw new DeserializeException("Non Enum Value " + name + " for " + rawType.getName());
+                else throw new SerializerException("Non Enum Value " + name + " for " + rawType.getName());
             } catch (Throwable e) {
-                throw new DeserializeException(e);
+                throw new SerializerException(e);
             }
-        }
-        throw new NotBaseException(getRegType());
+        } else throw new NotMatchException("Enum<?> type need NodeBase");
     }
 
-    public Node serialize(@Nonnull Type type, Enum<?> value, @Nonnull Options options) {
+    public Node serialize(Type type, Enum<?> value, Options options) {
         return new NodeBase(options, value == null ? null : value.name(), false);
     }
 
-    @Nonnull
     public Type getRegType() {
         return new TypeToken<Enum<?>>() {
         }.getType();

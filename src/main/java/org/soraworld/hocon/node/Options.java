@@ -3,7 +3,6 @@ package org.soraworld.hocon.node;
 import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.serializer.TypeSerializers;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 import java.util.function.Function;
 
@@ -12,10 +11,11 @@ import java.util.function.Function;
  */
 public class Options {
 
-    private boolean seal;
     private int deep = 0;
     private int indent = 2;
+    private boolean seal;
     private boolean debug = false;
+    private boolean cover = false;
     private String headLine = "---------------------------------------------";
     private Function<String, String> translator = key -> key;
     private final TypeSerializers[] serializers = new TypeSerializers[5];
@@ -70,6 +70,25 @@ public class Options {
      */
     public void setIndent(int indent) {
         if (!seal) this.indent = indent;
+    }
+
+    /**
+     * 在反序列化得到 null 或不存在对应结点, 是否覆盖当前值.
+     *
+     * @return 是否覆盖
+     */
+    public boolean isCover() {
+        return cover;
+    }
+
+    /**
+     * 设置 在反序列化得到 null 或不存在对应结点, 是否覆盖当前值.
+     * 如果配置已封印，则无效.
+     *
+     * @param cover 是否覆盖
+     */
+    public void setCover(boolean cover) {
+        if (!seal) this.cover = cover;
     }
 
     /**
@@ -136,7 +155,7 @@ public class Options {
      * @param type 类型
      * @return 序列化器
      */
-    public TypeSerializer getSerializer(@Nonnull Type type) {
+    public TypeSerializer getSerializer(Type type) {
         return serializers[deep].get(type);
     }
 
@@ -147,7 +166,7 @@ public class Options {
      * @param <T>        类型
      * @param serializer 序列化器
      */
-    public <T> void registerType(@Nonnull TypeSerializer<? super T> serializer) {
+    public <T> void registerType(TypeSerializer<? super T> serializer) {
         if (!seal) serializers[0].registerType(serializer);
     }
 
@@ -163,7 +182,7 @@ public class Options {
      * @param serializer 序列化器
      * @param level      注册级别
      */
-    public <T> void registerType(@Nonnull TypeSerializer<? super T> serializer, int level) {
+    public <T> void registerType(TypeSerializer<? super T> serializer, int level) {
         if (!seal && level >= 0) {
             level = level > 4 ? 4 : level;
             if (level > deep) {

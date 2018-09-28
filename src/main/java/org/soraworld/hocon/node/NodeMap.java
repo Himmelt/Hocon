@@ -1,11 +1,9 @@
 package org.soraworld.hocon.node;
 
-import org.soraworld.hocon.exception.NotMatchException;
-import org.soraworld.hocon.exception.SerializeException;
+import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.reflect.Reflects;
 import org.soraworld.hocon.serializer.TypeSerializer;
 
-import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.lang.reflect.Field;
@@ -38,10 +36,11 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
 
     /**
      * 用map里结点的值修改对象 {@link Setting} 修饰的字段.
+     * 如果字段的值是 null , 对应的类必须要有无参构造函数 !!
      *
      * @param target 修改对象
      */
-    public void modify(@Nonnull Object target) {
+    public void modify(Object target) {
         List<Field> fields = Reflects.getFields(target.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
@@ -49,54 +48,70 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 Type fieldType = field.getGenericType();
                 TypeSerializer serializer = options.getSerializer(fieldType);
                 if (serializer != null) {
-                    Node node = get(setting.path().isEmpty() ? field.getName() : setting.path());
-                    try {
-                        Object current = field.get(target);
-                        Class<?> type = current == null ? field.getType() : current.getClass();
-                        Object value = serializer.deserialize(fieldType, node);
-                        if (Map.class.isAssignableFrom(type) && value instanceof Map) {
-                            if (current instanceof Map) {
-                                ((Map) current).clear();
-                                ((Map<?, ?>) current).putAll((Map) value);
-                                continue;
-                            }
-                            if (current == null) {
-                                try {
-                                    Map<?, ?> newInstance = (Map) type.getConstructor().newInstance();
-                                    newInstance.putAll((Map) value);
-                                    field.set(target, newInstance);
-                                } catch (Throwable e) {
-                                    if (options.isDebug()) e.printStackTrace();
+                    Node node = get(new Paths(setting.path().isEmpty() ? field.getName() : setting.path()));
+                    if (node != null) {
+                        try {
+                            Object current = field.get(target);
+                            Class<?> type = current == null ? field.getType() : current.getClass();
+                            Object value = serializer.deserialize(fieldType, node);
+                            if (value != null) {
+                                if (Map.class.isAssignableFrom(type) && value instanceof Map) {
+                                    if (current instanceof Map) {
+                                        ((Map) current).clear();
+                                        ((Map<?, ?>) current).putAll((Map) value);
+                                        continue;
+                                    }
+                                    if (current == null) {
+                                        try {
+                                            Map<?, ?> newInstance = (Map) type.getConstructor().newInstance();
+                                            newInstance.putAll((Map) value);
+                                            field.set(target, newInstance);
+                                        } catch (Throwable e) {
+                                            if (options.isDebug()) e.printStackTrace();
+                                            field.set(target, value);
+                                        }
+                                        continue;
+                                    }
                                     field.set(target, value);
+                                    continue;
                                 }
-                                continue;
-                            }
-                            field.set(target, value);
-                            continue;
-                        }
-                        if (Collection.class.isAssignableFrom(type) && value instanceof Collection) {
-                            if (current instanceof Collection) {
-                                ((Collection) current).clear();
-                                ((Collection<?>) current).addAll((Collection) value);
-                                continue;
-                            }
-                            if (current == null) {
-                                try {
-                                    Collection<?> newInstance = (Collection<?>) type.getConstructor().newInstance();
-                                    newInstance.addAll((Collection) value);
-                                    field.set(target, newInstance);
-                                } catch (Throwable e) {
-                                    if (options.isDebug()) e.printStackTrace();
+                                if (Collection.class.isAssignableFrom(type) && value instanceof Collection) {
+                                    if (current instanceof Collection) {
+                                        ((Collection) current).clear();
+                                        ((Collection<?>) current).addAll((Collection) value);
+                                        continue;
+                                    }
+                                    if (current == null) {
+                                        try {
+                                            Collection<?> newInstance = (Collection<?>) type.getConstructor().newInstance();
+                                            newInstance.addAll((Collection) value);
+                                            field.set(target, newInstance);
+                                        } catch (Throwable e) {
+                                            if (options.isDebug()) e.printStackTrace();
+                                            field.set(target, value);
+                                        }
+                                        continue;
+                                    }
                                     field.set(target, value);
+                                    continue;
                                 }
-                                continue;
+                                field.set(target, value);
+                            } else if (options.isCover()) {
+                                try {
+                                    field.set(target, null);
+                                } catch (IllegalAccessException e) {
+                                    if (options.isDebug()) e.printStackTrace();
+                                }
                             }
-                            field.set(target, value);
-                            continue;
+                        } catch (Throwable e) {
+                            if (options.isDebug()) e.printStackTrace();
                         }
-                        field.set(target, value);
-                    } catch (Throwable e) {
-                        if (options.isDebug()) e.printStackTrace();
+                    } else if (options.isCover()) {
+                        try {
+                            field.set(target, null);
+                        } catch (IllegalAccessException e) {
+                            if (options.isDebug()) e.printStackTrace();
+                        }
                     }
                 } else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
                         + field.getDeclaringClass().getTypeName() + "." + field.getName()
@@ -110,22 +125,25 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      *
      * @param source 源对象
      */
-    public void extract(@Nonnull Object source) {
+    public void extract(Object source) {
         value.clear();
         List<Field> fields = Reflects.getFields(source.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
                 try {
-                    String path = setting.path().isEmpty() ? field.getName() : setting.path();
+                    Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     String comment = options.getTranslator().apply(setting.comment());
                     Type fieldType = field.getGenericType();
                     TypeSerializer serializer = options.getSerializer(fieldType);
-                    if (serializer != null) set(path, serializer.serialize(fieldType, field.get(source), options), comment);
-                    else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
+                    if (serializer != null) {
+                        if (!put(paths, serializer.serialize(fieldType, field.get(source), options), comment)) {
+                            if (options.isDebug()) System.out.println("NodeMap put failed, node not match or already exist !!");
+                        }
+                    } else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
                             + field.getDeclaringClass().getTypeName() + "." + field.getName()
                             + " with @Setting.");
-                } catch (SerializeException | NotMatchException | IllegalAccessException e) {
+                } catch (HoconException | IllegalAccessException e) {
                     if (options.isDebug()) e.printStackTrace();
                 }
             }
@@ -155,6 +173,29 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      */
     public int size() {
         return value.size();
+    }
+
+    /**
+     * 添加一个新的结点映射.
+     * 如果对应路径树上已有非空结点，则失败.
+     *
+     * @param paths   路径树
+     * @param obj     对象
+     * @param comment 注释
+     * @return 是否成功
+     */
+    public boolean put(Paths paths, Object obj, String comment) {
+        if (paths.empty()) return false;
+        if (paths.hasNext()) {
+            Node parent = get(paths.first());
+            if (parent == null) {
+                parent = new NodeMap(options);
+                set(paths.first(), parent);
+            }
+            if (parent instanceof NodeMap) return ((NodeMap) parent).put(paths.next(), obj, comment);
+            return false;
+        }
+        return put(paths.first(), obj, comment);
     }
 
     /**
@@ -200,18 +241,17 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param paths 路径树
      * @return 对应结点
      */
-    public Node get(String... paths) {
-        Node node = this;
-        for (String path : paths) {
-            if (node instanceof NodeMap) {
-                node = ((NodeMap) node).get(path);
-            } else return null;
+    public Node get(Paths paths) {
+        if (paths.notEmpty()) {
+            Node node = get(paths.first());
+            if (node instanceof NodeMap) return ((NodeMap) node).get(paths.next());
+            else return null;
         }
-        return node;
+        return this;
     }
 
     /**
-     * 设置路径对应结点.
+     * 强制设置(覆盖)路径对应结点.
      * 如果存在循环引用则失败.
      *
      * @param path 路径
@@ -232,7 +272,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     /**
-     * 设置路径对应结点.
+     * 强制设置(覆盖)路径对应结点.
      * 如果存在循环引用则失败.
      *
      * @param path    路径

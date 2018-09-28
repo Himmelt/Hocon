@@ -5,7 +5,16 @@ import java.lang.reflect.Type;
 /**
  * 序列化类型不匹配异常.
  */
-public class NotMatchException extends Exception {
+public class NotMatchException extends HoconException {
+    /**
+     * 实例化异常.
+     *
+     * @param message 异常消息
+     */
+    public NotMatchException(String message) {
+        super(message);
+    }
+
     /**
      * 实例化异常.
      *

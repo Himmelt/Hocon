@@ -95,17 +95,18 @@ public class NodeBase extends AbstractNode<String> implements Node {
 
     /**
      * 获取封装对象的逻辑值形式.
+     * true yes 1 t y
      *
      * @return 逻辑值
      */
-    public boolean getBoolean() {
+    public Boolean getBoolean() {
         if (value != null) {
             return value.equalsIgnoreCase("true")
                     || value.equalsIgnoreCase("yes")
                     || value.equalsIgnoreCase("1")
                     || value.equalsIgnoreCase("t")
                     || value.equalsIgnoreCase("y");
-        } else return false;
+        } else return null;
     }
 
     private static String parse(String text) {
