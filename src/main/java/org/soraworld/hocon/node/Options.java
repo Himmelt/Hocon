@@ -15,7 +15,6 @@ public class Options {
     private int indent = 2;
     private boolean seal;
     private boolean debug = false;
-    private boolean cover = false;
     private String headLine = "---------------------------------------------";
     private Function<String, String> translator = key -> key;
     private final TypeSerializers[] serializers = new TypeSerializers[5];
@@ -70,25 +69,6 @@ public class Options {
      */
     public void setIndent(int indent) {
         if (!seal) this.indent = indent;
-    }
-
-    /**
-     * 在反序列化得到 null 或不存在对应结点, 是否覆盖当前值.
-     *
-     * @return 是否覆盖
-     */
-    public boolean isCover() {
-        return cover;
-    }
-
-    /**
-     * 设置 在反序列化得到 null 或不存在对应结点, 是否覆盖当前值.
-     * 如果配置已封印，则无效.
-     *
-     * @param cover 是否覆盖
-     */
-    public void setCover(boolean cover) {
-        if (!seal) this.cover = cover;
     }
 
     /**

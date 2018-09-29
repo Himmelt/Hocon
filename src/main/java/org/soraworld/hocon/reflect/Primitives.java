@@ -68,8 +68,18 @@ public final class Primitives {
      * @param type 类型
      * @return 是否封装
      */
-    public static boolean isWrapperType(Class<?> type) {
+    public static boolean isWrapper(Class<?> type) {
         return WRAPPER_TO_PRIMITIVE_TYPE.containsKey(type);
+    }
+
+    /**
+     * 是否是原生类型.
+     *
+     * @param type 类型
+     * @return 是否原生
+     */
+    public static boolean isNative(Class<?> type) {
+        return PRIMITIVE_TO_WRAPPER_TYPE.containsKey(type);
     }
 
     /**

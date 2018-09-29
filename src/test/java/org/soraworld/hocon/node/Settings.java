@@ -12,6 +12,8 @@ public class Settings {
     public int abc;
     @Setting(path = "parent.string", comment = "comment.string")
     public String string;
+    @Setting(path = "parent.string", nullable = true, comment = "comment.string")
+    public String string2;
     @Setting(comment = "comment.maps")
     public Map<String, Integer> maps;
     @Setting(comment = "Gusk \nsdddd\r\\\\\"")

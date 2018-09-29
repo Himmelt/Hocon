@@ -1,6 +1,7 @@
 package org.soraworld.hocon.node;
 
 import org.soraworld.hocon.exception.HoconException;
+import org.soraworld.hocon.reflect.Primitives;
 import org.soraworld.hocon.reflect.Reflects;
 import org.soraworld.hocon.serializer.TypeSerializer;
 
@@ -35,12 +36,26 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     /**
-     * 用map里结点的值修改对象 {@link Setting} 修饰的字段.
-     * 如果字段的值是 null , 对应的类必须要有无参构造函数 !!
+     * 用 {@link NodeMap} 里结点的值修改对象 {@link Setting} 修饰的字段.<br>
+     * !!! 特别注意<br>
+     * 此方法不会修改 对应结点不存在，或 对应结点反序列化失败 的字段<br>
+     * 特别建议: 如果需要设置默认值 或 非首次执行，建议在调用此方法之前，<br>
+     * 对目标对象的{@link Setting}字段进行 初始化 或 设置默认值 或 !!清空之前的内容!!<br>
+     * 尤其是集合和映射，有可能在执行此方法之前就有内容，可根据需求选择是否清空当前内容 !!!<br>
+     * <br>
+     * 如果 集合或映射 的字段当前值为空，反序列化之后会对字段进行初始化，<br>
+     * 因此要求对应 集合或映射 的类要有无参构造函数,<br>
+     * 比如 {@link HashMap},{@link LinkedHashMap},{@link ArrayList},<br>
+     * {@link LinkedList},{@link HashSet},{@link TreeMap} 等等,<br>
+     * 因此建议在字段声明时使用准确的类型而不是 {@link Map},{@link Set},{@link List} 这样的类型<br>
+     * <br>
+     * 另外, {@link Setting#nullable()}为 true 的非原生类型字段, <br>
+     * 在对应结点反序列化结果是 null 时, 会被覆盖成 null
      *
      * @param target 修改对象
      */
     public void modify(Object target) {
+        if (target == null) return;
         List<Field> fields = Reflects.getFields(target.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
@@ -48,7 +63,8 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 Type fieldType = field.getGenericType();
                 TypeSerializer serializer = options.getSerializer(fieldType);
                 if (serializer != null) {
-                    Node node = get(new Paths(setting.path().isEmpty() ? field.getName() : setting.path()));
+                    Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
+                    Node node = get(paths);
                     if (node != null) {
                         try {
                             Object current = field.get(target);
@@ -96,20 +112,10 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                                     continue;
                                 }
                                 field.set(target, value);
-                            } else if (options.isCover()) {
-                                try {
-                                    field.set(target, null);
-                                } catch (IllegalAccessException e) {
-                                    if (options.isDebug()) e.printStackTrace();
-                                }
+                            } else if (setting.nullable() && !Primitives.isNative(type)) {
+                                field.set(target, null);
                             }
                         } catch (Throwable e) {
-                            if (options.isDebug()) e.printStackTrace();
-                        }
-                    } else if (options.isCover()) {
-                        try {
-                            field.set(target, null);
-                        } catch (IllegalAccessException e) {
                             if (options.isDebug()) e.printStackTrace();
                         }
                     }
@@ -121,7 +127,10 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     /**
-     * 提取对象{@link Setting} 修饰的字段的值到map对应的结点.
+     * 提取对象{@link Setting} 修饰的字段的值到map对应的结点.<br>
+     * !! 注意:<br>
+     * 如果存在两个 {@link Setting#path()} 相同的字段, 靠后的字段将无法提取<br>
+     * 在调试模式下会输出相关警告信息.
      *
      * @param source 源对象
      */
@@ -242,12 +251,12 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @return 对应结点
      */
     public Node get(Paths paths) {
-        if (paths.notEmpty()) {
+        if (paths.hasNext()) {
             Node node = get(paths.first());
             if (node instanceof NodeMap) return ((NodeMap) node).get(paths.next());
             else return null;
         }
-        return this;
+        return get(paths.first());
     }
 
     /**
