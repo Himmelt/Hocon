@@ -2,6 +2,7 @@ package org.soraworld.hocon.node;
 
 import org.soraworld.hocon.reflect.SubEnum;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -21,5 +22,7 @@ public class Settings {
     public Set<List<Integer>> set;
     @Setting(path = "parent2.abc.def")
     public SubEnum subEnum;
+    @Setting
+    protected ArrayList<String> arrayList = new ArrayList<>();
 
 }
