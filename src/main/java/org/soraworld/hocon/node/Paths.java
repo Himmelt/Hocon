@@ -11,6 +11,12 @@ public class Paths {
     private final int length;
     private final String[] paths;
 
+    private Paths(Paths source) {
+        this.paths = source.paths;
+        this.length = source.length;
+        this.current = 0;
+    }
+
     /**
      * 实例化路径树.
      * 以 . 分隔, 路径段内的 . 会被替换成下划线 '_'
@@ -125,6 +131,10 @@ public class Paths {
         if (current + index < length) {
             paths[current + index] = value.replace('.', '_');
         }
+    }
+
+    protected Paths clone() {
+        return new Paths(this);
     }
 
     public String toString() {

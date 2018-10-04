@@ -16,6 +16,10 @@ import java.util.*;
  */
 public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node {
 
+    private NodeMap(NodeMap source) {
+        super(source.options, source.value);
+    }
+
     /**
      * 实例化一个新的映射结点.
      *
@@ -133,7 +137,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param source 源对象
      */
     public void extract(Object source) {
-        extract(source, true, true);
+        extract(source, true, true, true);
     }
 
     /**
@@ -144,7 +148,19 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param keepComment 是否保留旧结点注释
      */
     public void extract(Object source, boolean keepComment) {
-        extract(source, keepComment, true);
+        extract(source, keepComment, true, true);
+    }
+
+    /**
+     * 提取对象{@link Setting} 修饰的字段的值到map对应的结点.<br>
+     * 覆盖旧结点内容.<br>
+     *
+     * @param source      源对象
+     * @param keepComment 是否保留旧结点注释
+     * @param clearOld    是否清除所有旧结点
+     */
+    public void extract(Object source, boolean keepComment, boolean clearOld) {
+        extract(source, keepComment, clearOld, true);
     }
 
     /**
@@ -156,8 +172,10 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param source      源对象
      * @param keepComment 是否保留旧结点注释
      * @param clearOld    是否清除所有旧结点
+     * @param overwrite   是否覆盖旧结点内容
      */
-    public void extract(Object source, boolean keepComment, boolean clearOld) {
+    public void extract(Object source, boolean keepComment, boolean clearOld, boolean overwrite) {
+        NodeMap oldNode = new NodeMap(this);
         if (clearOld) value.clear();
         List<Field> fields = Reflects.getFields(source.getClass());
         for (Field field : fields) {
@@ -166,13 +184,17 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 try {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     String comment = options.getTranslator().apply(setting.comment());
-                    Node old = get(paths);
+                    Node old = oldNode.get(paths.clone());
                     List<String> list = old != null ? old.getComments() : null;
                     Type fieldType = field.getGenericType();
                     TypeSerializer serializer = options.getSerializer(fieldType);
                     if (serializer != null) {
                         Node node = serializer.serialize(fieldType, field.get(source), options);
-                        if (put(paths, node, comment)) {
+                        if (overwrite) {
+                            if (set(paths, node, comment)) {
+                                if (comment.isEmpty() && keepComment) node.setComments(list);
+                            } else if (options.isDebug()) System.out.println("NodeMap set failed, paths is empty or not map path !!");
+                        } else if (put(paths, node, comment)) {
                             if (comment.isEmpty() && keepComment) node.setComments(list);
                         } else if (options.isDebug()) System.out.println("NodeMap put failed, node not match or already exist !!");
                     } else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
@@ -283,6 +305,30 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             else return null;
         }
         return get(paths.first());
+    }
+
+    /**
+     * 添加一个新的结点映射.<br>
+     * 如果对应路径树上已有非空结点，则覆盖.<br>
+     * 如果路径中间存在 非空非Map 结点则失败.
+     *
+     * @param paths   路径树
+     * @param obj     对象
+     * @param comment 注释
+     * @return 是否成功
+     */
+    public boolean set(Paths paths, Object obj, String comment) {
+        if (paths.empty()) return false;
+        if (paths.hasNext()) {
+            Node parent = get(paths.first());
+            if (parent == null) {
+                parent = new NodeMap(options);
+                set(paths.first(), parent);
+            }
+            if (parent instanceof NodeMap) return ((NodeMap) parent).set(paths.next(), obj, comment);
+            return false;
+        }
+        return set(paths.first(), obj, comment);
     }
 
     /**
