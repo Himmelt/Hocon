@@ -128,14 +128,37 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
 
     /**
      * 提取对象{@link Setting} 修饰的字段的值到map对应的结点.<br>
-     * !! 注意:<br>
-     * 如果存在两个 {@link Setting#path()} 相同的字段, 靠后的字段将无法提取<br>
-     * 在调试模式下会输出相关警告信息.
+     * 保留旧结点的注释, 清除所有旧结点内容.
      *
      * @param source 源对象
      */
     public void extract(Object source) {
-        value.clear();
+        extract(source, true, true);
+    }
+
+    /**
+     * 提取对象{@link Setting} 修饰的字段的值到map对应的结点.<br>
+     * 清除所有旧结点内容.
+     *
+     * @param source      源对象
+     * @param keepComment 是否保留旧结点注释
+     */
+    public void extract(Object source, boolean keepComment) {
+        extract(source, keepComment, true);
+    }
+
+    /**
+     * 提取对象{@link Setting} 修饰的字段的值到map对应的结点.<br>
+     * !! 注意:<br>
+     * 如果存在两个 {@link Setting#path()} 相同的字段, 靠后的字段将无法提取<br>
+     * 在调试模式下会输出相关警告信息.
+     *
+     * @param source      源对象
+     * @param keepComment 是否保留旧结点注释
+     * @param clearOld    是否清除所有旧结点
+     */
+    public void extract(Object source, boolean keepComment, boolean clearOld) {
+        if (clearOld) value.clear();
         List<Field> fields = Reflects.getFields(source.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
@@ -143,12 +166,15 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 try {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     String comment = options.getTranslator().apply(setting.comment());
+                    Node old = get(paths);
+                    List<String> list = old != null ? old.getComments() : null;
                     Type fieldType = field.getGenericType();
                     TypeSerializer serializer = options.getSerializer(fieldType);
                     if (serializer != null) {
-                        if (!put(paths, serializer.serialize(fieldType, field.get(source), options), comment)) {
-                            if (options.isDebug()) System.out.println("NodeMap put failed, node not match or already exist !!");
-                        }
+                        Node node = serializer.serialize(fieldType, field.get(source), options);
+                        if (put(paths, node, comment)) {
+                            if (comment.isEmpty() && keepComment) node.setComments(list);
+                        } else if (options.isDebug()) System.out.println("NodeMap put failed, node not match or already exist !!");
                     } else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
                             + field.getDeclaringClass().getTypeName() + "." + field.getName()
                             + " with @Setting.");

@@ -70,11 +70,22 @@ public abstract class AbstractNode<T> implements Node {
         } else return true;
     }
 
+    public List<String> getComments() {
+        return comments;
+    }
+
     public final void addComment(String comment) {
         if (comment != null && !comment.isEmpty()) {
             if (comments == null) comments = new ArrayList<>();
             comments.addAll(Arrays.asList(comment.split("[\n\r]")));
             comments.removeIf(String::isEmpty);
+        }
+    }
+
+    public void setComment(String comment) {
+        if (comment != null) {
+            comments.clear();
+            comments.add(comment);
         }
     }
 

@@ -43,12 +43,27 @@ public interface Node {
     void writeValue(int indent, BufferedWriter writer) throws Exception;
 
     /**
+     * 获取 node 的多行注释.
+     *
+     * @return 多行注释
+     */
+    List<String> getComments();
+
+    /**
      * 为 node 添加一条新注释.
      * 如果注释含有'\r' 或 '\n' 会被解析成多行.
      *
      * @param comment 注释
      */
     void addComment(String comment);
+
+    /**
+     * 为 node 设置单行注释,<br>
+     * 原来的注释会被替换.
+     *
+     * @param comment 新注释
+     */
+    void setComment(String comment);
 
     /**
      * 为 node 设置多行注释.
