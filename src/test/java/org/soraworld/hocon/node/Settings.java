@@ -24,5 +24,7 @@ public class Settings {
     public SubEnum subEnum;
     @Setting
     protected ArrayList<String> arrayList = new ArrayList<>();
+    @Setting
+    protected AnoSetting ssb = new AnoSetting();
 
 }

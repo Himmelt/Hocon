@@ -112,10 +112,10 @@ public abstract class AbstractNode<T> implements Node {
     }
 
     /**
-     * 尝试给字符串加双引号.
-     * 如果 封装内容 是字符串"null"，或以空格开头或以空格结尾，或含有非法字符，
-     * 则在写入文本文件时会在两端添加双引号.
-     * 同时对转义字符 '\' 和 '"' 进行转义.
+     * 尝试给字符串加双引号.<br>
+     * 如果 封装内容 是字符串"null"，或以空格开头或以空格结尾，或含有非法字符,<br>
+     * 则在写入文本文件时会在两端添加双引号.<br>
+     * 同时对转义字符进行转义.
      *
      * @param text 文本内容
      * @return 处理后的文本
@@ -135,7 +135,7 @@ public abstract class AbstractNode<T> implements Node {
     }
 
     /**
-     * 给字符串去双引号.
+     * 给字符串去双引号.<br>
      * 并反向操作转义字符.
      *
      * @param text 文本内容

@@ -23,6 +23,7 @@ public class TypeSerializers {
         SERIALIZERS.registerType(new BooleanSerializer());
         SERIALIZERS.registerType(new MapSerializer());
         SERIALIZERS.registerType(new ListSerializer());
+        SERIALIZERS.registerType(new AnnotationSerializer());
         SERIALIZERS.registerType(new NodeSerializer());
         SERIALIZERS.registerType(new EnumSerializer());
     }

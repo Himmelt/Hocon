@@ -66,6 +66,9 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             if (setting != null) {
                 Type fieldType = field.getGenericType();
                 TypeSerializer serializer = options.getSerializer(fieldType);
+                if (serializer == null && fieldType instanceof Class && ((Class) fieldType).isAnnotationPresent(Serializable.class)) {
+                    serializer = options.getSerializer(Serializable.class);
+                }
                 if (serializer != null) {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     Node node = get(paths);
@@ -188,6 +191,9 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     List<String> list = old != null ? old.getComments() : null;
                     Type fieldType = field.getGenericType();
                     TypeSerializer serializer = options.getSerializer(fieldType);
+                    if (serializer == null && fieldType instanceof Class && ((Class) fieldType).isAnnotationPresent(Serializable.class)) {
+                        serializer = options.getSerializer(Serializable.class);
+                    }
                     if (serializer != null) {
                         Node node = serializer.serialize(fieldType, field.get(source), options);
                         if (overwrite) {
