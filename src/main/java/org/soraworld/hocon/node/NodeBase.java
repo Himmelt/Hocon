@@ -9,6 +9,8 @@ import java.io.BufferedWriter;
  */
 public class NodeBase extends AbstractNode<String> implements Node, java.io.Serializable, Comparable<NodeBase>, CharSequence {
 
+    private static final long serialVersionUID = 511187959363727820L;
+
     /**
      * 实例化一个新的基础结点.
      * 如果 parse 为真，则会按照文本文件内容解析，即把双引号去掉，用在从文本读取解析时.
