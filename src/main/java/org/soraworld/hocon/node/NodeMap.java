@@ -574,4 +574,37 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         }
         return target;
     }
+
+    private static Collection<?> transCollection(Collection<?> source, Collection target, Type targetType) throws Exception {
+        if (source == null) throw new Exception();
+        if (target == null) {
+            Class<?> rawType = null;
+            if (targetType instanceof Class<?>) rawType = (Class<?>) targetType;
+            else if (targetType instanceof ParameterizedType) rawType = (Class<?>) ((ParameterizedType) targetType).getRawType();
+            target = (Collection<?>) rawType.getConstructor().newInstance();
+        } else target.clear();
+
+        if (targetType instanceof ParameterizedType) {
+            Type listType = Reflects.getListParameter((ParameterizedType) targetType);
+            if (listType instanceof ParameterizedType) {
+                Class<?> rawValType = (Class<?>) ((ParameterizedType) listType).getRawType();
+                if (Collection.class.isAssignableFrom(rawValType)) {
+                    for (Object element : source) {
+                        if (element instanceof Collection<?>) {
+                            Collection targetVal = transCollection((Collection<?>) element, null, listType);
+                            target.add(targetVal);
+                        }
+                    }
+                }
+            } else if (listType instanceof Class<?>) {
+                Class<?> clzValType = (Class<?>) listType;
+                for (Object element : source) {
+                    if (clzValType.isAssignableFrom(element.getClass())) {
+                        target.add(element);
+                    }
+                }
+            }
+        }
+        return target;
+    }
 }
