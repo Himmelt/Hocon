@@ -8,6 +8,7 @@ import org.soraworld.hocon.serializer.TypeSerializer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
 
@@ -81,12 +82,15 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                                 if (Map.class.isAssignableFrom(type) && value instanceof Map) {
                                     if (current instanceof Map) {
                                         ((Map) current).clear();
-                                        ((Map<?, ?>) current).putAll((Map) value);
+                                        // TODO LinkedHashMap -> Map
+                                        transMap((Map<?, ?>) value, (Map<?, ?>) current, fieldType);
+                                        //((Map<?, ?>) current).putAll((Map) value);
                                         continue;
                                     }
                                     if (current == null) {
                                         try {
                                             Map<?, ?> newInstance = (Map) type.getConstructor().newInstance();
+                                            // TODO LinkedHashMap -> Map
                                             newInstance.putAll((Map) value);
                                             field.set(target, newInstance);
                                         } catch (Throwable e) {
@@ -101,12 +105,14 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                                 if (Collection.class.isAssignableFrom(type) && value instanceof Collection) {
                                     if (current instanceof Collection) {
                                         ((Collection) current).clear();
+                                        // TODO LinkedList -> Collection
                                         ((Collection<?>) current).addAll((Collection) value);
                                         continue;
                                     }
                                     if (current == null) {
                                         try {
                                             Collection<?> newInstance = (Collection<?>) type.getConstructor().newInstance();
+                                            // TODO LinkedList -> Collection
                                             newInstance.addAll((Collection) value);
                                             field.set(target, newInstance);
                                         } catch (Throwable e) {
@@ -511,5 +517,61 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 }
             }
         }
+    }
+
+    private static Map<?, ?> transMap(Map<?, ?> source, Map target, Type targetType) throws Exception {
+        if (source == null) throw new Exception();
+        if (target == null) {
+            Class<?> rawType = null;
+            if (targetType instanceof Class<?>) rawType = (Class<?>) targetType;
+            else if (targetType instanceof ParameterizedType) rawType = (Class<?>) ((ParameterizedType) targetType).getRawType();
+            target = (Map<?, ?>) rawType.getConstructor().newInstance();
+        } else target.clear();
+
+        if (targetType instanceof ParameterizedType) {
+            Type[] params = Reflects.getMapParameter((ParameterizedType) targetType);
+            if (params[0] instanceof Class<?>) {
+                Class<?> clzKey = (Class<?>) params[0];
+                if (String.class.isAssignableFrom(clzKey) || NodeBase.class.isAssignableFrom(clzKey)) {
+                    if (params[1] instanceof ParameterizedType) {
+                        Class<?> rawValType = (Class<?>) ((ParameterizedType) params[1]).getRawType();
+                        if (Map.class.isAssignableFrom(rawValType)) {
+                            for (Map.Entry<?, ?> entry : source.entrySet()) {
+                                Object obj = entry.getKey();
+                                String key = "";
+                                if (obj instanceof String) key = (String) obj;
+                                else if (obj instanceof NodeBase) key = ((NodeBase) obj).getString();
+                                Object val = entry.getValue();
+                                if (val instanceof Map<?, ?>) {
+                                    Map targetVal = transMap((Map<?, ?>) val, null, params[1]);
+                                    target.put(key, targetVal);
+                                }
+                            }
+                        }
+                    } else if (params[1] instanceof Class<?>) {
+                        Class<?> clzValType = (Class<?>) params[1];
+                        for (Map.Entry<?, ?> entry : source.entrySet()) {
+                            Object obj = entry.getKey();
+                            String key = "";
+                            NodeBase node = null;
+                            if (obj instanceof String) key = (String) obj;
+                            else if (obj instanceof NodeBase) {
+                                node = (NodeBase) obj;
+                                key = node.getString();
+                            }
+                            Object val = entry.getValue();
+                            if (clzValType.isAssignableFrom(val.getClass())) {
+                                if (String.class.isAssignableFrom(clzKey)) {
+                                    target.put(key, val);
+                                } else if (NodeBase.class.isAssignableFrom(clzKey) && node != null) {
+                                    target.put(node, val);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return target;
     }
 }

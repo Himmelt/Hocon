@@ -2,10 +2,7 @@ package org.soraworld.hocon.node;
 
 import org.soraworld.hocon.reflect.SubEnum;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Settings {
 
@@ -26,5 +23,8 @@ public class Settings {
     protected ArrayList<String> arrayList = new ArrayList<>();
     @Setting
     protected AnoSetting ssb = new AnoSetting();
+
+    @Setting
+    public final TreeMap<String, TreeMap<String, String>> treeMap = new TreeMap<>();
 
 }
