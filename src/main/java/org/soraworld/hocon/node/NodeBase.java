@@ -7,7 +7,7 @@ import java.io.BufferedWriter;
  * 基础结点类.
  * 此类会把对象以字符串的形式存储.
  */
-public class NodeBase extends AbstractNode<String> implements Node {
+public class NodeBase extends AbstractNode<String> implements Node, java.io.Serializable, Comparable<NodeBase>, CharSequence {
 
     /**
      * 实例化一个新的基础结点.
@@ -112,5 +112,37 @@ public class NodeBase extends AbstractNode<String> implements Node {
     private static String parse(String text) {
         if (text.equals("null")) return null;
         return unquotation(text);
+    }
+
+    public int length() {
+        return value == null ? 0 : value.length();
+    }
+
+    public char charAt(int index) {
+        return value == null ? 0 : value.charAt(index);
+    }
+
+    public CharSequence subSequence(int start, int end) {
+        return value == null ? "" : value.subSequence(start, end);
+    }
+
+    public int compareTo(NodeBase o) {
+        return value == null || o == null || o.value == null ? 0 : value.compareTo(o.value);
+    }
+
+    public int hashCode() {
+        return value == null ? 0 : value.hashCode();
+    }
+
+    public boolean equals(Object obj) {
+        if (obj instanceof NodeBase) {
+            if (value == null && ((NodeBase) obj).value == null) return true;
+            if (value != null && ((NodeBase) obj).value != null) return value.equals(((NodeBase) obj).value);
+        }
+        return false;
+    }
+
+    public String toString() {
+        return value == null ? "[null]" : value;
     }
 }

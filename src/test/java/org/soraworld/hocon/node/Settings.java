@@ -25,6 +25,8 @@ public class Settings {
     protected AnoSetting ssb = new AnoSetting();
 
     @Setting
-    public final TreeMap<String, TreeMap<String, String>> treeMap = new TreeMap<>();
+    public final TreeMap<NodeBase, TreeMap<String, ArrayList<Float>>> treeMap = new TreeMap<>();
 
+    @Setting
+    public final HashSet<TreeMap<String, ArrayList<Float>>> hashSet = new HashSet<>();
 }

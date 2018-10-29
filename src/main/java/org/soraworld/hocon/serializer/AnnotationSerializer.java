@@ -20,6 +20,8 @@ public class AnnotationSerializer implements TypeSerializer<Object> {
                     Object object = ((Class<?>) type).getConstructor().newInstance();
                     ((NodeMap) node).modify(object);
                     return object;
+                } catch (ReflectiveOperationException | SecurityException e) {
+                    throw new SerializerException("Class annotated with @Serializable must have public non-parameter constructor !!");
                 } catch (Throwable e) {
                     throw new SerializerException(e);
                 }

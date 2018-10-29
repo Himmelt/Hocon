@@ -11,6 +11,7 @@ public class NodeMapTest {
 
     @Test
     public void modify() {
+        options.setDebug(true);
         try {
             fileNode.load(true);
             fileNode.modify(settings);
