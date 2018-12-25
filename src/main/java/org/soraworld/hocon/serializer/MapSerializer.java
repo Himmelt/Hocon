@@ -56,7 +56,7 @@ public class MapSerializer implements TypeSerializer<Map<?, ?>> {
                     if (key != null && obj != null) {
                         Node node = KEY.serialize(params[0], key, options);
                         if (node instanceof NodeBase) {
-                            if (!map.put(((NodeBase) node).getString(), VAL.serialize(params[1], obj, options))) {
+                            if (!map.add(((NodeBase) node).getString(), VAL.serialize(params[1], obj, options))) {
                                 throw new SerializerException("Node for key <" + ((NodeBase) node).getString() + "> already exist");
                             }
                         } else throw new NotMatchException("Key type must be BodeBase");

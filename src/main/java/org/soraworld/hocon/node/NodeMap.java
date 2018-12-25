@@ -20,7 +20,9 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * 映射结点类.
  */
-public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node {
+public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node, Map<String, Node> {
+
+    /* value - 不为 null */
 
     private NodeMap(NodeMap source) {
         super(source.options, source.value);
@@ -213,6 +215,18 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         value.clear();
     }
 
+    public Set<String> keySet() {
+        return value.keySet();
+    }
+
+    public Collection<Node> values() {
+        return value.values();
+    }
+
+    public Set<Entry<String, Node>> entrySet() {
+        return value.entrySet();
+    }
+
     /**
      * 获取 map 大小.
      *
@@ -220,6 +234,37 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      */
     public int size() {
         return value.size();
+    }
+
+    public boolean isEmpty() {
+        return value.isEmpty();
+    }
+
+    public boolean containsKey(Object key) {
+        return value.containsKey(key);
+    }
+
+    public boolean containsValue(Object value) {
+        return this.value.containsValue(value);
+    }
+
+    public Node get(Object key) {
+        return get(String.valueOf(key));
+    }
+
+    public Node put(String key, Node value) {
+        Node old = remove(key);
+        set(key, value);
+        return old;
+    }
+
+    public Node remove(Object key) {
+        return value.remove(key);
+    }
+
+    // TODO 循环引用未检查
+    public void putAll(Map<? extends String, ? extends Node> m) {
+        value.putAll(m);
     }
 
     /**
@@ -253,7 +298,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param obj  对象
      * @return 是否成功
      */
-    public boolean put(String path, Object obj) {
+    public boolean add(String path, Object obj) {
         if (value.get(path) != null) return false;
         return set(path, obj);
     }
@@ -369,9 +414,10 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * 移除路径对应结点.
      *
      * @param path 路径
+     * @return 移除的结点
      */
-    public void remove(String path) {
-        value.remove(path);
+    public Node remove(String path) {
+        return value.remove(path);
     }
 
     /**
