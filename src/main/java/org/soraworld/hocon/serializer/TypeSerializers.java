@@ -97,6 +97,7 @@ public class TypeSerializers {
      *
      * @param <T>        序列化器类型参数
      * @param serializer 序列化器
+     * @throws SerializerException 序列化异常
      */
     public <T> void registerType(TypeSerializer<? super T> serializer) throws SerializerException {
         TypeSerializer serial = get(serializer.getRegType());

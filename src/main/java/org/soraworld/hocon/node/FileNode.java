@@ -82,7 +82,8 @@ public class FileNode extends NodeMap {
     /**
      * 从文件加载配置.
      *
-     * @param backup 是否在失败时还原
+     * @param backup       是否在失败时还原
+     * @param keepComments 是否保留注释
      * @throws Exception 加载异常
      */
     public void load(boolean backup, boolean keepComments) throws Exception {
