@@ -430,6 +430,12 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         value.remove(path, node);
     }
 
+    public <T> T toType(Class<T> clazz) throws HoconException {
+        TypeSerializer serializer = options.getSerializer(clazz);
+        if (serializer != null) return (T) serializer.deserialize(clazz, this);
+        return null;
+    }
+
     /**
      * 为对应路径的结点添加注释.
      *
