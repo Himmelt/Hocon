@@ -61,6 +61,8 @@ bintray {
     key = BINTRAY_KEY
     user = BINTRAY_USER
     publications = ['mavenJava']
+    publish = true
+    override = true
     pkg {
         repo = 'Minecraft'
         name = 'Hocon'
