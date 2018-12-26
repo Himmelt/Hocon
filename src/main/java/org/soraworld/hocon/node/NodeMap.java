@@ -474,7 +474,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return map;
     }
 
-    public Map<String, Object> toTypeMap() {
+    public LinkedHashMap<String, Object> toTypeMap() {
         LinkedHashMap<String, Object> map = new LinkedHashMap<>();
         for (Map.Entry<String, Node> entry : value.entrySet()) {
             Node node = entry.getValue();
