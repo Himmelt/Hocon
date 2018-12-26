@@ -489,6 +489,29 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return map;
     }
 
+    public void fromTypeMap(Map<String, Object> map) {
+        value.clear();
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
+            Object val = entry.getValue();
+            if (val != null) {
+                Class<?> clazz = val.getClass();
+                TypeSerializer serial = options.getSerializer(clazz);
+                if (serial != null) {
+                    try {
+                        Node node = serial.serialize(clazz, val, options);
+                        if (node != null) {
+                            node.setTypeToComment(clazz);
+                            set(key, node);
+                        }
+                    } catch (HoconException e) {
+                        if (options.isDebug()) e.printStackTrace();
+                    }
+                }
+            }
+        }
+    }
+
     public boolean notEmpty() {
         return value != null && !value.isEmpty();
     }
