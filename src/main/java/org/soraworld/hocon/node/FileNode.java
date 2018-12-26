@@ -14,7 +14,7 @@ import java.util.List;
 public class FileNode extends NodeMap {
 
     private final File file;
-    private List<String> heads;
+    protected List<String> heads;
 
     private static final Field FD_VALUE;
 
@@ -59,14 +59,10 @@ public class FileNode extends NodeMap {
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
 
         if (heads != null && !heads.isEmpty()) {
-            writer.write("# " + options.getHeadLine());
-            writer.newLine();
             for (String head : heads) {
-                writer.write("# " + head);
+                writer.write("#! " + head);
                 writer.newLine();
             }
-            writer.write("# " + options.getHeadLine());
-            writer.newLine();
             if (notEmpty()) writer.newLine();
         }
 
@@ -75,22 +71,30 @@ public class FileNode extends NodeMap {
         writer.close();
     }
 
+    public void load() throws Exception {
+        load(false, false);
+    }
+
+    public void load(boolean backup) throws Exception {
+        load(backup, false);
+    }
+
     /**
      * 从文件加载配置.
      *
      * @param backup 是否在失败时还原
      * @throws Exception 加载异常
      */
-    public void load(boolean backup) throws Exception {
+    public void load(boolean backup, boolean keepComments) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
         if (backup && FD_VALUE != null) {
             Object value = this.value;
             try {
                 FD_VALUE.set(this, new LinkedHashMap<>());
-                readValue(reader);
+                readValue(reader, keepComments);
             } catch (IllegalAccessException ignored) {
                 System.out.println("IllegalAccessException backup will not work !!!");
-                readValue(reader);
+                readValue(reader, keepComments);
             } catch (Exception e) {
                 try {
                     FD_VALUE.set(this, value);
@@ -100,7 +104,7 @@ public class FileNode extends NodeMap {
                     throw e;
                 }
             }
-        } else readValue(reader);
+        } else readValue(reader, keepComments);
         reader.close();
     }
 

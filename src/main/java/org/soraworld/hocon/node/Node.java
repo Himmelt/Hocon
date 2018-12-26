@@ -1,5 +1,8 @@
 package org.soraworld.hocon.node;
 
+import org.soraworld.hocon.exception.HoconException;
+import org.soraworld.hocon.serializer.TypeSerializer;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -31,7 +34,11 @@ public interface Node {
      * @param reader reader
      * @throws Exception 读取异常
      */
-    void readValue(BufferedReader reader) throws Exception;
+    default void readValue(BufferedReader reader) throws Exception {
+        readValue(reader, false);
+    }
+
+    void readValue(BufferedReader reader, boolean keepComments) throws Exception;
 
     /**
      * 从 node 值写数据到 writer.
@@ -81,6 +88,22 @@ public interface Node {
      * @throws IOException 写入异常
      */
     void writeComment(int indent, BufferedWriter writer) throws IOException;
+
+    void setTypeToComment(Class<?> clazz);
+
+    Class<?> getTypeFromComment();
+
+    default <C> C toType(Class<C> clazz) throws HoconException {
+        TypeSerializer serializer = options().getSerializer(clazz);
+        if (serializer != null) return (C) serializer.deserialize(clazz, this);
+        return null;
+    }
+
+    default Object toType() throws HoconException {
+        Class<?> clz = getTypeFromComment();
+        if (clz != null) return toType(clz);
+        return null;
+    }
 
     /**
      * 获取 配置选项 options.

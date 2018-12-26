@@ -430,12 +430,6 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         value.remove(path, node);
     }
 
-    public <T> T toType(Class<T> clazz) throws HoconException {
-        TypeSerializer serializer = options.getSerializer(clazz);
-        if (serializer != null) return (T) serializer.deserialize(clazz, this);
-        return null;
-    }
-
     /**
      * 为对应路径的结点添加注释.
      *
@@ -480,32 +474,70 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return map;
     }
 
+    public Map<String, Object> toTypeMap() {
+        LinkedHashMap<String, Object> map = new LinkedHashMap<>();
+        for (Map.Entry<String, Node> entry : value.entrySet()) {
+            Node node = entry.getValue();
+            if (node != null) {
+                try {
+                    map.put(entry.getKey(), node.toType());
+                } catch (HoconException e) {
+                    if (options.isDebug()) e.printStackTrace();
+                }
+            }
+        }
+        return map;
+    }
+
     public boolean notEmpty() {
         return value != null && !value.isEmpty();
     }
 
-    public void readValue(BufferedReader reader) throws Exception {
+    public void readValue(BufferedReader reader, boolean keepComments) throws Exception {
         value.clear();
         String line;
+        ArrayList<String> commentTemp = new ArrayList<>();
         while ((line = reader.readLine()) != null) {
             line = line.trim();
             if (line.startsWith("}") || line.startsWith("]")) return;
-            if (line.isEmpty() || line.startsWith("#")) continue;
+            if (line.isEmpty()) continue;
+            if (line.startsWith("#")) {
+                if (keepComments) {
+                    int index = line.startsWith("#! ") ? 3 : line.startsWith("#!") || line.startsWith("# ") ? 2 : 1;
+                    String text = line.substring(index);
+                    if (line.startsWith("#!") && this instanceof FileNode) {
+                        ((FileNode) this).addHead(text);
+                    } else commentTemp.add(text);
+                } else continue;
+            }
             // text maybe contains { [ ] } ...
             if (line.endsWith("{") || (line.contains("{") && line.endsWith("}"))) {
                 NodeMap node = new NodeMap(options);
+                if (keepComments) {
+                    node.setComments(commentTemp);
+                    commentTemp = new ArrayList<>();
+                }
                 String path = line.substring(0, line.indexOf('{') - 1).trim();
                 value.put(unquotation(path), node);
-                if (!line.endsWith("}")) node.readValue(reader);
+                if (!line.endsWith("}")) node.readValue(reader, keepComments);
             } else if (line.contains("=") && (line.endsWith("[") || (line.contains("[") && line.endsWith("]")))) {
                 NodeList list = new NodeList(options);
+                if (keepComments) {
+                    list.setComments(commentTemp);
+                    commentTemp = new ArrayList<>();
+                }
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 value.put(unquotation(path), list);
-                if (!line.endsWith("]")) list.readValue(reader);
+                if (!line.endsWith("]")) list.readValue(reader, keepComments);
             } else if (line.contains("=")) {
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 String text = line.substring(line.indexOf('=') + 1).trim();
-                value.put(unquotation(path), new NodeBase(options, text, true));
+                NodeBase base = new NodeBase(options, text, true);
+                if (keepComments) {
+                    base.setComments(commentTemp);
+                    commentTemp = new ArrayList<>();
+                }
+                value.put(unquotation(path), base);
             }
         }
     }

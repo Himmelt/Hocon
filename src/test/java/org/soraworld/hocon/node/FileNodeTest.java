@@ -25,8 +25,7 @@ public class FileNodeTest {
         settings.set.add(new ArrayList<>(Arrays.asList(4, 5, 6, 7, 9)));
         settings.set.add(new LinkedList<>());
         settings.subEnum = SubEnum.SUB_ENUM_2;
-        options.setIndent(3);
-        options.setHeadLine("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        options.setIndent(0);
         options.setTranslator(s -> s.replace('.', '-'));
     }
 
@@ -38,6 +37,20 @@ public class FileNodeTest {
             fileNode.addHead("             Head Test Line 1");
             fileNode.addHead("             Head Test Line 2");
             fileNode.addHead("             Head Test Line 3");
+            fileNode.save();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void loadSave() {
+        try {
+            fileNode.load(false, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
             fileNode.save();
         } catch (Exception e) {
             e.printStackTrace();

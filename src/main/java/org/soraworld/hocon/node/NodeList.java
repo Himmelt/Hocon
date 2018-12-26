@@ -100,23 +100,42 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
         return value != null && !value.isEmpty();
     }
 
-    public void readValue(BufferedReader reader) throws Exception {
+    public void readValue(BufferedReader reader, boolean keepComments) throws Exception {
         value.clear();
         String line;
+        ArrayList<String> commentTemp = new ArrayList<>();
         while ((line = reader.readLine()) != null) {
             line = line.trim();
             if (line.startsWith("]")) return;
-            if (line.startsWith("#")) continue;
+            if (line.startsWith("#")) {
+                if (keepComments) {
+                    int index = line.startsWith("#! ") ? 3 : line.startsWith("#!") || line.startsWith("# ") ? 2 : 1;
+                    commentTemp.add(line.substring(index));
+                } else continue;
+            }
             if (line.startsWith("{")) {
                 NodeMap node = new NodeMap(options);
+                if (keepComments) {
+                    node.setComments(commentTemp);
+                    commentTemp = new ArrayList<>();
+                }
                 value.add(node);
-                if (!line.endsWith("}")) node.readValue(reader);
+                if (!line.endsWith("}")) node.readValue(reader, keepComments);
             } else if (line.startsWith("[")) {
                 NodeList list = new NodeList(options);
+                if (keepComments) {
+                    list.setComments(commentTemp);
+                    commentTemp = new ArrayList<>();
+                }
                 value.add(list);
-                if (!line.endsWith("]")) list.readValue(reader);
+                if (!line.endsWith("]")) list.readValue(reader, keepComments);
             } else {
-                value.add(new NodeBase(options, line, true));
+                NodeBase base = new NodeBase(options, line, true);
+                if (keepComments) {
+                    base.setComments(commentTemp);
+                    commentTemp = new ArrayList<>();
+                }
+                value.add(base);
             }
         }
     }

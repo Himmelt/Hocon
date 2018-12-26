@@ -11,6 +11,10 @@ public class NodeBase extends AbstractNode<String> implements Node, java.io.Seri
 
     private static final long serialVersionUID = 511187959363727820L;
 
+    public NodeBase(Object obj) {
+        super(Options.defaults(), String.valueOf(obj));
+    }
+
     /**
      * 实例化一个新的基础结点.
      * 如果 parse 为真，则会按照文本文件内容解析，即把双引号去掉，用在从文本读取解析时.
@@ -40,8 +44,7 @@ public class NodeBase extends AbstractNode<String> implements Node, java.io.Seri
         return value != null;
     }
 
-    @Override
-    public void readValue(BufferedReader reader) {
+    public void readValue(BufferedReader reader, boolean keepComments) {
     }
 
     @Override

@@ -11,6 +11,8 @@ import java.lang.reflect.TypeVariable;
  */
 public abstract class TypeToken<T> {
 
+    /* TODO 尝试 TypeResolver */
+
     private final Type runtimeType;
 
     /**
@@ -21,7 +23,7 @@ public abstract class TypeToken<T> {
         if (runtimeType instanceof TypeVariable) {
             throw new IllegalStateException("Cannot construct a TypeToken for a type variable.\n"
                     + "You probably meant to call new TypeToken<"
-                    + String.valueOf(runtimeType)
+                    + runtimeType
                     + ">(getClass()) "
                     + "that can resolve the type variable for you.\n"
                     + "If you do need to create a TypeToken of a type variable.");
@@ -31,7 +33,7 @@ public abstract class TypeToken<T> {
     private Type capture() {
         Type superclass = getClass().getGenericSuperclass();
         if (!(superclass instanceof ParameterizedType)) {
-            throw new IllegalArgumentException(String.valueOf(superclass) + " isn't parameterized.");
+            throw new IllegalArgumentException(superclass + " isn't parameterized.");
         }
         return ((ParameterizedType) superclass).getActualTypeArguments()[0];
     }

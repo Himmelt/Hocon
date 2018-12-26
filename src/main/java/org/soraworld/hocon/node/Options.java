@@ -1,5 +1,6 @@
 package org.soraworld.hocon.node;
 
+import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.serializer.TypeSerializers;
 
@@ -15,7 +16,6 @@ public class Options {
     private int indent = 2;
     private boolean seal;
     private boolean debug = false;
-    private String headLine = "---------------------------------------------";
     private Function<String, String> translator = key -> key;
     private final TypeSerializers[] serializers = new TypeSerializers[5];
 
@@ -91,26 +91,6 @@ public class Options {
     }
 
     /**
-     * 获取文件头部注释的分隔线字符串.
-     *
-     * @return 分隔线
-     */
-    public String getHeadLine() {
-        return headLine == null ? "" : headLine;
-    }
-
-    /**
-     * 设置文件头部注释的分隔线字符串.
-     * 请不要带有换行符和回车符.
-     * 如果配置已封印，则无效.
-     *
-     * @param headLine 分隔线
-     */
-    public void setHeadLine(String headLine) {
-        if (!seal) this.headLine = headLine.replaceAll("[\r\n]", "");
-    }
-
-    /**
      * 获取 {@link Setting} 注解注释的翻译器.
      *
      * @return 翻译器
@@ -147,7 +127,14 @@ public class Options {
      * @param serializer 序列化器
      */
     public <T> void registerType(TypeSerializer<? super T> serializer) {
-        if (!seal) serializers[0].registerType(serializer);
+        if (!seal) {
+            try {
+                serializers[0].registerType(serializer);
+            } catch (SerializerException e) {
+                System.out.println(e.getMessage());
+                if (debug) e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -170,8 +157,20 @@ public class Options {
                 for (int i = 1; i <= deep; i++) {
                     if (serializers[i] == null) serializers[i] = serializers[i - 1].newChild();
                 }
-                serializers[deep].registerType(serializer);
-            } else serializers[level].registerType(serializer);
+                try {
+                    serializers[deep].registerType(serializer);
+                } catch (SerializerException e) {
+                    System.out.println(e.getMessage());
+                    if (debug) e.printStackTrace();
+                }
+            } else {
+                try {
+                    serializers[level].registerType(serializer);
+                } catch (SerializerException e) {
+                    System.out.println(e.getMessage());
+                    if (debug) e.printStackTrace();
+                }
+            }
         }
     }
 }

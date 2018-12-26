@@ -31,6 +31,8 @@ public abstract class AbstractNode<T> implements Node {
      */
     protected static final Pattern ILLEGAL = Pattern.compile(".*[\":=,+?`!@#$^&*{}\\[\\]\\\\].*");
 
+    protected static final Pattern CLZ_COMMENT = Pattern.compile("# <class>.+</class>");
+
     /**
      * 初始化一个新结点.
      *
@@ -105,6 +107,26 @@ public abstract class AbstractNode<T> implements Node {
                 writer.newLine();
             }
         }
+    }
+
+    public void setTypeToComment(Class<?> clazz) {
+        if (clazz != null) {
+            if (comments == null) comments = new ArrayList<>();
+            comments.removeIf(text -> CLZ_COMMENT.matcher(text).matches());
+            comments.add("# <class>" + clazz.getName() + "</class>");
+        }
+    }
+
+    public Class<?> getTypeFromComment() {
+        if (comments != null) {
+            String comment = comments.stream().filter(text -> CLZ_COMMENT.matcher(text).matches()).findAny().orElse("");
+            try {
+                return Class.forName(comment.replaceAll("# <class>", "").replace("</class>", ""));
+            } catch (ClassNotFoundException e) {
+                if (options.isDebug()) e.printStackTrace();
+            }
+        }
+        return null;
     }
 
     public final Options options() {

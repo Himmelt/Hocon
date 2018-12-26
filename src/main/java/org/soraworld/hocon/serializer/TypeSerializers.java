@@ -1,5 +1,6 @@
 package org.soraworld.hocon.serializer;
 
+import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.reflect.Primitives;
 import org.soraworld.hocon.reflect.Reflects;
 
@@ -18,14 +19,46 @@ public class TypeSerializers {
     private static final TypeSerializers SERIALIZERS = new TypeSerializers(null);
 
     static {
-        SERIALIZERS.registerType(new NumberSerializer());
-        SERIALIZERS.registerType(new StringSerializer());
-        SERIALIZERS.registerType(new BooleanSerializer());
-        SERIALIZERS.registerType(new MapSerializer());
-        SERIALIZERS.registerType(new ListSerializer());
-        SERIALIZERS.registerType(new AnnotationSerializer());
-        SERIALIZERS.registerType(new NodeSerializer());
-        SERIALIZERS.registerType(new EnumSerializer());
+        try {
+            SERIALIZERS.registerType(new NumberSerializer());
+        } catch (SerializerException e) {
+            e.printStackTrace();
+        }
+        try {
+            SERIALIZERS.registerType(new StringSerializer());
+        } catch (SerializerException e) {
+            e.printStackTrace();
+        }
+        try {
+            SERIALIZERS.registerType(new BooleanSerializer());
+        } catch (SerializerException e) {
+            e.printStackTrace();
+        }
+        try {
+            SERIALIZERS.registerType(new MapSerializer());
+        } catch (SerializerException e) {
+            e.printStackTrace();
+        }
+        try {
+            SERIALIZERS.registerType(new ListSerializer());
+        } catch (SerializerException e) {
+            e.printStackTrace();
+        }
+        try {
+            SERIALIZERS.registerType(new AnnotationSerializer());
+        } catch (SerializerException e) {
+            e.printStackTrace();
+        }
+        try {
+            SERIALIZERS.registerType(new NodeSerializer());
+        } catch (SerializerException e) {
+            e.printStackTrace();
+        }
+        try {
+            SERIALIZERS.registerType(new EnumSerializer());
+        } catch (SerializerException e) {
+            e.printStackTrace();
+        }
     }
 
     private TypeSerializers(TypeSerializers parent) {
@@ -65,9 +98,18 @@ public class TypeSerializers {
      * @param <T>        序列化器类型参数
      * @param serializer 序列化器
      */
-    public <T> void registerType(TypeSerializer<? super T> serializer) {
-        serializers.add(serializer);
-        typeMatches.clear();
+    public <T> void registerType(TypeSerializer<? super T> serializer) throws SerializerException {
+        TypeSerializer serial = get(serializer.getRegType());
+        if (serial == null) {
+            serializers.add(serializer);
+            typeMatches.clear();
+        } else {
+            String message = "Serializer for type ["
+                    + serializer.getRegType().getTypeName()
+                    + "] has been registered with type ["
+                    + serial.getRegType() + "].";
+            throw new SerializerException(message);
+        }
     }
 
     /**
