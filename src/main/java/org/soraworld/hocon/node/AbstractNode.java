@@ -153,6 +153,7 @@ public abstract class AbstractNode<T> implements Node {
                     .replace("\"", "\\\"");
             return '"' + target + '"';
         }
+        if (text.isEmpty()) return "\"\"";
         return text;
     }
 
