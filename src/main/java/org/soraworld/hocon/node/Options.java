@@ -123,10 +123,9 @@ public class Options {
      * 注册类型和对应的序列化器.
      * 注册级别默认为 0
      *
-     * @param <T>        类型
      * @param serializer 序列化器
      */
-    public <T> void registerType(TypeSerializer<? super T> serializer) {
+    public void registerType(TypeSerializer serializer) {
         if (!seal) {
             try {
                 serializers[0].registerType(serializer);
@@ -145,11 +144,10 @@ public class Options {
      * 按类型搜索序列化器时会先从最低的等级开始搜寻，找不到再去父集合查找，
      * 直到根集合查找完毕.
      *
-     * @param <T>        类型
      * @param serializer 序列化器
      * @param level      注册级别
      */
-    public <T> void registerType(TypeSerializer<? super T> serializer, int level) {
+    public void registerType(TypeSerializer serializer, int level) {
         if (!seal && level >= 0) {
             level = level > 4 ? 4 : level;
             if (level > deep) {

@@ -1,5 +1,6 @@
 package org.soraworld.hocon.node;
 
+import javax.annotation.Nonnull;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 
@@ -11,8 +12,20 @@ public class NodeBase extends AbstractNode<String> implements Node, java.io.Seri
 
     private static final long serialVersionUID = 511187959363727820L;
 
-    public NodeBase(Object obj) {
+    public NodeBase(@Nonnull Object obj) {
         super(Options.defaults(), String.valueOf(obj));
+    }
+
+    /**
+     * 实例化一个新的基础结点.
+     * 如果 parse 为真，则会按照文本文件内容解析，即把双引号去掉，用在从文本读取解析时.
+     * 如果 parse 为假，则会直接存储 obj 的字符串形式，用在创建新实例时.
+     *
+     * @param options 配置选项
+     * @param obj     封装对象
+     */
+    public NodeBase(@Nonnull Options options, @Nonnull Object obj) {
+        super(options, obj.toString());
     }
 
     /**
@@ -24,8 +37,8 @@ public class NodeBase extends AbstractNode<String> implements Node, java.io.Seri
      * @param obj     封装对象
      * @param parse   是否解析
      */
-    public NodeBase(Options options, Object obj, boolean parse) {
-        super(options, obj == null ? null : parse && obj instanceof String ? parse((String) obj) : obj.toString());
+    public NodeBase(@Nonnull Options options, @Nonnull Object obj, boolean parse) {
+        super(options, parse && obj instanceof String ? unquotation((String) obj) : obj.toString());
     }
 
     /**
@@ -36,7 +49,7 @@ public class NodeBase extends AbstractNode<String> implements Node, java.io.Seri
      * @param parse   是否解析
      * @param comment 注释
      */
-    public NodeBase(Options options, Object obj, boolean parse, String comment) {
+    public NodeBase(@Nonnull Options options, @Nonnull Object obj, boolean parse, String comment) {
         super(options, obj == null ? null : parse && obj instanceof String ? parse((String) obj) : obj.toString(), comment);
     }
 
@@ -58,6 +71,7 @@ public class NodeBase extends AbstractNode<String> implements Node, java.io.Seri
      *
      * @return 字符串
      */
+    @Nonnull
     public String getString() {
         return value;
     }

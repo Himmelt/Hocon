@@ -4,7 +4,6 @@ import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NonRawTypeException;
 import org.soraworld.hocon.exception.NotParamListException;
 import org.soraworld.hocon.exception.NotParamMapException;
-import org.soraworld.hocon.reflect.Primitives;
 import org.soraworld.hocon.reflect.Reflects;
 import org.soraworld.hocon.serializer.TypeSerializer;
 
@@ -105,7 +104,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                                     continue;
                                 }
                                 field.set(target, value);
-                            } else if (setting.nullable() && !Primitives.isNative(clzType)) {
+                            } else if (setting.nullable() && !clzType.isPrimitive()) {
                                 field.set(target, null);
                             }
                         } catch (Throwable e) {

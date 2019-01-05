@@ -1,5 +1,6 @@
 package org.soraworld.hocon.node;
 
+import javax.annotation.Nonnull;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,8 +40,8 @@ public abstract class AbstractNode<T> implements Node {
      * @param options 配置选项
      * @param value   封装对象
      */
-    protected AbstractNode(Options options, T value) {
-        this.options = options != null ? options : Options.defaults();
+    protected AbstractNode(@Nonnull Options options, @Nonnull T value) {
+        this.options = options;
         this.value = value;
     }
 
@@ -51,8 +52,8 @@ public abstract class AbstractNode<T> implements Node {
      * @param value   封装对象
      * @param comment 注释
      */
-    protected AbstractNode(Options options, T value, String comment) {
-        this.options = options != null ? options : Options.defaults();
+    protected AbstractNode(@Nonnull Options options, @Nonnull T value, @Nonnull String comment) {
+        this.options = options;
         this.value = value;
         addComment(comment);
     }
@@ -76,8 +77,8 @@ public abstract class AbstractNode<T> implements Node {
         return comments;
     }
 
-    public final void addComment(String comment) {
-        if (comment != null && !comment.isEmpty()) {
+    public final void addComment(@Nonnull String comment) {
+        if (!comment.isEmpty()) {
             if (comments == null) comments = new ArrayList<>();
             comments.addAll(Arrays.asList(comment.split("[\n\r]")));
             comments.removeIf(String::isEmpty);

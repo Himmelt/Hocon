@@ -1,8 +1,8 @@
 package org.soraworld.hocon.serializer;
 
 import org.soraworld.hocon.exception.SerializerException;
-import org.soraworld.hocon.reflect.Primitives;
 import org.soraworld.hocon.reflect.Reflects;
+import org.soraworld.hocon.reflect.TypeResolver;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,8 +14,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class TypeSerializers {
 
     private final TypeSerializers parent;
-    private final CopyOnWriteArrayList<TypeSerializer<?>> serializers = new CopyOnWriteArrayList<>();
-    private final ConcurrentHashMap<Type, TypeSerializer<?>> typeMatches = new ConcurrentHashMap<>();
+    private final CopyOnWriteArrayList<TypeSerializer> serializers = new CopyOnWriteArrayList<>();
+    private final ConcurrentHashMap<Type, TypeSerializer> typeMatches = new ConcurrentHashMap<>();
     private static final TypeSerializers SERIALIZERS = new TypeSerializers(null);
 
     static {
@@ -77,38 +77,33 @@ public class TypeSerializers {
      * @return 序列化器
      */
     public TypeSerializer get(Type type) {
-        if (type instanceof Class) {
-            type = Primitives.wrap((Class<?>) type);
-        }
-        TypeSerializer<?> serializer = typeMatches.computeIfAbsent(type, typ -> {
-            for (TypeSerializer<?> serial : serializers) {
-                if (Reflects.isSuperOf(serial.getRegType(), typ)) return serial;
+        if (type instanceof Class) type = TypeResolver.wrapPrimitives((Class<?>) type);
+        TypeSerializer serializer = typeMatches.computeIfAbsent(type, typ -> {
+            for (TypeSerializer serial : serializers) {
+                if (Reflects.isSuperOf(serial.getType(), typ)) return serial;
             }
             return null;
         });
-        if (serializer == null && parent != null) {
-            serializer = parent.get(type);
-        }
+        if (serializer == null && parent != null) serializer = parent.get(type);
         return serializer;
     }
 
     /**
      * 注册序列化器.
      *
-     * @param <T>        序列化器类型参数
      * @param serializer 序列化器
      * @throws SerializerException 序列化异常
      */
-    public <T> void registerType(TypeSerializer<? super T> serializer) throws SerializerException {
-        TypeSerializer serial = get(serializer.getRegType());
+    public void registerType(TypeSerializer serializer) throws SerializerException {
+        TypeSerializer serial = get(serializer.getType());
         if (serial == null) {
             serializers.add(serializer);
             typeMatches.clear();
         } else {
             String message = "Serializer for type ["
-                    + serializer.getRegType().getTypeName()
+                    + serializer.getType().getTypeName()
                     + "] has been registered with type ["
-                    + serial.getRegType() + "].";
+                    + serial.getType() + "].";
             throw new SerializerException(message);
         }
     }

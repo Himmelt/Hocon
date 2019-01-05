@@ -11,6 +11,7 @@ import org.soraworld.hocon.node.Options;
 import org.soraworld.hocon.reflect.Reflects;
 import org.soraworld.hocon.reflect.TypeToken;
 
+import javax.annotation.Nonnull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -19,31 +20,30 @@ import java.util.Map;
 /**
  * 映射类型序列化器.
  */
-public class MapSerializer implements TypeSerializer<Map<?, ?>> {
-    public Map<?, ?> deserialize(Type type, Node node) throws HoconException {
-        if (node == null) throw new NullNodeException();
-        if (node instanceof NodeMap) {
-            if (type instanceof ParameterizedType) {
-                try {
-                    Type[] params = Reflects.getMapParameter((ParameterizedType) type);
-                    TypeSerializer<?> KEY = node.options().getSerializer(params[0]);
-                    TypeSerializer<?> VAL = node.options().getSerializer(params[1]);
-                    Map<Object, Object> map = new LinkedHashMap<>();
-                    for (String path : ((NodeMap) node).keys()) {
-                        Object key = KEY.deserialize(params[0], new NodeBase(node.options(), path, false));
-                        Object val = VAL.deserialize(params[1], ((NodeMap) node).get(path));
-                        if (key != null && val != null) map.put(key, val);
-                    }
-                    return map;
-                } catch (Throwable e) {
-                    throw new SerializerException(e);
+public class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
+    @Nonnull
+    public Map<?, ?> deserialize(@Nonnull Type type, @Nonnull NodeMap node) throws HoconException {
+        if (type instanceof ParameterizedType) {
+            try {
+                Type[] params = Reflects.getMapParameter((ParameterizedType) type);
+                TypeSerializer KEY = node.options().getSerializer(params[0]);
+                TypeSerializer VAL = node.options().getSerializer(params[1]);
+                Map<Object, Object> map = new LinkedHashMap<>();
+                for (String path : node.keys()) {
+                    Object key = KEY.deserialize(params[0], new NodeBase(node.options(), path, false));
+                    Object val = VAL.deserialize(params[1], node.get(path));
+                    map.put(key, val);
                 }
-            } else throw new NotMatchException(getRegType(), type);
-        } else throw new NotMatchException("Map<?,?> type need NodeMap");
+                return map;
+            } catch (Throwable e) {
+                throw new SerializerException(e);
+            }
+        } else throw new NotMatchException(getType(), type);
     }
 
-    public Node serialize(Type type, Map<?, ?> value, Options options) throws HoconException {
-        if (value == null || value.isEmpty()) return new NodeMap(options);
+    @Nonnull
+    public NodeMap serialize(@Nonnull Type type, @Nonnull Map<?, ?> value, @Nonnull Options options) throws HoconException {
+        if (value.isEmpty()) return new NodeMap(options);
         if (type instanceof ParameterizedType) {
             try {
                 Type[] params = Reflects.getMapParameter((ParameterizedType) type);
@@ -66,11 +66,6 @@ public class MapSerializer implements TypeSerializer<Map<?, ?>> {
             } catch (Throwable e) {
                 throw new SerializerException(e);
             }
-        } else throw new NotMatchException(getRegType(), type);
-    }
-
-    public Type getRegType() {
-        return new TypeToken<Map<?, ?>>() {
-        }.getType();
+        } else throw new NotMatchException(getType(), type);
     }
 }
