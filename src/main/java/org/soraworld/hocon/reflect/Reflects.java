@@ -16,6 +16,21 @@ public final class Reflects {
 
     private static final ConcurrentHashMap<Class<?>, CopyOnWriteArrayList<Field>> CLAZZ_FIELDS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Class<? extends Enum<?>>, ConcurrentHashMap<String, Enum<?>>> ENUM_FIELDS = new ConcurrentHashMap<>();
+    private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPERS;
+
+    static {
+        Map<Class<?>, Class<?>> types = new HashMap<>();
+        types.put(boolean.class, Boolean.class);
+        types.put(byte.class, Byte.class);
+        types.put(char.class, Character.class);
+        types.put(double.class, Double.class);
+        types.put(float.class, Float.class);
+        types.put(int.class, Integer.class);
+        types.put(long.class, Long.class);
+        types.put(short.class, Short.class);
+        types.put(void.class, Void.class);
+        PRIMITIVE_WRAPPERS = Collections.unmodifiableMap(types);
+    }
 
     /**
      * 获取类的非静态字段.
@@ -102,29 +117,31 @@ public final class Reflects {
     }
 
     /**
-     * 是否是超类型.
+     * 是否可以赋值.<br>
+     * 判断继承关系, 是否超类型.
      *
-     * @param upper 预计超类型
-     * @param lower 预计子类型
+     * @param parent 超类型
+     * @param child  子类型
      * @return 是否超类型
      */
-    public static boolean isSuperOf(Type upper, Type lower) {
-        if (upper.equals(lower)) return true;
-        if (upper instanceof Class) {
-            if (lower instanceof Class) return ((Class<?>) upper).isAssignableFrom((Class<?>) lower);
-            return lower instanceof ParameterizedType && ((Class<?>) upper).isAssignableFrom((Class<?>) ((ParameterizedType) lower).getRawType());
+    // TODO 封装类型和原生类型的关系 ???
+    public static boolean isAssignableFrom(Type parent, Type child) {
+        if (parent.equals(child)) return true;
+        if (parent instanceof Class) {
+            if (child instanceof Class) return ((Class<?>) parent).isAssignableFrom((Class<?>) child);
+            return child instanceof ParameterizedType && ((Class<?>) parent).isAssignableFrom((Class<?>) ((ParameterizedType) child).getRawType());
         }
-        if (upper instanceof ParameterizedType) {
-            Class<?> upperRaw = (Class) ((ParameterizedType) upper).getRawType();
-            Type[] upperTypes = ((ParameterizedType) upper).getActualTypeArguments();
-            if (lower instanceof ParameterizedType) {
-                Class<?> lowerRaw = (Class) ((ParameterizedType) lower).getRawType();
+        if (parent instanceof ParameterizedType) {
+            Class<?> upperRaw = (Class) ((ParameterizedType) parent).getRawType();
+            Type[] upperTypes = ((ParameterizedType) parent).getActualTypeArguments();
+            if (child instanceof ParameterizedType) {
+                Class<?> lowerRaw = (Class) ((ParameterizedType) child).getRawType();
                 if (upperRaw.isAssignableFrom(lowerRaw)) {
-                    Type[] lowerTypes = ((ParameterizedType) lower).getActualTypeArguments();
+                    Type[] lowerTypes = ((ParameterizedType) child).getActualTypeArguments();
                     if (upperTypes.length == lowerTypes.length) {
                         if (upperTypes.length > 0) {
                             for (int i = 0; i < upperTypes.length; i++) {
-                                if (!isSuperOf(upperTypes[i], lowerTypes[i])) return false;
+                                if (!isAssignableFrom(upperTypes[i], lowerTypes[i])) return false;
                             }
                         }
                         return true;
@@ -132,19 +149,66 @@ public final class Reflects {
                 }
                 return false;
             }
-            if (lower instanceof Class && upperRaw.isAssignableFrom((Class<?>) lower)) {
+            if (child instanceof Class && upperRaw.isAssignableFrom((Class<?>) child)) {
                 if (upperTypes.length > 0) {
                     for (Type upperType : upperTypes) {
-                        if (!isSuperOf(upperType, Enum.class.isAssignableFrom((Class) lower) ? lower : Object.class)) return false;
+                        if (!isAssignableFrom(upperType, Enum.class.isAssignableFrom((Class) child) ? child : Object.class))
+                            return false;
                     }
                 }
                 return true;
             }
             return false;
         }
-        if (upper instanceof WildcardType || upper instanceof TypeVariable) {
-            return Bounds.getBounds(upper).isSuperOf(Bounds.getBounds(lower));
+        if (parent instanceof WildcardType || parent instanceof TypeVariable) {
+            return Bounds.getBounds(parent).isSuperOf(Bounds.getBounds(child));
         }
         return false;
+    }
+
+    public static ArrayList<Type> getClassTree(ParameterizedType parent, Class<?> child) {
+        ArrayList<Type> tree = new ArrayList<>();
+
+        return tree;
+    }
+
+    public static <P, C extends P> Type getParentType(Class<P> ancestor, Class<C> child) {
+        Type sup = child.getGenericSuperclass();
+        if (sup instanceof Class<?> && ancestor.isAssignableFrom((Class<?>) sup)
+                || sup instanceof ParameterizedType && ancestor.isAssignableFrom((Class<?>) ((ParameterizedType) sup).getRawType())) {
+            return sup;
+        }
+        Type[] sups = child.getGenericInterfaces();
+        for (int i = 0; sups != null && i < sups.length; i++) {
+            sup = sups[i];
+            if (sup instanceof Class<?> && ancestor.isAssignableFrom((Class<?>) sup)
+                    || sup instanceof ParameterizedType && ancestor.isAssignableFrom((Class<?>) ((ParameterizedType) sup).getRawType())) {
+                return sup;
+            }
+        }
+        return null;
+    }
+
+    public static <P, C extends P> ArrayList<Type> getClassTree(Class<P> parent, Class<C> child) {
+        ArrayList<Type> tree = new ArrayList<>();
+        Type sup = child.getGenericSuperclass();
+        if (sup instanceof Class<?> && parent.isAssignableFrom((Class<?>) sup)) {
+
+        } else if (sup instanceof ParameterizedType && parent.isAssignableFrom((Class<?>) ((ParameterizedType) sup).getRawType())) {
+
+        }
+        return tree;
+    }
+
+    public static Type[] getRawParamType(Type origin, Type instance) {
+        return null;
+    }
+
+    public static Type getRawParamTypeByName(Type origin, Type instance, String name) {
+        return null;
+    }
+
+    public static Class<?> wrap(Class<?> clazz) {
+        return clazz.isPrimitive() ? PRIMITIVE_WRAPPERS.get(clazz) : clazz;
     }
 }

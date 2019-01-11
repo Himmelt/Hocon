@@ -1,24 +1,24 @@
 package org.soraworld.hocon.serializer;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NotMatchException;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.Options;
-import org.soraworld.hocon.reflect.TypeResolver;
+import org.soraworld.hocon.reflect.Reflects;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 
 /**
  * 数值类型序列化器.
  */
-public class NumberSerializer extends TypeSerializer<Number, NodeBase> {
-    @Nonnull
-    public Number deserialize(@Nonnull Type type, @Nonnull NodeBase node) throws HoconException {
+public final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
+    @NotNull
+    public Number deserialize(@NotNull Type type, @NotNull NodeBase node) throws HoconException {
         String number = node.getString();
         if (type instanceof Class) {
-            Class clazz = TypeResolver.wrapPrimitives((Class<?>) type);
+            Class clazz = Reflects.wrap((Class<?>) type);
             try {
                 if (Integer.class.equals(clazz)) {
                     return Integer.valueOf(number);
@@ -40,8 +40,8 @@ public class NumberSerializer extends TypeSerializer<Number, NodeBase> {
         throw new NotMatchException(getType(), type);
     }
 
-    @Nonnull
-    public NodeBase serialize(@Nonnull Type type, @Nonnull Number value, @Nonnull Options options) {
+    @NotNull
+    public NodeBase serialize(@NotNull Type type, @NotNull Number value, @NotNull Options options) {
         return new NodeBase(options, value);
     }
 }

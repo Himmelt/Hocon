@@ -1,5 +1,6 @@
 package org.soraworld.hocon.node;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NonRawTypeException;
 import org.soraworld.hocon.exception.NotParamListException;
@@ -9,6 +10,7 @@ import org.soraworld.hocon.serializer.TypeSerializer;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -395,7 +397,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param comment 注释
      * @return 是否成功
      */
-    public boolean set(String path, Object obj, String comment) {
+    public boolean set(@NotNull String path, @NotNull Object obj, @NotNull String comment) {
         if (obj instanceof Node) {
             if (checkCycle((Node) obj)) {
                 ((Node) obj).addComment(comment);
@@ -405,7 +407,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
             return false;
         }
-        value.put(path, new NodeBase(options, obj, false, comment));
+        value.put(path, new NodeBase(options, obj, comment));
         return true;
     }
 

@@ -1,6 +1,7 @@
 package org.soraworld.hocon.node;
 
-import javax.annotation.Nonnull;
+import org.jetbrains.annotations.NotNull;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public abstract class AbstractNode<T> implements Node {
     /**
      * 封装的值.
      */
+    @NotNull
     protected final T value;
     /**
      * 多行注释.
@@ -26,6 +28,7 @@ public abstract class AbstractNode<T> implements Node {
     /**
      * 配置选项.
      */
+    @NotNull
     protected final Options options;
     /**
      * 非法字符的正则表达式，匹配该正则时需要对字符串加双引号.
@@ -40,7 +43,7 @@ public abstract class AbstractNode<T> implements Node {
      * @param options 配置选项
      * @param value   封装对象
      */
-    protected AbstractNode(@Nonnull Options options, @Nonnull T value) {
+    protected AbstractNode(@NotNull Options options, @NotNull T value) {
         this.options = options;
         this.value = value;
     }
@@ -52,7 +55,7 @@ public abstract class AbstractNode<T> implements Node {
      * @param value   封装对象
      * @param comment 注释
      */
-    protected AbstractNode(@Nonnull Options options, @Nonnull T value, @Nonnull String comment) {
+    protected AbstractNode(@NotNull Options options, @NotNull T value, @NotNull String comment) {
         this.options = options;
         this.value = value;
         addComment(comment);
@@ -77,7 +80,7 @@ public abstract class AbstractNode<T> implements Node {
         return comments;
     }
 
-    public final void addComment(@Nonnull String comment) {
+    public final void addComment(@NotNull String comment) {
         if (!comment.isEmpty()) {
             if (comments == null) comments = new ArrayList<>();
             comments.addAll(Arrays.asList(comment.split("[\n\r]")));
@@ -85,11 +88,9 @@ public abstract class AbstractNode<T> implements Node {
         }
     }
 
-    public void setComment(String comment) {
-        if (comment != null) {
-            comments.clear();
-            comments.add(comment);
-        }
+    public void setComment(@NotNull String comment) {
+        comments.clear();
+        comments.add(comment);
     }
 
     public final void setComments(List<String> comments) {
@@ -110,12 +111,10 @@ public abstract class AbstractNode<T> implements Node {
         }
     }
 
-    public void setTypeToComment(Class<?> clazz) {
-        if (clazz != null) {
-            if (comments == null) comments = new ArrayList<>();
-            comments.removeIf(text -> CLZ_COMMENT.matcher(text).matches());
-            comments.add("<class>" + clazz.getName() + "</class>");
-        }
+    public void setTypeToComment(@NotNull Class<?> clazz) {
+        if (comments == null) comments = new ArrayList<>();
+        comments.removeIf(text -> CLZ_COMMENT.matcher(text).matches());
+        comments.add("<class>" + clazz.getName() + "</class>");
     }
 
     public Class<?> getTypeFromComment() {
@@ -130,6 +129,7 @@ public abstract class AbstractNode<T> implements Node {
         return null;
     }
 
+    @NotNull
     public final Options options() {
         return options;
     }
@@ -143,7 +143,7 @@ public abstract class AbstractNode<T> implements Node {
      * @param text 文本内容
      * @return 处理后的文本
      */
-    public static String quotation(String text) {
+    public static String quotation(@NotNull String text) {
         if (text.equals("null") || text.startsWith(" ") || text.endsWith(" ") || ILLEGAL.matcher(text).matches()) {
             String target = text
                     .replace("\\", "\\\\")
@@ -165,7 +165,7 @@ public abstract class AbstractNode<T> implements Node {
      * @param text 文本内容
      * @return 处理后的文本
      */
-    public static String unquotation(String text) {
+    public static String unquotation(@NotNull String text) {
         if (text.startsWith("\"")) text = text.substring(1);
         if (text.endsWith("\"")) text = text.substring(0, text.length() - 1);
         return text

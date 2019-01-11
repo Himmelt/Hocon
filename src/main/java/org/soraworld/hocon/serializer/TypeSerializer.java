@@ -1,19 +1,22 @@
 package org.soraworld.hocon.serializer;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.Options;
-import org.soraworld.hocon.node.Serializable;
 
-import javax.annotation.Nonnull;
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
- * 序列化器接口.
+ * 序列化器接口.<br>
+ * 1. 实现类因当用 final 修饰<br>
+ * 2. 实现类不得含有参数类型
  *
  * @param <T> 序列化类型参数
+ * @param <N> 序列化结点类型参数
  */
 public abstract class TypeSerializer<T, N extends Node> {
 
@@ -45,8 +48,8 @@ public abstract class TypeSerializer<T, N extends Node> {
      * @return 反序列化后的对象
      * @throws HoconException Hocon操作异常
      */
-    @Nonnull
-    abstract T deserialize(@Nonnull Type type, @Nonnull N node) throws HoconException;
+    @NotNull
+    public abstract T deserialize(@NotNull Type type, @NotNull N node) throws HoconException;
 
     /**
      * 序列化.
@@ -58,8 +61,8 @@ public abstract class TypeSerializer<T, N extends Node> {
      * @return 序列化后的结点
      * @throws HoconException Hocon操作异常
      */
-    @Nonnull
-    abstract N serialize(@Nonnull Type type, @Nonnull T value, @Nonnull Options options) throws HoconException;
+    @NotNull
+    public abstract N serialize(@NotNull Type type, @NotNull T value, @NotNull Options options) throws HoconException;
 
     public final boolean keyAble() {
         return types[1] == NodeBase.class;
@@ -70,7 +73,7 @@ public abstract class TypeSerializer<T, N extends Node> {
      *
      * @return 注册类型
      */
-    @Nonnull
+    @NotNull
     public final Type getType() {
         if (this instanceof AnnotationSerializer) return Serializable.class;
         return types[0];

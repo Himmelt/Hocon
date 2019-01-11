@@ -2,7 +2,6 @@ package org.soraworld.hocon.serializer;
 
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.reflect.Reflects;
-import org.soraworld.hocon.reflect.TypeResolver;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * 序列化器集合类.
  */
-public class TypeSerializers {
+public final class TypeSerializers {
 
     private final TypeSerializers parent;
     private final CopyOnWriteArrayList<TypeSerializer> serializers = new CopyOnWriteArrayList<>();
@@ -77,10 +76,10 @@ public class TypeSerializers {
      * @return 序列化器
      */
     public TypeSerializer get(Type type) {
-        if (type instanceof Class) type = TypeResolver.wrapPrimitives((Class<?>) type);
+        if (type instanceof Class) type = Reflects.wrap((Class<?>) type);
         TypeSerializer serializer = typeMatches.computeIfAbsent(type, typ -> {
             for (TypeSerializer serial : serializers) {
-                if (Reflects.isSuperOf(serial.getType(), typ)) return serial;
+                if (Reflects.isAssignableFrom(serial.getType(), typ)) return serial;
             }
             return null;
         });

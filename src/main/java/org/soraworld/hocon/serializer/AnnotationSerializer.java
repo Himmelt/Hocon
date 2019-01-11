@@ -1,17 +1,17 @@
 package org.soraworld.hocon.serializer;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NotMatchException;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.node.NodeMap;
 import org.soraworld.hocon.node.Options;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.Type;
 
-public class AnnotationSerializer extends TypeSerializer<Object, NodeMap> {
-    @Nonnull
-    public Object deserialize(@Nonnull Type type, @Nonnull NodeMap node) throws HoconException {
+public final class AnnotationSerializer extends TypeSerializer<Object, NodeMap> {
+    @NotNull
+    public Object deserialize(@NotNull Type type, @NotNull NodeMap node) throws HoconException {
         if (type instanceof Class) {
             try {
                 Object object = ((Class<?>) type).getConstructor().newInstance();
@@ -26,8 +26,8 @@ public class AnnotationSerializer extends TypeSerializer<Object, NodeMap> {
         throw new NotMatchException("Annotation type must be Class");
     }
 
-    @Nonnull
-    public NodeMap serialize(@Nonnull Type type, @Nonnull Object value, @Nonnull Options options) {
+    @NotNull
+    public NodeMap serialize(@NotNull Type type, @NotNull Object value, @NotNull Options options) {
         NodeMap node = new NodeMap(options);
         node.extract(value);
         return node;

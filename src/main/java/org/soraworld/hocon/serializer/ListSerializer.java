@@ -1,14 +1,13 @@
 package org.soraworld.hocon.serializer;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NotMatchException;
-import org.soraworld.hocon.exception.NullNodeException;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.node.NodeList;
 import org.soraworld.hocon.node.Options;
 import org.soraworld.hocon.reflect.Reflects;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -20,9 +19,9 @@ import java.util.LinkedList;
  * 集合类型序列化器.
  * 目前支持 {@link java.util.List} {@link java.util.Set} {@link java.util.Queue}
  */
-public class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
-    @Nonnull
-    public Collection<?> deserialize(@Nonnull Type type, @Nonnull NodeList node) throws HoconException {
+public final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
+    @NotNull
+    public Collection<?> deserialize(@NotNull Type type, @NotNull NodeList node) throws HoconException {
         if (type instanceof ParameterizedType) {
             try {
                 Class<?> rawType = (Class<?>) ((ParameterizedType) type).getRawType();
@@ -43,8 +42,8 @@ public class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
         } else throw new NotMatchException(getType(), type);
     }
 
-    @Nonnull
-    public NodeList serialize(@Nonnull Type type, @Nonnull Collection<?> value, @Nonnull Options options) throws HoconException {
+    @NotNull
+    public NodeList serialize(@NotNull Type type, @NotNull Collection<?> value, @NotNull Options options) throws HoconException {
         if (value.isEmpty()) return new NodeList(options);
         if (type instanceof ParameterizedType) {
             try {

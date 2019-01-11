@@ -1,17 +1,15 @@
 package org.soraworld.hocon.serializer;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NotMatchException;
-import org.soraworld.hocon.exception.NullNodeException;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.NodeMap;
 import org.soraworld.hocon.node.Options;
 import org.soraworld.hocon.reflect.Reflects;
-import org.soraworld.hocon.reflect.TypeToken;
 
-import javax.annotation.Nonnull;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -20,9 +18,9 @@ import java.util.Map;
 /**
  * 映射类型序列化器.
  */
-public class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
-    @Nonnull
-    public Map<?, ?> deserialize(@Nonnull Type type, @Nonnull NodeMap node) throws HoconException {
+public final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
+    @NotNull
+    public Map<?, ?> deserialize(@NotNull Type type, @NotNull NodeMap node) throws HoconException {
         if (type instanceof ParameterizedType) {
             try {
                 Type[] params = Reflects.getMapParameter((ParameterizedType) type);
@@ -41,8 +39,8 @@ public class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
         } else throw new NotMatchException(getType(), type);
     }
 
-    @Nonnull
-    public NodeMap serialize(@Nonnull Type type, @Nonnull Map<?, ?> value, @Nonnull Options options) throws HoconException {
+    @NotNull
+    public NodeMap serialize(@NotNull Type type, @NotNull Map<?, ?> value, @NotNull Options options) throws HoconException {
         if (value.isEmpty()) return new NodeMap(options);
         if (type instanceof ParameterizedType) {
             try {

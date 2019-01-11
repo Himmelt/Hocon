@@ -46,9 +46,9 @@ public final class Bounds {
      */
     public boolean isSuperOf(Bounds bounds) {
         if (lower != null) {
-            return bounds.lower != null && Reflects.isSuperOf(upper, bounds.upper) && Reflects.isSuperOf(bounds.lower, lower);
+            return bounds.lower != null && Reflects.isAssignableFrom(upper, bounds.upper) && Reflects.isAssignableFrom(bounds.lower, lower);
         }
-        return Reflects.isSuperOf(upper, bounds.upper);
+        return Reflects.isAssignableFrom(upper, bounds.upper);
     }
 
     /**

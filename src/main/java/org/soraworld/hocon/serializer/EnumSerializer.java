@@ -1,21 +1,20 @@
 package org.soraworld.hocon.serializer;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.Options;
 import org.soraworld.hocon.reflect.Reflects;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 
 /**
  * 枚举类型序列化器.
  */
-public class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
-    @Nonnull
-    public Enum<?> deserialize(@Nonnull Type type, @Nonnull NodeBase node) throws HoconException {
+public final class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
+    @NotNull
+    public Enum<?> deserialize(@NotNull Type type, @NotNull NodeBase node) throws HoconException {
         String name = node.getString();
         try {
             Class<?> rawType = Reflects.getRawType(type);
@@ -27,8 +26,8 @@ public class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
         }
     }
 
-    @Nonnull
-    public NodeBase serialize(@Nonnull Type type, @Nonnull Enum<?> value, @Nonnull Options options) {
+    @NotNull
+    public NodeBase serialize(@NotNull Type type, @NotNull Enum<?> value, @NotNull Options options) {
         return new NodeBase(options, value.name(), false);
     }
 }
