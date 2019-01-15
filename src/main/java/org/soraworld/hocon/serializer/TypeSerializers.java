@@ -1,7 +1,7 @@
 package org.soraworld.hocon.serializer;
 
 import org.soraworld.hocon.exception.SerializerException;
-import org.soraworld.hocon.reflect.Reflects;
+import org.soraworld.hocon.util.Reflects;
 
 import java.lang.reflect.Type;
 import java.util.concurrent.ConcurrentHashMap;

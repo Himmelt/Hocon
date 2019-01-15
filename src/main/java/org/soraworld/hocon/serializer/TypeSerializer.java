@@ -12,7 +12,7 @@ import java.lang.reflect.Type;
 
 /**
  * 序列化器接口.<br>
- * 1. 实现类因当用 final 修饰<br>
+ * 1. 实现类应当用 {@code final} 修饰<br>
  * 2. 实现类不得含有参数类型
  *
  * @param <T> 序列化类型参数

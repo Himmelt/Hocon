@@ -8,7 +8,7 @@ import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.NodeMap;
 import org.soraworld.hocon.node.Options;
-import org.soraworld.hocon.reflect.Reflects;
+import org.soraworld.hocon.util.Reflects;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;

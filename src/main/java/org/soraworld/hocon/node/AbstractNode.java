@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
  *
  * @param <T> 封装内容的参数类型
  */
-public abstract class AbstractNode<T> implements Node {
+abstract class AbstractNode<T> implements Node {
 
     /**
      * 封装的值.

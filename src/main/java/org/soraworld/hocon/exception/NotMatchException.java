@@ -6,6 +6,8 @@ import java.lang.reflect.Type;
  * 序列化类型不匹配异常.
  */
 public class NotMatchException extends HoconException {
+    private static final long serialVersionUID = 3542459413725412836L;
+
     /**
      * 实例化异常.
      *

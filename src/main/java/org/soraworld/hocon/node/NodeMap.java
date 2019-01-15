@@ -5,8 +5,8 @@ import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NonRawTypeException;
 import org.soraworld.hocon.exception.NotParamListException;
 import org.soraworld.hocon.exception.NotParamMapException;
-import org.soraworld.hocon.reflect.Reflects;
 import org.soraworld.hocon.serializer.TypeSerializer;
+import org.soraworld.hocon.util.Reflects;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
