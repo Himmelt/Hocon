@@ -34,7 +34,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      *
      * @param options 配置选项
      */
-    public NodeMap(Options options) {
+    public NodeMap(@NotNull Options options) {
         super(options, new LinkedHashMap<>());
     }
 
@@ -44,7 +44,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param options 配置选项
      * @param comment 注释
      */
-    public NodeMap(Options options, String comment) {
+    public NodeMap(@NotNull Options options, String comment) {
         super(options, new LinkedHashMap<>(), comment);
     }
 

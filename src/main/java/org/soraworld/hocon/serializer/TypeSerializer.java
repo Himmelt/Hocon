@@ -31,9 +31,9 @@ public abstract class TypeSerializer<T, N extends Node> {
      */
     public TypeSerializer() throws SerializerException {
         // 必须获取两个有效类型，否则抛出异常
-        Type type = Reflects.getGenericType(TypeSerializer.class, this.getClass());
-        if (type instanceof ParameterizedType) {
-            Type[] types = ((ParameterizedType) type).getActualTypeArguments();
+        ParameterizedType type = Reflects.getGenericType(TypeSerializer.class, this.getClass());
+        if (type != null) {
+            Type[] types = type.getActualTypeArguments();
             if (types.length == 2) {
                 this.types[0] = types[0];
                 this.types[1] = types[1];

@@ -324,7 +324,26 @@ public abstract class Reflects {
         ParameterizedType result = null;
         if (ancestor.isInterface()) {
             for (Type parent : rawType.getGenericInterfaces()) {
-                if (child != null && parent instanceof ParameterizedType) {
+                if (parent instanceof ParameterizedType) {
+                    if (child != null) {
+                        TypeVariable[] variables = rawType.getTypeParameters();
+                        Type[] arguments = child.getActualTypeArguments();
+                        if (variables.length == arguments.length) {
+                            HashMap<TypeVariable, Type> map = new HashMap<>();
+                            for (int i = 0; i < variables.length; i++) {
+                                map.put(variables[i], arguments[i]);
+                            }
+                            result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
+                        }
+                    } else result = getGenericType(ancestor, (ParameterizedType) parent);
+                } else if (parent instanceof Class<?>) result = getGenericType(ancestor, (Class<?>) parent);
+                if (result != null) return result;
+            }
+        }
+        Type parent = rawType.getGenericSuperclass();
+        if (parent != null && !parent.equals(Object.class)) {
+            if (parent instanceof ParameterizedType) {
+                if (child != null) {
                     TypeVariable[] variables = rawType.getTypeParameters();
                     Type[] arguments = child.getActualTypeArguments();
                     if (variables.length == arguments.length) {
@@ -334,22 +353,7 @@ public abstract class Reflects {
                         }
                         result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
                     }
-                } else if (parent instanceof Class<?>) result = getGenericType(ancestor, (Class<?>) parent);
-                if (result != null) return result;
-            }
-        }
-        Type parent = rawType.getGenericSuperclass();
-        if (parent != null && !parent.equals(Object.class)) {
-            if (child != null && parent instanceof ParameterizedType) {
-                TypeVariable[] variables = rawType.getTypeParameters();
-                Type[] arguments = child.getActualTypeArguments();
-                if (variables.length == arguments.length) {
-                    HashMap<TypeVariable, Type> map = new HashMap<>();
-                    for (int i = 0; i < variables.length; i++) {
-                        map.put(variables[i], arguments[i]);
-                    }
-                    result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
-                }
+                } else result = getGenericType(ancestor, (ParameterizedType) parent);
             } else if (parent instanceof Class<?>) result = getGenericType(ancestor, (Class<?>) parent);
         }
         return result;

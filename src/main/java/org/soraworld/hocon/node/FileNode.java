@@ -1,5 +1,7 @@
 package org.soraworld.hocon.node;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.*;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
@@ -13,6 +15,7 @@ import java.util.List;
  */
 public class FileNode extends NodeMap {
 
+    @NotNull
     private final File file;
     protected List<String> heads;
 
@@ -34,7 +37,7 @@ public class FileNode extends NodeMap {
      *
      * @param file 文件
      */
-    public FileNode(File file) {
+    public FileNode(@NotNull File file) {
         super(Options.defaults());
         this.file = file;
     }
@@ -45,7 +48,7 @@ public class FileNode extends NodeMap {
      * @param file    文件
      * @param options 配置选项
      */
-    public FileNode(File file, Options options) {
+    public FileNode(@NotNull File file, @NotNull Options options) {
         super(options);
         this.file = file;
     }

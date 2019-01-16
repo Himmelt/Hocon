@@ -21,14 +21,6 @@ public interface Node {
     boolean notEmpty();
 
     /**
-     * 检查循环引用.
-     *
-     * @param node 被检查 node
-     * @return 如果不存在循环引用则返回 true，否则返回 false
-     */
-    boolean checkCycle(Node node);
-
-    /**
      * 从数据 reader 读取值到 node.
      *
      * @param reader reader

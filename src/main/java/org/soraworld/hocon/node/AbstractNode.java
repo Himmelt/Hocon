@@ -61,7 +61,13 @@ abstract class AbstractNode<T> implements Node {
         addComment(comment);
     }
 
-    public boolean checkCycle(Node node) {
+    /**
+     * 检查循环引用.
+     *
+     * @param node 被检查 node
+     * @return 如果不存在循环引用则返回 true，否则返回 false
+     */
+    protected boolean checkCycle(Node node) {
         if (this.equals(node)) return false;
         if (node instanceof NodeMap) {
             for (Node sub : ((NodeMap) node).value.values()) {
