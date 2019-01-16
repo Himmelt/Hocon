@@ -19,6 +19,14 @@ import java.util.Map;
  * 映射类型序列化器.
  */
 public final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
+    /**
+     * 实例化,并计算类型标记.
+     *
+     * @throws SerializerException the serializer exception
+     */
+    public MapSerializer() throws SerializerException {
+    }
+
     @NotNull
     public Map<?, ?> deserialize(@NotNull Type type, @NotNull NodeMap node) throws HoconException {
         if (type instanceof ParameterizedType) {

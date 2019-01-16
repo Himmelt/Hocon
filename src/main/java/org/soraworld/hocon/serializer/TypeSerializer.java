@@ -2,9 +2,11 @@ package org.soraworld.hocon.serializer;
 
 import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
+import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.Options;
+import org.soraworld.hocon.util.Reflects;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -24,18 +26,21 @@ public abstract class TypeSerializer<T, N extends Node> {
 
     /**
      * 实例化,并计算类型标记.
+     *
+     * @throws SerializerException 序列化器实例化异常
      */
-    public TypeSerializer() {
+    public TypeSerializer() throws SerializerException {
         // 必须获取两个有效类型，否则抛出异常
-        types[0] = capture();
-    }
-
-    private Type capture() {
-        Type superclass = getClass().getGenericSuperclass();
-        if (!(superclass instanceof ParameterizedType)) {
-            throw new IllegalArgumentException(superclass + " isn't parameterized.");
+        Type type = Reflects.getGenericType(TypeSerializer.class, this.getClass());
+        if (type instanceof ParameterizedType) {
+            Type[] types = ((ParameterizedType) type).getActualTypeArguments();
+            if (types.length == 2) {
+                this.types[0] = types[0];
+                this.types[1] = types[1];
+                return;
+            }
         }
-        return ((ParameterizedType) superclass).getActualTypeArguments()[0];
+        throw new SerializerException("Invalid params");
     }
 
     /**

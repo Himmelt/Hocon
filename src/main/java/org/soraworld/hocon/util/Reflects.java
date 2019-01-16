@@ -5,7 +5,6 @@ import org.jetbrains.annotations.Nullable;
 import org.soraworld.hocon.exception.NonRawTypeException;
 import org.soraworld.hocon.exception.NotParamListException;
 import org.soraworld.hocon.exception.NotParamMapException;
-import sun.reflect.generics.reflectiveObjects.ParameterizedTypeImpl;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -331,36 +330,45 @@ public abstract class Reflects {
         Class<?> rawType;
         if (child instanceof ParameterizedType) {
             rawType = (Class<?>) ((ParameterizedType) child).getRawType();
-        } else rawType = (Class<?>) child;
+        }
+        // TODO not class ??
+        else rawType = (Class<?>) child;
 
         if (ancestor.equals(rawType)) return child;
 
         Type result;
         if (ancestor.isInterface()) {
             for (Type parent : rawType.getGenericInterfaces()) {
-                if (parent != null && !parent.equals(Object.class)) {
-                    if (child instanceof ParameterizedType && parent instanceof ParameterizedType) {
-                        TypeVariable[] variables = rawType.getTypeParameters();
-                        Type[] arguments = ((ParameterizedType) child).getActualTypeArguments();
-                        if (variables.length == arguments.length) {
-                            HashMap<TypeVariable, Type> map = new HashMap<>();
-                            for (int i = 0; i < variables.length; i++) {
-                                map.put(variables[i], arguments[i]);
-                            }
-                            parent = fillParameter((ParameterizedType) parent, map);
-                        }
-                    }
-                    result = getGenericType(ancestor, parent);
-                    if (result != null) return result;
-                }
+                result = getType(ancestor, child, rawType, parent);
+                if (result != null) return result;
             }
         }
 
-        Type superClass = rawType.getGenericSuperclass();
-        if (superClass != null && !superClass.equals(Object.class))
-            if ((result = getGenericType(ancestor, superClass)) != null)
-                return result;
+        Type parent = rawType.getGenericSuperclass();
+        result = getType(ancestor, child, rawType, parent);
+        if (result != null) return result;
 
+        return null;
+    }
+
+    @Nullable
+    private static Type getType(@NotNull Class<?> ancestor, @NotNull Type child, Class<?> rawType, Type parent) {
+        Type result;
+        if (parent != null && !parent.equals(Object.class)) {
+            if (child instanceof ParameterizedType && parent instanceof ParameterizedType) {
+                TypeVariable[] variables = rawType.getTypeParameters();
+                Type[] arguments = ((ParameterizedType) child).getActualTypeArguments();
+                if (variables.length == arguments.length) {
+                    HashMap<TypeVariable, Type> map = new HashMap<>();
+                    for (int i = 0; i < variables.length; i++) {
+                        map.put(variables[i], arguments[i]);
+                    }
+                    parent = fillParameter((ParameterizedType) parent, map);
+                }
+            }
+            result = getGenericType(ancestor, parent);
+            if (result != null) return result;
+        }
         return null;
     }
 
@@ -378,7 +386,7 @@ public abstract class Reflects {
             }
         }
         if (changed) {
-            return ParameterizedTypeImpl.make(rawClass, arguments, type.getOwnerType());
+            return new ParameterizedTypeImpl(rawClass, arguments, type.getOwnerType());
         } else return type;
     }
 }

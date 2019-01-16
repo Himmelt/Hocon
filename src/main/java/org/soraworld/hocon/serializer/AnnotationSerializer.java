@@ -10,6 +10,15 @@ import org.soraworld.hocon.node.Options;
 import java.lang.reflect.Type;
 
 public final class AnnotationSerializer extends TypeSerializer<Object, NodeMap> {
+
+    /**
+     * Instantiates a new Annotation serializer.
+     *
+     * @throws SerializerException the serializer exception
+     */
+    public AnnotationSerializer() throws SerializerException {
+    }
+
     @NotNull
     public Object deserialize(@NotNull Type type, @NotNull NodeMap node) throws HoconException {
         if (type instanceof Class) {

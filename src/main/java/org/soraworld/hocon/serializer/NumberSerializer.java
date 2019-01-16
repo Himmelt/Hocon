@@ -14,6 +14,14 @@ import java.lang.reflect.Type;
  * 数值类型序列化器.
  */
 public final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
+    /**
+     * 实例化,并计算类型标记.
+     *
+     * @throws SerializerException the serializer exception
+     */
+    public NumberSerializer() throws SerializerException {
+    }
+
     @NotNull
     public Number deserialize(@NotNull Type type, @NotNull NodeBase node) throws HoconException {
         String number = node.getString();

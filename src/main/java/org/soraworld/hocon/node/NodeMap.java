@@ -186,10 +186,12 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                         if (overwrite) {
                             if (set(paths, node, comment)) {
                                 if (comment.isEmpty() && keepComment) node.setComments(list);
-                            } else if (options.isDebug()) System.out.println("NodeMap set failed, paths is empty or not map path !!");
+                            } else if (options.isDebug())
+                                System.out.println("NodeMap set failed, paths is empty or not map path !!");
                         } else if (put(paths, node, comment)) {
                             if (comment.isEmpty() && keepComment) node.setComments(list);
-                        } else if (options.isDebug()) System.out.println("NodeMap put failed, node not match or already exist !!");
+                        } else if (options.isDebug())
+                            System.out.println("NodeMap put failed, node not match or already exist !!");
                     } else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
                             + field.getDeclaringClass().getTypeName() + "." + field.getName()
                             + " with @Setting.");

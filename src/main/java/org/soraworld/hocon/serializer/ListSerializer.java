@@ -20,6 +20,14 @@ import java.util.LinkedList;
  * 目前支持 {@link java.util.List} {@link java.util.Set} {@link java.util.Queue}
  */
 public final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
+    /**
+     * 实例化,并计算类型标记.
+     *
+     * @throws SerializerException the serializer exception
+     */
+    public ListSerializer() throws SerializerException {
+    }
+
     @NotNull
     public Collection<?> deserialize(@NotNull Type type, @NotNull NodeList node) throws HoconException {
         if (type instanceof ParameterizedType) {

@@ -1,6 +1,7 @@
 package org.soraworld.hocon.serializer;
 
 import org.jetbrains.annotations.NotNull;
+import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.Options;
 
@@ -10,6 +11,14 @@ import java.lang.reflect.Type;
  * 结点类型序列化器.
  */
 public final class NodeSerializer extends TypeSerializer<Node, Node> {
+    /**
+     * 实例化,并计算类型标记.
+     *
+     * @throws SerializerException the serializer exception
+     */
+    public NodeSerializer() throws SerializerException {
+    }
+
     @NotNull
     public Node deserialize(@NotNull Type type, @NotNull Node node) {
         return node;
