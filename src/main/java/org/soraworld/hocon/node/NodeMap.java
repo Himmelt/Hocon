@@ -26,7 +26,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     /* value - 不为 null */
 
     private NodeMap(NodeMap source) {
-        super(source.options, source.value);
+        super(source.options, new LinkedHashMap<>(source.value));
     }
 
     /**
@@ -61,9 +61,6 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * 比如 {@link HashMap},{@link LinkedHashMap},{@link ArrayList},<br>
      * {@link LinkedList},{@link HashSet},{@link TreeMap} 等等,<br>
      * 因此建议在字段声明时使用准确的类型而不是 {@link Map},{@link Set},{@link List} 这样的类型<br>
-     * <br>
-     * 另外, {@link Setting#nullable()}为 true 的非原生类型字段, <br>
-     * 在对应结点反序列化结果是 null 时, 会被覆盖成 null
      *
      * @param target 修改对象
      */
@@ -75,40 +72,41 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             if (setting != null) {
                 Type fieldType = field.getGenericType();
                 TypeSerializer serializer = options.getSerializer(fieldType);
-                if (serializer == null && fieldType instanceof Class && ((Class) fieldType).isAnnotationPresent(Serializable.class)) {
+                if (serializer == null && fieldType instanceof Class && Serializable.class.isAssignableFrom((Class) fieldType)) {
                     serializer = options.getSerializer(Serializable.class);
                 }
                 if (serializer != null) {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     Node node = get(paths);
+                    if (node instanceof NodeBase && (setting.contentTrans() || setting.deserializeTrans())) {
+                        List<String> comments = ((NodeBase) node).comments;
+                        node = new NodeBase(options, options.transDeserializeText(((NodeBase) node).value));
+                        node.setComments(comments);
+                    }
                     if (node != null) {
                         try {
                             Object current = field.get(target);
                             Class<?> clzType = current == null ? field.getType() : current.getClass();
                             Object value = serializer.deserialize(fieldType, node);
-                            if (value != null) {
-                                if (Map.class.isAssignableFrom(clzType) && value instanceof Map) {
-                                    try {
-                                        if (current == null || current instanceof Map) {
-                                            value = transMap((Map) value, (Map) current, fieldType);
-                                        }
-                                    } catch (Throwable e) {
-                                        if (options.isDebug()) e.printStackTrace();
+                            if (Map.class.isAssignableFrom(clzType) && value instanceof Map) {
+                                try {
+                                    if (current == null || current instanceof Map) {
+                                        value = transMap((Map) value, (Map) current, fieldType);
                                     }
-                                    field.set(target, value);
-                                    continue;
-                                }
-                                if (Collection.class.isAssignableFrom(clzType) && value instanceof Collection) {
-                                    if (current == null || current instanceof Collection) {
-                                        value = transCollection((Collection) value, (Collection) current, fieldType);
-                                    }
-                                    field.set(target, value);
-                                    continue;
+                                } catch (Throwable e) {
+                                    if (options.isDebug()) e.printStackTrace();
                                 }
                                 field.set(target, value);
-                            } else if (setting.nullable() && !clzType.isPrimitive()) {
-                                field.set(target, null);
+                                continue;
                             }
+                            if (Collection.class.isAssignableFrom(clzType) && value instanceof Collection) {
+                                if (current == null || current instanceof Collection) {
+                                    value = transCollection((Collection) value, (Collection) current, fieldType);
+                                }
+                                field.set(target, value);
+                                continue;
+                            }
+                            field.set(target, value);
                         } catch (Throwable e) {
                             if (options.isDebug()) e.printStackTrace();
                         }
@@ -173,16 +171,19 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             if (setting != null) {
                 try {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
-                    String comment = options.getTranslator().apply(setting.comment());
+                    String comment = options.transComment(setting.comment());
                     Node old = oldNode.get(paths.clone());
                     List<String> list = old != null ? old.getComments() : null;
                     Type fieldType = field.getGenericType();
                     TypeSerializer serializer = options.getSerializer(fieldType);
-                    if (serializer == null && fieldType instanceof Class && ((Class) fieldType).isAnnotationPresent(Serializable.class)) {
+                    if (serializer == null && fieldType instanceof Class<?> && Serializable.class.isAssignableFrom((Class<?>) fieldType)) {
                         serializer = options.getSerializer(Serializable.class);
                     }
                     if (serializer != null) {
                         Node node = serializer.serialize(fieldType, field.get(source), options);
+                        if (node instanceof NodeBase && (setting.contentTrans() || setting.serializeTrans())) {
+                            node = new NodeBase(options, options.transSerializeText(((NodeBase) node).value));
+                        }
                         if (overwrite) {
                             if (set(paths, node, comment)) {
                                 if (comment.isEmpty() && keepComment) node.setComments(list);

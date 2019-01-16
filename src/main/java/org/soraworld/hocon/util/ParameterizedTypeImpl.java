@@ -8,97 +8,82 @@ import java.util.Arrays;
 import java.util.Objects;
 
 public class ParameterizedTypeImpl implements ParameterizedType {
-    private final Type[] actualTypeArguments;
+
+    private final Type[] arguments;
     private final Class<?> rawType;
     private final Type ownerType;
 
-    public ParameterizedTypeImpl(Class<?> var1, Type[] var2, Type var3) {
-        this.actualTypeArguments = var2;
-        this.rawType = var1;
-        this.ownerType = var3 != null ? var3 : var1.getDeclaringClass();
-        this.validateConstructorArguments();
+    public ParameterizedTypeImpl(Class<?> rawType, Type[] arguments, Type ownerType) {
+        this.arguments = arguments;
+        this.rawType = rawType;
+        this.ownerType = ownerType != null ? ownerType : rawType.getDeclaringClass();
+        validateConstructorArguments();
     }
 
     private void validateConstructorArguments() {
-        TypeVariable[] var1 = this.rawType.getTypeParameters();
-        if (var1.length != this.actualTypeArguments.length) {
+        TypeVariable[] params = rawType.getTypeParameters();
+        if (params.length != arguments.length) {
             throw new MalformedParameterizedTypeException();
-        } else {
-            for (int var2 = 0; var2 < this.actualTypeArguments.length; ++var2) {
-            }
-
         }
     }
 
     public Type[] getActualTypeArguments() {
-        return this.actualTypeArguments.clone();
+        return arguments.clone();
     }
 
     public Class<?> getRawType() {
-        return this.rawType;
+        return rawType;
     }
 
     public Type getOwnerType() {
-        return this.ownerType;
+        return ownerType;
     }
 
-    public boolean equals(Object var1) {
-        if (var1 instanceof ParameterizedType) {
-            ParameterizedType var2 = (ParameterizedType) var1;
-            if (this == var2) {
-                return true;
-            } else {
-                Type var3 = var2.getOwnerType();
-                Type var4 = var2.getRawType();
-                return Objects.equals(this.ownerType, var3) && Objects.equals(this.rawType, var4) && Arrays.equals(this.actualTypeArguments, var2.getActualTypeArguments());
-            }
-        } else {
-            return false;
-        }
+    public boolean equals(Object obj) {
+        if (obj instanceof ParameterizedType) {
+            ParameterizedType type = (ParameterizedType) obj;
+            if (this != type) {
+                Type ownerType = type.getOwnerType();
+                Type rawType = type.getRawType();
+                return Objects.equals(this.ownerType, ownerType) && Objects.equals(this.rawType, rawType) && Arrays.equals(this.arguments, type.getActualTypeArguments());
+            } else return true;
+        } else return false;
     }
 
     public int hashCode() {
-        return Arrays.hashCode(this.actualTypeArguments) ^ Objects.hashCode(this.ownerType) ^ Objects.hashCode(this.rawType);
+        return Arrays.hashCode(this.arguments) ^ Objects.hashCode(this.ownerType) ^ Objects.hashCode(this.rawType);
     }
 
     public String toString() {
-        StringBuilder var1 = new StringBuilder();
-        if (this.ownerType != null) {
-            if (this.ownerType instanceof Class) {
-                var1.append(((Class) this.ownerType).getName());
+        StringBuilder builder = new StringBuilder();
+        if (ownerType != null) {
+            if (ownerType instanceof Class) {
+                builder.append(((Class) ownerType).getName());
             } else {
-                var1.append(this.ownerType.toString());
+                builder.append(ownerType.toString());
             }
 
-            var1.append("$");
-            if (this.ownerType instanceof ParameterizedTypeImpl) {
-                var1.append(this.rawType.getName().replace(((ParameterizedTypeImpl) this.ownerType).rawType.getName() + "$", ""));
+            builder.append("$");
+            if (ownerType instanceof ParameterizedTypeImpl) {
+                builder.append(rawType.getName().replace(((ParameterizedTypeImpl) ownerType).rawType.getName() + "$", ""));
             } else {
-                var1.append(this.rawType.getSimpleName());
+                builder.append(rawType.getSimpleName());
             }
         } else {
-            var1.append(this.rawType.getName());
+            builder.append(rawType.getName());
         }
 
-        if (this.actualTypeArguments != null && this.actualTypeArguments.length > 0) {
-            var1.append("<");
-            boolean var2 = true;
-            Type[] var3 = this.actualTypeArguments;
-            int var4 = var3.length;
-
-            for (int var5 = 0; var5 < var4; ++var5) {
-                Type var6 = var3[var5];
-                if (!var2) {
-                    var1.append(", ");
-                }
-
-                var1.append(var6.getTypeName());
-                var2 = false;
+        if (arguments != null && arguments.length > 0) {
+            builder.append("<");
+            boolean flag = true;
+            for (Type type : this.arguments) {
+                if (!flag) builder.append(", ");
+                builder.append(type.getTypeName());
+                flag = false;
             }
-
-            var1.append(">");
+            builder.append(">");
         }
 
-        return var1.toString();
+        return builder.toString();
     }
 }

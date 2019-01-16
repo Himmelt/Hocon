@@ -12,21 +12,35 @@ public @interface Setting {
     /**
      * 路径树, 以 . 分隔
      *
-     * @return 路径树
+     * @return 路径树 string
      */
     String path() default "";
 
     /**
-     * 结点是否可以 {@link NodeMap#modify(java.lang.Object)} 为 null
-     *
-     * @return 是否可以 modify 为 null
-     */
-    boolean nullable() default false;
-
-    /**
      * 注释.
      *
-     * @return 注释
+     * @return 注释 string
      */
     String comment() default "";
+
+    /**
+     * Content trans boolean.
+     *
+     * @return the boolean
+     */
+    boolean contentTrans() default false;
+
+    /**
+     * Serialize trans boolean.
+     *
+     * @return the boolean
+     */
+    boolean serializeTrans() default false;
+
+    /**
+     * Deserialize trans boolean.
+     *
+     * @return the boolean
+     */
+    boolean deserializeTrans() default false;
 }

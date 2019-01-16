@@ -16,7 +16,9 @@ public class Options {
     private int indent = 2;
     private boolean seal;
     private boolean debug = false;
-    private Function<String, String> translator = key -> key;
+    private Function<String, String> commentTranslator;
+    private Function<String, String> serializeTranslator;
+    private Function<String, String> deserializeTranslator;
     private final TypeSerializers[] serializers = new TypeSerializers[5];
 
     private static final Options defaults = new Options(true);
@@ -91,12 +93,14 @@ public class Options {
     }
 
     /**
-     * 获取 {@link Setting} 注解注释的翻译器.
+     * 翻译 {@link Setting} 注解的注释.
      *
-     * @return 翻译器
+     * @param comment the comment
+     * @return 翻译后的注释 string
      */
-    public Function<String, String> getTranslator() {
-        return translator;
+    public String transComment(String comment) {
+        if (comment != null && commentTranslator != null) return commentTranslator.apply(comment);
+        return comment;
     }
 
     /**
@@ -105,8 +109,50 @@ public class Options {
      *
      * @param function 翻译器
      */
-    public void setTranslator(Function<String, String> function) {
-        if (!seal && function != null) translator = function;
+    public void setCommentTranslator(Function<String, String> function) {
+        if (!seal) commentTranslator = function;
+    }
+
+    /**
+     * 翻译 {@link Setting} 注解的注释.
+     *
+     * @param content the content
+     * @return 翻译后的注释 string
+     */
+    public String transSerializeText(String content) {
+        if (content != null && serializeTranslator != null) return serializeTranslator.apply(content);
+        return content;
+    }
+
+    /**
+     * 设置 {@link Setting} 注解注释的翻译器.
+     * 如果配置已封印，则无效.
+     *
+     * @param function 翻译器
+     */
+    public void setSerializeTranslator(Function<String, String> function) {
+        if (!seal) serializeTranslator = function;
+    }
+
+    /**
+     * 翻译 {@link Setting} 注解的注释.
+     *
+     * @param content the content
+     * @return 翻译后的注释 string
+     */
+    public String transDeserializeText(String content) {
+        if (content != null && deserializeTranslator != null) return deserializeTranslator.apply(content);
+        return content;
+    }
+
+    /**
+     * 设置 {@link Setting} 注解注释的翻译器.
+     * 如果配置已封印，则无效.
+     *
+     * @param function 翻译器
+     */
+    public void setDeserializeTranslator(Function<String, String> function) {
+        if (!seal) deserializeTranslator = function;
     }
 
     /**

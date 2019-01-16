@@ -304,74 +304,58 @@ public abstract class Reflects {
         return isAssignableFrom(lhsType, rhsType);
     }
 
-    public static <T, S extends T> Type[] getActualArguments(Class<T> ancestor, Class<S> child) {
-        return getActualArguments(getGenericType(ancestor, child), child);
+    public static <T, S extends T> Type[] getActualArguments(@NotNull Class<T> ancestor, @NotNull Class<S> child) {
+        ParameterizedType type = getGenericType(ancestor, child);
+        return type == null ? null : type.getActualTypeArguments();
     }
 
-    public static Type[] getActualArguments(Type ancestor, Class<?> child) {
-        Type[] result = null;
-        if (ancestor instanceof ParameterizedType) {
-            ParameterizedType paramType = (ParameterizedType) ancestor;
-            Type[] arguments = paramType.getActualTypeArguments();
-            result = new Type[arguments.length];
-            System.arraycopy(arguments, 0, result, 0, arguments.length);
-        } else if (ancestor instanceof TypeVariable) {
-            result = new Type[1];
-            result[0] = ancestor;
-        } else if (ancestor instanceof Class) {
-            TypeVariable<?>[] typeParams = ((Class<?>) ancestor).getTypeParameters();
-            result = new Type[typeParams.length];
-            System.arraycopy(typeParams, 0, result, 0, typeParams.length);
-        }
-        return result;
-    }
-
-    public static Type getGenericType(@NotNull Class<?> ancestor, @NotNull Type child) {
-        Class<?> rawType;
-        if (child instanceof ParameterizedType) {
-            rawType = (Class<?>) ((ParameterizedType) child).getRawType();
-        }
-        // TODO not class ??
-        else rawType = (Class<?>) child;
-
-        if (ancestor.equals(rawType)) return child;
-
-        Type result;
-        if (ancestor.isInterface()) {
-            for (Type parent : rawType.getGenericInterfaces()) {
-                result = getType(ancestor, child, rawType, parent);
-                if (result != null) return result;
-            }
-        }
-
-        Type parent = rawType.getGenericSuperclass();
-        result = getType(ancestor, child, rawType, parent);
-        if (result != null) return result;
-
-        return null;
+    public static ParameterizedType getGenericType(@NotNull Class<?> ancestor, @NotNull Class<?> child) {
+        return getGenericType(ancestor, null, child);
     }
 
     @Nullable
-    private static Type getType(@NotNull Class<?> ancestor, @NotNull Type child, Class<?> rawType, Type parent) {
-        Type result;
+    public static ParameterizedType getGenericType(@NotNull Class<?> ancestor, @NotNull ParameterizedType child) {
+        return getGenericType(ancestor, child, (Class<?>) child.getRawType());
+    }
+
+    @Nullable
+    private static ParameterizedType getGenericType(@NotNull Class<?> ancestor, @Nullable ParameterizedType child, @NotNull Class<?> rawType) {
+        if (ancestor.equals(rawType)) return child;
+        ParameterizedType result = null;
+        if (ancestor.isInterface()) {
+            for (Type parent : rawType.getGenericInterfaces()) {
+                if (child != null && parent instanceof ParameterizedType) {
+                    TypeVariable[] variables = rawType.getTypeParameters();
+                    Type[] arguments = child.getActualTypeArguments();
+                    if (variables.length == arguments.length) {
+                        HashMap<TypeVariable, Type> map = new HashMap<>();
+                        for (int i = 0; i < variables.length; i++) {
+                            map.put(variables[i], arguments[i]);
+                        }
+                        result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
+                    }
+                } else if (parent instanceof Class<?>) result = getGenericType(ancestor, (Class<?>) parent);
+                if (result != null) return result;
+            }
+        }
+        Type parent = rawType.getGenericSuperclass();
         if (parent != null && !parent.equals(Object.class)) {
-            if (child instanceof ParameterizedType && parent instanceof ParameterizedType) {
+            if (child != null && parent instanceof ParameterizedType) {
                 TypeVariable[] variables = rawType.getTypeParameters();
-                Type[] arguments = ((ParameterizedType) child).getActualTypeArguments();
+                Type[] arguments = child.getActualTypeArguments();
                 if (variables.length == arguments.length) {
                     HashMap<TypeVariable, Type> map = new HashMap<>();
                     for (int i = 0; i < variables.length; i++) {
                         map.put(variables[i], arguments[i]);
                     }
-                    parent = fillParameter((ParameterizedType) parent, map);
+                    result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
                 }
-            }
-            result = getGenericType(ancestor, parent);
-            if (result != null) return result;
+            } else if (parent instanceof Class<?>) result = getGenericType(ancestor, (Class<?>) parent);
         }
-        return null;
+        return result;
     }
 
+    @NotNull
     private static ParameterizedType fillParameter(@NotNull ParameterizedType type, @NotNull Map<TypeVariable, Type> map) {
         Class<?> rawClass = (Class<?>) type.getRawType();
         Type[] arguments = type.getActualTypeArguments();
