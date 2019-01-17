@@ -26,7 +26,7 @@ public final class StringSerializer extends TypeSerializer<String, NodeBase> {
     }
 
     @NotNull
-    public NodeBase serialize(@NotNull Type type, @NotNull String value, @NotNull Options options) {
+    public NodeBase serialize(@NotNull Type actualType, @NotNull String value, @NotNull Options options) {
         return new NodeBase(options, value);
     }
 }

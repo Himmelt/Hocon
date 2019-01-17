@@ -49,7 +49,7 @@ public final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
     }
 
     @NotNull
-    public NodeBase serialize(@NotNull Type type, @NotNull Number value, @NotNull Options options) {
+    public NodeBase serialize(@NotNull Type actualType, @NotNull Number value, @NotNull Options options) {
         return new NodeBase(options, value);
     }
 }

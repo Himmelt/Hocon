@@ -60,14 +60,14 @@ public abstract class TypeSerializer<T, N extends Node> {
      * 序列化.
      * 此方法可以抛出异常，但不应该返回空值.
      *
-     * @param type    实例类型
-     * @param value   序列化对象
-     * @param options 配置选项
+     * @param actualType 实际类型
+     * @param value      序列化对象
+     * @param options    配置选项
      * @return 序列化后的结点
      * @throws HoconException Hocon操作异常
      */
     @NotNull
-    public abstract N serialize(@NotNull Type type, @NotNull T value, @NotNull Options options) throws HoconException;
+    public abstract N serialize(@NotNull Type actualType, @NotNull T value, @NotNull Options options) throws HoconException;
 
     public final boolean keyAble() {
         return types[1] == NodeBase.class;

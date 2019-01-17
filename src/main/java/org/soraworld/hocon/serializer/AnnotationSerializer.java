@@ -36,7 +36,7 @@ public final class AnnotationSerializer extends TypeSerializer<Object, NodeMap> 
     }
 
     @NotNull
-    public NodeMap serialize(@NotNull Type type, @NotNull Object value, @NotNull Options options) {
+    public NodeMap serialize(@NotNull Type actualType, @NotNull Object value, @NotNull Options options) {
         NodeMap node = new NodeMap(options);
         node.extract(value);
         return node;

@@ -14,7 +14,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * 反射相关工具.
  */
-public abstract class Reflects {
+public final class Reflects {
 
     private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER;
     private static final Map<Class<?>, Class<?>> WRAPPER_PRIMITIVE;
@@ -44,6 +44,9 @@ public abstract class Reflects {
         map2.put(Void.class, void.class);
         PRIMITIVE_WRAPPER = Collections.unmodifiableMap(map1);
         WRAPPER_PRIMITIVE = Collections.unmodifiableMap(map2);
+    }
+
+    private Reflects() {
     }
 
     public static Class<?> wrap(@NotNull Class<?> clazz) {
@@ -137,6 +140,7 @@ public abstract class Reflects {
         throw new NotParamListException(type);
     }
 
+    // TODO BUG Clooection<?> <= Enum<?>
     public static boolean isAssignableFrom(@NotNull Type ancestor, @NotNull Type child) {
         if (ancestor.equals(child) || Object.class == ancestor) return true;
 
@@ -305,6 +309,11 @@ public abstract class Reflects {
     }
 
     public static <T, S extends T> Type[] getActualArguments(@NotNull Class<T> ancestor, @NotNull Class<S> child) {
+        ParameterizedType type = getGenericType(ancestor, child);
+        return type == null ? null : type.getActualTypeArguments();
+    }
+
+    public static Type[] getActualArguments(@NotNull Class<?> ancestor, @NotNull ParameterizedType child) {
         ParameterizedType type = getGenericType(ancestor, child);
         return type == null ? null : type.getActualTypeArguments();
     }

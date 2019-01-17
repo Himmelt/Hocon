@@ -25,7 +25,7 @@ public final class BooleanSerializer extends TypeSerializer<Boolean, NodeBase> {
     }
 
     @NotNull
-    public NodeBase serialize(@NotNull Type type, @NotNull Boolean value, @NotNull Options options) {
+    public NodeBase serialize(@NotNull Type actualType, @NotNull Boolean value, @NotNull Options options) {
         return new NodeBase(options, value, false);
     }
 }

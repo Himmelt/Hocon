@@ -7,13 +7,13 @@ import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.Objects;
 
-public class ParameterizedTypeImpl implements ParameterizedType {
+final class ParameterizedTypeImpl implements ParameterizedType {
 
     private final Type[] arguments;
     private final Class<?> rawType;
     private final Type ownerType;
 
-    public ParameterizedTypeImpl(Class<?> rawType, Type[] arguments, Type ownerType) {
+    ParameterizedTypeImpl(Class<?> rawType, Type[] arguments, Type ownerType) {
         this.arguments = arguments;
         this.rawType = rawType;
         this.ownerType = ownerType != null ? ownerType : rawType.getDeclaringClass();

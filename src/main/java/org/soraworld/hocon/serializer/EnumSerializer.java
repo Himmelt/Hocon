@@ -35,7 +35,7 @@ public final class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
     }
 
     @NotNull
-    public NodeBase serialize(@NotNull Type type, @NotNull Enum<?> value, @NotNull Options options) {
+    public NodeBase serialize(@NotNull Type actualType, @NotNull Enum<?> value, @NotNull Options options) {
         return new NodeBase(options, value.name(), false);
     }
 }

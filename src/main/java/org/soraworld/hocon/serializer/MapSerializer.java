@@ -4,7 +4,6 @@ import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NotMatchException;
 import org.soraworld.hocon.exception.SerializerException;
-import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.NodeMap;
 import org.soraworld.hocon.node.Options;
@@ -48,30 +47,29 @@ public final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
     }
 
     @NotNull
-    public NodeMap serialize(@NotNull Type type, @NotNull Map<?, ?> value, @NotNull Options options) throws HoconException {
+    public NodeMap serialize(@NotNull Type actualType, @NotNull Map<?, ?> value, @NotNull Options options) throws HoconException {
         if (value.isEmpty()) return new NodeMap(options);
-        if (type instanceof ParameterizedType) {
-            try {
-                Type[] params = Reflects.getMapParameter((ParameterizedType) type);
-                TypeSerializer KEY = options.getSerializer(params[0]);
-                TypeSerializer VAL = options.getSerializer(params[1]);
-                NodeMap map = new NodeMap(options);
+        Type[] arguments = null;
+        if (actualType instanceof ParameterizedType) {
+            arguments = Reflects.getActualArguments(Map.class, (ParameterizedType) actualType);
+        } else if (actualType instanceof Class) arguments = Reflects.getActualArguments(Map.class, (Class) actualType);
+        if (arguments != null && arguments.length == 2) {
+            TypeSerializer KEY = options.getSerializer(arguments[0]);
+            TypeSerializer VAL = options.getSerializer(arguments[1]);
+            NodeMap nodeMap = new NodeMap(options);
+            if (KEY.keyAble()) {
                 for (Map.Entry<?, ?> entry : value.entrySet()) {
                     Object key = entry.getKey();
                     Object obj = entry.getValue();
                     if (key != null && obj != null) {
-                        Node node = KEY.serialize(params[0], key, options);
-                        if (node instanceof NodeBase) {
-                            if (!map.add(((NodeBase) node).getString(), VAL.serialize(params[1], obj, options))) {
-                                throw new SerializerException("Node for key <" + ((NodeBase) node).getString() + "> already exist");
-                            }
-                        } else throw new NotMatchException("Key type must be NodeBase");
+                        NodeBase node = (NodeBase) KEY.serialize(arguments[0], key, options);
+                        if (!nodeMap.add(node.getString(), VAL.serialize(arguments[1], obj, options))) {
+                            throw new SerializerException("Node for key <" + node.getString() + "> already exist !");
+                        }
                     }
                 }
-                return map;
-            } catch (Throwable e) {
-                throw new SerializerException(e);
             }
-        } else throw new NotMatchException(getType(), type);
+            return nodeMap;
+        } else throw new NotMatchException(getType(), actualType);
     }
 }

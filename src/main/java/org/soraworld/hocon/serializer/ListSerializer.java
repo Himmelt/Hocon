@@ -51,11 +51,11 @@ public final class ListSerializer extends TypeSerializer<Collection<?>, NodeList
     }
 
     @NotNull
-    public NodeList serialize(@NotNull Type type, @NotNull Collection<?> value, @NotNull Options options) throws HoconException {
+    public NodeList serialize(@NotNull Type actualType, @NotNull Collection<?> value, @NotNull Options options) throws HoconException {
         if (value.isEmpty()) return new NodeList(options);
-        if (type instanceof ParameterizedType) {
+        if (actualType instanceof ParameterizedType) {
             try {
-                Type keyType = Reflects.getListParameter((ParameterizedType) type);
+                Type keyType = Reflects.getListParameter((ParameterizedType) actualType);
                 TypeSerializer KEY = options.getSerializer(keyType);
                 NodeList node = new NodeList(options);
                 for (Object obj : value) node.add(KEY.serialize(keyType, obj, options));
@@ -63,6 +63,6 @@ public final class ListSerializer extends TypeSerializer<Collection<?>, NodeList
             } catch (Throwable e) {
                 throw new SerializerException(e);
             }
-        } else throw new NotMatchException(getType(), type);
+        } else throw new NotMatchException(getType(), actualType);
     }
 }
