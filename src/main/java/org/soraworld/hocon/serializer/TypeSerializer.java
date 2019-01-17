@@ -11,16 +11,18 @@ import org.soraworld.hocon.util.Reflects;
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 
 /**
  * 序列化器接口.<br>
  * 1. 实现类应当用 {@code final} 修饰<br>
- * 2. 实现类不得含有参数类型
+ * 2. 实现类不得含有参数类型<br>
+ * 3. 预作为 Map 的键类型，理应实现有效的hashcode和equals方法.
  *
  * @param <T> 序列化类型参数
  * @param <N> 序列化结点类型参数
  */
-public abstract class TypeSerializer<T, N extends Node> {
+public abstract class TypeSerializer<T, N extends Node> implements Comparable<TypeSerializer> {
 
     private Type[] types = new Type[2];
 
@@ -31,7 +33,7 @@ public abstract class TypeSerializer<T, N extends Node> {
      */
     public TypeSerializer() throws SerializerException {
         // 必须获取两个有效类型，否则抛出异常
-        ParameterizedType type = Reflects.getGenericType(TypeSerializer.class, this.getClass());
+        ParameterizedType type = Reflects.getGenericType(TypeSerializer.class, getClass());
         if (type != null) {
             Type[] types = type.getActualTypeArguments();
             if (types.length == 2) {
@@ -40,7 +42,7 @@ public abstract class TypeSerializer<T, N extends Node> {
                 return;
             }
         }
-        throw new SerializerException("Invalid params");
+        throw new SerializerException("Type " + getClass().getName() + " MUST has 2 parameters extends 'TypeSerializer<T, N extends Node>'");
     }
 
     /**
@@ -82,5 +84,19 @@ public abstract class TypeSerializer<T, N extends Node> {
     final Type getType() {
         if (this instanceof SerializableSerializer) return Serializable.class;
         return types[0];
+    }
+
+    public int hashCode() {
+        return Arrays.hashCode(types);
+    }
+
+    public String toString() {
+        return types[0].getTypeName() + " <-> " + types[1].getTypeName();
+    }
+
+    public int compareTo(@NotNull TypeSerializer another) {
+        if (this == another) return 0;
+        if (Reflects.isAssignableFrom(types[0], another.types[0])) return 1;
+        return -1;
     }
 }

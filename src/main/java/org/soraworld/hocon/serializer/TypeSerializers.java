@@ -5,6 +5,10 @@ import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.util.Reflects;
 
 import java.lang.reflect.Type;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -13,117 +17,118 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public final class TypeSerializers {
 
-    private final TypeSerializers parent;
     private final CopyOnWriteArrayList<TypeSerializer> serializers = new CopyOnWriteArrayList<>();
     private final ConcurrentHashMap<Type, TypeSerializer> typeMatches = new ConcurrentHashMap<>();
-    private static final TypeSerializers DEFAULT_SERIALIZERS = new TypeSerializers(null);
+    /**
+     * 默认顶级序列化器集合，不可修改.<br>
+     * 包含 {@link Number},{@link String},{@link Boolean},{@link Map},{@link Enum}<br>
+     * {@link java.util.Collection},{@link java.io.Serializable},{@link org.soraworld.hocon.node.Node}
+     */
+    public static final Map<Type, TypeSerializer> DEFAULT_SERIALIZERS;
 
     static {
+        // 默认顶级序列化器
+        Map<Type, TypeSerializer> map = new LinkedHashMap<>();
+        TypeSerializer serializer;
         try {
-            DEFAULT_SERIALIZERS.registerType(new NumberSerializer());
+            serializer = new NumberSerializer();
+            map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            DEFAULT_SERIALIZERS.registerType(new StringSerializer());
+            serializer = new StringSerializer();
+            map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            DEFAULT_SERIALIZERS.registerType(new BooleanSerializer());
+            serializer = new BooleanSerializer();
+            map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            DEFAULT_SERIALIZERS.registerType(new MapSerializer());
+            serializer = new MapSerializer();
+            map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            DEFAULT_SERIALIZERS.registerType(new ListSerializer());
+            serializer = new ListSerializer();
+            map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            DEFAULT_SERIALIZERS.registerType(new SerializableSerializer());
+            serializer = new SerializableSerializer();
+            map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            DEFAULT_SERIALIZERS.registerType(new NodeSerializer());
+            serializer = new NodeSerializer();
+            map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            DEFAULT_SERIALIZERS.registerType(new EnumSerializer());
+            serializer = new EnumSerializer();
+            map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();
         }
-    }
-
-    private TypeSerializers(TypeSerializers parent) {
-        this.parent = checkCycle(parent) ? parent : null;
-    }
-
-    private boolean checkCycle(TypeSerializers another) {
-        if (another == null) return true;
-        return this != another && checkCycle(another.parent);
+        DEFAULT_SERIALIZERS = Collections.unmodifiableMap(map);
     }
 
     /**
      * 获取类型对应的序列化器.
      *
      * @param type 类型
-     * @return 序列化器
+     * @return 序列化器 type serializer
      */
     public TypeSerializer get(@NotNull Type type) {
-        if (type instanceof Class) type = Reflects.wrap((Class<?>) type);
-        TypeSerializer serializer = typeMatches.computeIfAbsent(type, typ -> {
+        if (type instanceof Class<?>) type = Reflects.wrap((Class<?>) type);
+        TypeSerializer serializer = typeMatches.computeIfAbsent(type, actual -> {
+            TreeSet<TypeSerializer> set = new TreeSet<>();
             for (TypeSerializer serial : serializers) {
-                if (Reflects.isAssignableFrom(serial.getType(), typ)) return serial;
+                if (Reflects.isAssignableFrom(serial.getType(), actual)) set.add(serial);
             }
-            return null;
+            return set.isEmpty() ? null : set.first();
         });
-        if (serializer == null && parent != null) serializer = parent.get(type);
+        if (serializer == null) {
+            // 默认序列化器集合里全是顶级序列化器，不存在 "以下序上" 的情况
+            for (TypeSerializer serial : DEFAULT_SERIALIZERS.values()) {
+                if (Reflects.isAssignableFrom(serial.getType(), type)) {
+                    serializer = serial;
+                    break;
+                }
+            }
+            if (serializer != null) typeMatches.put(type, serializer);
+        }
         return serializer;
     }
 
     /**
-     * 注册序列化器.
+     * 注册序列化器.<br>
+     * 允许注册已存在的 父/子 序列化器，但会输出提示.<br>
+     * 不允许注册已存在的 同类 序列化器.
      *
      * @param serializer 序列化器
      * @throws SerializerException 序列化异常
      */
-    public void registerType(TypeSerializer serializer) throws SerializerException {
-        TypeSerializer serial = get(serializer.getType());
-        if (serial == null) {
-            serializers.add(serializer);
-            typeMatches.clear();
-        } else {
-            String message = "Serializer for type ["
-                    + serializer.getType().getTypeName()
-                    + "] has been registered with type ["
-                    + serial.getType() + "].";
-            throw new SerializerException(message);
+    public void registerType(@NotNull TypeSerializer serializer) throws SerializerException {
+        Type type = serializer.getType();
+        TypeSerializer serial = get(type);
+        if (serial != null) {
+            if (DEFAULT_SERIALIZERS.containsKey(type)) {
+                throw new SerializerException("Top Serializer of " + type.getTypeName() + " CAN NOT be overridden !!");
+            } else if (type.equals(serial.getType())) {
+                throw new SerializerException("Serializer of the same type " + type.getTypeName() + " is already exist !!");
+            }
+            System.out.println("WARNING Serializer of " + type.getTypeName() + " has been registered with related type " + serial.getType().getTypeName());
         }
-    }
-
-    /**
-     * 创建新的子序列化器集合.
-     *
-     * @return 子序列化器集合
-     */
-    public TypeSerializers newChild() {
-        return new TypeSerializers(this);
-    }
-
-    /**
-     * 创建新的序列化器集合.
-     * 以根集合为父集合
-     *
-     * @return 序列化器集合
-     */
-    public static TypeSerializers build() {
-        return DEFAULT_SERIALIZERS.newChild();
+        serializers.add(serializer);
+        typeMatches.clear();
     }
 }

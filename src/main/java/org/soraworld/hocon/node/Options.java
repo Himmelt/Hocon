@@ -18,7 +18,7 @@ public class Options {
     private Function<String, String> commentTranslator;
     private Function<String, String> serializeTranslator;
     private Function<String, String> deserializeTranslator;
-    private final TypeSerializers serializers = TypeSerializers.build();
+    private final TypeSerializers serializers = new TypeSerializers();
 
     private static final Options defaults = new Options(true);
 
