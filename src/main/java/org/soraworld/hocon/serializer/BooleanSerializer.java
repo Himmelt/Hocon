@@ -10,13 +10,13 @@ import java.lang.reflect.Type;
 /**
  * 逻辑类型序列化器.
  */
-public final class BooleanSerializer extends TypeSerializer<Boolean, NodeBase> {
+final class BooleanSerializer extends TypeSerializer<Boolean, NodeBase> {
     /**
      * Instantiates a new Boolean serializer.
      *
      * @throws SerializerException the serializer exception
      */
-    public BooleanSerializer() throws SerializerException {
+    BooleanSerializer() throws SerializerException {
     }
 
     @NotNull

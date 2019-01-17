@@ -12,20 +12,18 @@ import java.util.function.Function;
  */
 public class Options {
 
-    private int deep = 0;
     private int indent = 2;
     private boolean seal;
     private boolean debug = false;
     private Function<String, String> commentTranslator;
     private Function<String, String> serializeTranslator;
     private Function<String, String> deserializeTranslator;
-    private final TypeSerializers[] serializers = new TypeSerializers[5];
+    private final TypeSerializers serializers = TypeSerializers.build();
 
     private static final Options defaults = new Options(true);
 
     private Options(boolean seal) {
         this.seal = seal;
-        serializers[0] = TypeSerializers.build();
     }
 
     /**
@@ -162,58 +160,21 @@ public class Options {
      * @return 序列化器
      */
     public TypeSerializer getSerializer(Type type) {
-        return serializers[deep].get(type);
+        return serializers.get(type);
     }
 
     /**
-     * 注册类型和对应的序列化器.
-     * 注册级别默认为 0
+     * 注册序列化器.
      *
      * @param serializer 序列化器
      */
     public void registerType(TypeSerializer serializer) {
         if (!seal) {
             try {
-                serializers[0].registerType(serializer);
+                serializers.registerType(serializer);
             } catch (SerializerException e) {
                 System.out.println(e.getMessage());
                 if (debug) e.printStackTrace();
-            }
-        }
-    }
-
-    /**
-     * 按级别注册类型和对应的序列化器.
-     * 注册级别为 0 - 4
-     * 0 为最高级，是 1级序列化器集合的父集合，
-     * 同理，1级序列化器集合是1级序列化器集合的父集合.
-     * 按类型搜索序列化器时会先从最低的等级开始搜寻，找不到再去父集合查找，
-     * 直到根集合查找完毕.
-     *
-     * @param serializer 序列化器
-     * @param level      注册级别
-     */
-    public void registerType(TypeSerializer serializer, int level) {
-        if (!seal && level >= 0) {
-            level = level > 4 ? 4 : level;
-            if (level > deep) {
-                deep = level;
-                for (int i = 1; i <= deep; i++) {
-                    if (serializers[i] == null) serializers[i] = serializers[i - 1].newChild();
-                }
-                try {
-                    serializers[deep].registerType(serializer);
-                } catch (SerializerException e) {
-                    System.out.println(e.getMessage());
-                    if (debug) e.printStackTrace();
-                }
-            } else {
-                try {
-                    serializers[level].registerType(serializer);
-                } catch (SerializerException e) {
-                    System.out.println(e.getMessage());
-                    if (debug) e.printStackTrace();
-                }
             }
         }
     }

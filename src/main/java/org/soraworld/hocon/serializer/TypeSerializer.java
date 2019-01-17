@@ -22,7 +22,7 @@ import java.lang.reflect.Type;
  */
 public abstract class TypeSerializer<T, N extends Node> {
 
-    protected Type[] types = new Type[2];
+    private Type[] types = new Type[2];
 
     /**
      * 实例化,并计算类型标记.
@@ -69,7 +69,7 @@ public abstract class TypeSerializer<T, N extends Node> {
     @NotNull
     public abstract N serialize(@NotNull Type actualType, @NotNull T value, @NotNull Options options) throws HoconException;
 
-    public final boolean keyAble() {
+    final boolean keyAble() {
         return types[1] == NodeBase.class;
     }
 
@@ -79,8 +79,8 @@ public abstract class TypeSerializer<T, N extends Node> {
      * @return 注册类型
      */
     @NotNull
-    public final Type getType() {
-        if (this instanceof AnnotationSerializer) return Serializable.class;
+    final Type getType() {
+        if (this instanceof SerializableSerializer) return Serializable.class;
         return types[0];
     }
 }

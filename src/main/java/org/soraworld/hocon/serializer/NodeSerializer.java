@@ -10,13 +10,13 @@ import java.lang.reflect.Type;
 /**
  * 结点类型序列化器.
  */
-public final class NodeSerializer extends TypeSerializer<Node, Node> {
+final class NodeSerializer extends TypeSerializer<Node, Node> {
     /**
      * 实例化,并计算类型标记.
      *
      * @throws SerializerException the serializer exception
      */
-    public NodeSerializer() throws SerializerException {
+    NodeSerializer() throws SerializerException {
     }
 
     @NotNull

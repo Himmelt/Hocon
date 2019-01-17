@@ -72,9 +72,6 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             if (setting != null) {
                 Type fieldType = field.getGenericType();
                 TypeSerializer serializer = options.getSerializer(fieldType);
-                if (serializer == null && fieldType instanceof Class && Serializable.class.isAssignableFrom((Class) fieldType)) {
-                    serializer = options.getSerializer(Serializable.class);
-                }
                 if (serializer != null) {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     Node node = get(paths);

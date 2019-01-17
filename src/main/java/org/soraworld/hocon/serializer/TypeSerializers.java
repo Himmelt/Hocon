@@ -1,5 +1,6 @@
 package org.soraworld.hocon.serializer;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.util.Reflects;
 
@@ -15,46 +16,46 @@ public final class TypeSerializers {
     private final TypeSerializers parent;
     private final CopyOnWriteArrayList<TypeSerializer> serializers = new CopyOnWriteArrayList<>();
     private final ConcurrentHashMap<Type, TypeSerializer> typeMatches = new ConcurrentHashMap<>();
-    private static final TypeSerializers SERIALIZERS = new TypeSerializers(null);
+    private static final TypeSerializers DEFAULT_SERIALIZERS = new TypeSerializers(null);
 
     static {
         try {
-            SERIALIZERS.registerType(new NumberSerializer());
+            DEFAULT_SERIALIZERS.registerType(new NumberSerializer());
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            SERIALIZERS.registerType(new StringSerializer());
+            DEFAULT_SERIALIZERS.registerType(new StringSerializer());
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            SERIALIZERS.registerType(new BooleanSerializer());
+            DEFAULT_SERIALIZERS.registerType(new BooleanSerializer());
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            SERIALIZERS.registerType(new MapSerializer());
+            DEFAULT_SERIALIZERS.registerType(new MapSerializer());
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            SERIALIZERS.registerType(new ListSerializer());
+            DEFAULT_SERIALIZERS.registerType(new ListSerializer());
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            SERIALIZERS.registerType(new AnnotationSerializer());
+            DEFAULT_SERIALIZERS.registerType(new SerializableSerializer());
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            SERIALIZERS.registerType(new NodeSerializer());
+            DEFAULT_SERIALIZERS.registerType(new NodeSerializer());
         } catch (SerializerException e) {
             e.printStackTrace();
         }
         try {
-            SERIALIZERS.registerType(new EnumSerializer());
+            DEFAULT_SERIALIZERS.registerType(new EnumSerializer());
         } catch (SerializerException e) {
             e.printStackTrace();
         }
@@ -75,7 +76,7 @@ public final class TypeSerializers {
      * @param type 类型
      * @return 序列化器
      */
-    public TypeSerializer get(Type type) {
+    public TypeSerializer get(@NotNull Type type) {
         if (type instanceof Class) type = Reflects.wrap((Class<?>) type);
         TypeSerializer serializer = typeMatches.computeIfAbsent(type, typ -> {
             for (TypeSerializer serial : serializers) {
@@ -117,21 +118,12 @@ public final class TypeSerializers {
     }
 
     /**
-     * 获取根(默认)序列化器集合.
-     *
-     * @return 根序列化器集合
-     */
-    public static TypeSerializers defaults() {
-        return SERIALIZERS;
-    }
-
-    /**
      * 创建新的序列化器集合.
      * 以根集合为父集合
      *
      * @return 序列化器集合
      */
     public static TypeSerializers build() {
-        return SERIALIZERS.newChild();
+        return DEFAULT_SERIALIZERS.newChild();
     }
 }

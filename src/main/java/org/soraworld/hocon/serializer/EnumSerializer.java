@@ -12,13 +12,13 @@ import java.lang.reflect.Type;
 /**
  * 枚举类型序列化器.
  */
-public final class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
+final class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
     /**
      * 实例化,并计算类型标记.
      *
      * @throws SerializerException the serializer exception
      */
-    public EnumSerializer() throws SerializerException {
+    EnumSerializer() throws SerializerException {
     }
 
     @NotNull

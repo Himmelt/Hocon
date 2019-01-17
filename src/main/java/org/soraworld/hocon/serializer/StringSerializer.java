@@ -11,13 +11,13 @@ import java.lang.reflect.Type;
 /**
  * 字符串类型序列化器.
  */
-public final class StringSerializer extends TypeSerializer<String, NodeBase> {
+final class StringSerializer extends TypeSerializer<String, NodeBase> {
     /**
      * 实例化,并计算类型标记.
      *
      * @throws SerializerException the serializer exception
      */
-    public StringSerializer() throws SerializerException {
+    StringSerializer() throws SerializerException {
     }
 
     @NotNull
