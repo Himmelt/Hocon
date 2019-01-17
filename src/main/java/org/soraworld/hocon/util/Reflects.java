@@ -17,6 +17,7 @@ public final class Reflects {
     private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER;
     private static final Map<Class<?>, Class<?>> WRAPPER_PRIMITIVE;
     private static final ConcurrentHashMap<Class<?>, CopyOnWriteArrayList<Field>> CLAZZ_FIELDS = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<?>, CopyOnWriteArrayList<Field>> STATIC_FIELDS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Class<? extends Enum<?>>, ConcurrentHashMap<String, Enum<?>>> ENUM_FIELDS = new ConcurrentHashMap<>();
 
     static {
@@ -69,6 +70,22 @@ public final class Reflects {
         fields.addAll(0, getFields(clazz.getSuperclass()));
         fields.forEach(field -> field.setAccessible(true));
         CLAZZ_FIELDS.put(clazz, fields);
+        return fields;
+    }
+
+    /**
+     * 获取类的静态字段.
+     *
+     * @param clazz 类
+     * @return 字段列表
+     */
+    @NotNull
+    public static List<Field> getStaticFields(@NotNull Class<?> clazz) {
+        if (STATIC_FIELDS.containsKey(clazz)) return STATIC_FIELDS.get(clazz);
+        CopyOnWriteArrayList<Field> fields = new CopyOnWriteArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
+        fields.removeIf(field -> !Modifier.isStatic(field.getModifiers()));
+        fields.forEach(field -> field.setAccessible(true));
+        STATIC_FIELDS.put(clazz, fields);
         return fields;
     }
 
