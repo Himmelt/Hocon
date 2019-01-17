@@ -20,7 +20,7 @@ public final class NodeSerializer extends TypeSerializer<Node, Node> {
     }
 
     @NotNull
-    public Node deserialize(@NotNull Type type, @NotNull Node node) {
+    public Node deserialize(@NotNull Type actualType, @NotNull Node node) {
         return node;
     }
 

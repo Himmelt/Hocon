@@ -3,8 +3,6 @@ package org.soraworld.hocon.util;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.soraworld.hocon.exception.NonRawTypeException;
-import org.soraworld.hocon.exception.NotParamListException;
-import org.soraworld.hocon.exception.NotParamMapException;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -108,36 +106,6 @@ public final class Reflects {
         if (type instanceof Class) return (Class<?>) type;
         if (type instanceof ParameterizedType) return (Class<?>) ((ParameterizedType) type).getRawType();
         else throw new NonRawTypeException(type);
-    }
-
-    /**
-     * 获取映射类型的类型参数数组.
-     *
-     * @param type 参数化类型
-     * @return 类型参数
-     * @throws NotParamMapException 非映射参数化类型异常
-     */
-    public static Type[] getMapParameter(ParameterizedType type) throws NotParamMapException {
-        if (Map.class.isAssignableFrom((Class<?>) type.getRawType())) {
-            Type[] types = type.getActualTypeArguments();
-            if (types.length == 2) return types;
-        }
-        throw new NotParamMapException(type);
-    }
-
-    /**
-     * 获取集合类型的类型参数数组.
-     *
-     * @param type 参数化类型
-     * @return 类型参数
-     * @throws NotParamListException 非集合参数化类型异常
-     */
-    public static Type getListParameter(ParameterizedType type) throws NotParamListException {
-        if (Collection.class.isAssignableFrom((Class<?>) type.getRawType())) {
-            Type[] types = type.getActualTypeArguments();
-            if (types.length == 1) return types[0];
-        }
-        throw new NotParamListException(type);
     }
 
     // TODO BUG Clooection<?> <= Enum<?>
@@ -316,6 +284,15 @@ public final class Reflects {
     public static Type[] getActualArguments(@NotNull Class<?> ancestor, @NotNull ParameterizedType child) {
         ParameterizedType type = getGenericType(ancestor, child);
         return type == null ? null : type.getActualTypeArguments();
+    }
+
+    public static Type[] getActualTypes(@NotNull Class<?> topClass, @NotNull Type actualType) {
+        Type[] arguments = null;
+        if (actualType instanceof ParameterizedType) {
+            arguments = Reflects.getActualArguments(topClass, (ParameterizedType) actualType);
+        } else if (actualType instanceof Class)
+            arguments = Reflects.getActualArguments(topClass, (Class) actualType);
+        return arguments;
     }
 
     public static ParameterizedType getGenericType(@NotNull Class<?> ancestor, @NotNull Class<?> child) {

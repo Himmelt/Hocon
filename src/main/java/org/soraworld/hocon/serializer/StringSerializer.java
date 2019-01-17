@@ -21,7 +21,7 @@ public final class StringSerializer extends TypeSerializer<String, NodeBase> {
     }
 
     @NotNull
-    public String deserialize(@NotNull Type type, @NotNull NodeBase node) throws HoconException {
+    public String deserialize(@NotNull Type actualType, @NotNull NodeBase node) throws HoconException {
         return node.getString();
     }
 

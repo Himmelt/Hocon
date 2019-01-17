@@ -20,12 +20,12 @@ public final class BooleanSerializer extends TypeSerializer<Boolean, NodeBase> {
     }
 
     @NotNull
-    public Boolean deserialize(@NotNull Type type, @NotNull NodeBase node) {
+    public Boolean deserialize(@NotNull Type actualType, @NotNull NodeBase node) {
         return node.getBoolean();
     }
 
     @NotNull
     public NodeBase serialize(@NotNull Type actualType, @NotNull Boolean value, @NotNull Options options) {
-        return new NodeBase(options, value, false);
+        return new NodeBase(options, value);
     }
 }

@@ -19,27 +19,12 @@ public class NodeBase extends AbstractNode<String> implements Node, java.io.Seri
 
     /**
      * 实例化一个新的基础结点.
-     * 如果 parse 为真，则会按照文本文件内容解析，即把双引号去掉，用在从文本读取解析时.
-     * 如果 parse 为假，则会直接存储 obj 的字符串形式，用在创建新实例时.
      *
      * @param options 配置选项
      * @param obj     封装对象
      */
     public NodeBase(@NotNull Options options, @NotNull Object obj) {
         super(options, obj.toString());
-    }
-
-    /**
-     * 实例化一个新的基础结点.
-     * 如果 parse 为真，则会按照文本文件内容解析，即把双引号去掉，用在从文本读取解析时.
-     * 如果 parse 为假，则会直接存储 obj 的字符串形式，用在创建新实例时.
-     *
-     * @param options 配置选项
-     * @param obj     封装对象
-     * @param parse   是否解析
-     */
-    public NodeBase(@NotNull Options options, @NotNull Object obj, boolean parse) {
-        super(options, parse && obj instanceof String ? unquotation((String) obj) : obj.toString());
     }
 
     /**

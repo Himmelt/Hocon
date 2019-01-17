@@ -20,14 +20,14 @@ public final class AnnotationSerializer extends TypeSerializer<Object, NodeMap> 
     }
 
     @NotNull
-    public Object deserialize(@NotNull Type type, @NotNull NodeMap node) throws HoconException {
-        if (type instanceof Class) {
+    public Object deserialize(@NotNull Type actualType, @NotNull NodeMap node) throws HoconException {
+        if (actualType instanceof Class) {
             try {
-                Object object = ((Class<?>) type).getConstructor().newInstance();
+                Object object = ((Class<?>) actualType).getConstructor().newInstance();
                 node.modify(object);
                 return object;
             } catch (ReflectiveOperationException | SecurityException e) {
-                throw new SerializerException("Class " + type + " annotated with @Serializable must have public non-parameter constructor !!");
+                throw new SerializerException("Class " + actualType + " annotated with @Serializable must have public non-parameter constructor !!");
             } catch (Throwable e) {
                 throw new SerializerException(e);
             }

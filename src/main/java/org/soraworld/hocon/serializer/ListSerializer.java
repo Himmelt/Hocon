@@ -8,7 +8,6 @@ import org.soraworld.hocon.node.NodeList;
 import org.soraworld.hocon.node.Options;
 import org.soraworld.hocon.util.Reflects;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,40 +28,30 @@ public final class ListSerializer extends TypeSerializer<Collection<?>, NodeList
     }
 
     @NotNull
-    public Collection<?> deserialize(@NotNull Type type, @NotNull NodeList node) throws HoconException {
-        if (type instanceof ParameterizedType) {
-            try {
-                Class<?> rawType = (Class<?>) ((ParameterizedType) type).getRawType();
-                Type paramType = Reflects.getListParameter((ParameterizedType) type);
-                TypeSerializer KEY = node.options().getSerializer(paramType);
-                Collection<Object> collection;
-                if (rawType.isAssignableFrom(ArrayList.class)) collection = new ArrayList<>();
-                else if (rawType.isAssignableFrom(HashSet.class)) collection = new HashSet<>();
-                else collection = new LinkedList<>();
-                int size = node.size();
-                for (int i = 0; i < size; i++) {
-                    collection.add(KEY.deserialize(paramType, node.get(i)));
-                }
-                return collection;
-            } catch (Throwable e) {
-                throw new SerializerException(e);
+    public Collection<?> deserialize(@NotNull Type actualType, @NotNull NodeList node) throws HoconException {
+        Type[] arguments = Reflects.getActualTypes(Collection.class, actualType);
+        if (arguments != null && arguments.length == 1) {
+            Collection<Object> collection;
+            if (Reflects.isAssignableFrom(actualType, ArrayList.class)) collection = new ArrayList<>();
+            else if (Reflects.isAssignableFrom(actualType, HashSet.class)) collection = new HashSet<>();
+            else collection = new LinkedList<>();
+            TypeSerializer KEY = node.options().getSerializer(arguments[0]);
+            int size = node.size();
+            for (int i = 0; i < size; i++) {
+                collection.add(KEY.deserialize(arguments[0], node.get(i)));
             }
-        } else throw new NotMatchException(getType(), type);
+            return collection;
+        } else throw new NotMatchException(getType(), actualType);
     }
 
     @NotNull
     public NodeList serialize(@NotNull Type actualType, @NotNull Collection<?> value, @NotNull Options options) throws HoconException {
-        if (value.isEmpty()) return new NodeList(options);
-        if (actualType instanceof ParameterizedType) {
-            try {
-                Type keyType = Reflects.getListParameter((ParameterizedType) actualType);
-                TypeSerializer KEY = options.getSerializer(keyType);
-                NodeList node = new NodeList(options);
-                for (Object obj : value) node.add(KEY.serialize(keyType, obj, options));
-                return node;
-            } catch (Throwable e) {
-                throw new SerializerException(e);
-            }
+        Type[] arguments = Reflects.getActualTypes(Collection.class, actualType);
+        if (arguments != null && arguments.length == 1) {
+            NodeList nodeList = new NodeList(options);
+            TypeSerializer ELEMENT = options.getSerializer(arguments[0]);
+            for (Object obj : value) nodeList.add(ELEMENT.serialize(arguments[0], obj, options));
+            return nodeList;
         } else throw new NotMatchException(getType(), actualType);
     }
 }

@@ -387,7 +387,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
             return false;
         }
-        value.put(path, new NodeBase(options, obj, false));
+        value.put(path, new NodeBase(options, obj));
         return true;
     }
 
@@ -517,7 +517,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     public boolean notEmpty() {
-        return value != null && !value.isEmpty();
+        return !value.isEmpty();
     }
 
     public void readValue(BufferedReader reader, boolean keepComments) throws Exception {
@@ -559,7 +559,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             } else if (line.contains("=")) {
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 String text = line.substring(line.indexOf('=') + 1).trim();
-                NodeBase base = new NodeBase(options, text, true);
+                NodeBase base = new NodeBase(options, text);
                 if (keepComments) {
                     base.setComments(commentTemp);
                     commentTemp = new ArrayList<>();
@@ -636,7 +636,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         } else target.clear();
 
         if (targetType instanceof ParameterizedType) {
-            Type[] params = Reflects.getMapParameter((ParameterizedType) targetType);
+            Type[] params = Reflects.getActualTypes(Map.class, targetType);
             Type keyType = params[0];
             Type valType = params[1];
             if (keyType instanceof Class<?>) {
@@ -677,8 +677,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return target;
     }
 
-    /* source 不得为 null */
-    private static void transfer(Map<?, ?> source, Map target, Class<?> targetClazz) {
+    private static void transfer(@NotNull Map<?, ?> source, Map target, Class<?> targetClazz) {
         for (Map.Entry<?, ?> entry : source.entrySet()) {
             Object objKey = entry.getKey();
             Object objVal = entry.getValue();
@@ -690,8 +689,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         }
     }
 
-    /* source 不得为 null */
-    private static Collection<?> transCollection(Collection<?> source, Collection target, Type targetType) throws HoconException, NotParamListException, NotParamMapException, NonRawTypeException {
+    private static Collection<?> transCollection(@NotNull Collection<?> source, Collection target, Type targetType) throws HoconException, NotParamListException, NotParamMapException, NonRawTypeException {
         if (target == null) {
             Class<?> rawType = Reflects.getRawType(targetType);
             if (rawType.equals(source.getClass()) || rawType.equals(Collection.class)) return source;
@@ -721,40 +719,42 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 throw new HoconException("Class " + rawType.getName() + " must have public non-parameter constructor !!");
             }
         } else target.clear();
-
         if (targetType instanceof ParameterizedType) {
-            Type elementType = Reflects.getListParameter((ParameterizedType) targetType);
-            if (elementType instanceof ParameterizedType) {
-                Class<?> elementRawClazz = (Class<?>) ((ParameterizedType) elementType).getRawType();
-                if (Map.class.isAssignableFrom(elementRawClazz)) {
-                    for (Object element : source) {
-                        if (element instanceof Map<?, ?>) {
-                            Map<?, ?> value = transMap((Map<?, ?>) element, null, elementType);
-                            target.add(value);
+            Type[] arguments = Reflects.getActualTypes(Collection.class, targetType);
+            if (arguments != null && arguments.length == 1) {
+                Type elementType = arguments[0];
+                if (elementType instanceof ParameterizedType) {
+                    Class<?> elementRawClazz = (Class<?>) ((ParameterizedType) elementType).getRawType();
+                    if (Map.class.isAssignableFrom(elementRawClazz)) {
+                        for (Object element : source) {
+                            if (element instanceof Map<?, ?>) {
+                                Map<?, ?> value = transMap((Map<?, ?>) element, null, elementType);
+                                target.add(value);
+                            }
+                        }
+                    } else if (Collection.class.isAssignableFrom(elementRawClazz)) {
+                        for (Object element : source) {
+                            if (element instanceof Collection<?>) {
+                                Collection<?> value = transCollection((Collection<?>) element, null, elementType);
+                                target.add(value);
+                            }
+                        }
+                    } else {
+                        for (Object value : source) {
+                            if (elementRawClazz.isAssignableFrom(value.getClass())) {
+                                target.add(value);
+                            }
                         }
                     }
-                } else if (Collection.class.isAssignableFrom(elementRawClazz)) {
-                    for (Object element : source) {
-                        if (element instanceof Collection<?>) {
-                            Collection<?> value = transCollection((Collection<?>) element, null, elementType);
-                            target.add(value);
+                } else if (elementType instanceof Class<?>) {
+                    Class<?> elementClazz = (Class<?>) elementType;
+                    for (Object object : source) {
+                        if (elementClazz.isAssignableFrom(object.getClass())) {
+                            target.add(object);
                         }
                     }
-                } else {
-                    for (Object value : source) {
-                        if (elementRawClazz.isAssignableFrom(value.getClass())) {
-                            target.add(value);
-                        }
-                    }
-                }
-            } else if (elementType instanceof Class<?>) {
-                Class<?> elementClazz = (Class<?>) elementType;
-                for (Object object : source) {
-                    if (elementClazz.isAssignableFrom(object.getClass())) {
-                        target.add(object);
-                    }
-                }
-            } else throw new HoconException("Unexpected element type : " + elementType.getTypeName());
+                } else throw new HoconException("Unexpected element type : " + elementType.getTypeName());
+            }
         } else if (targetType instanceof Class<?>) {
             target.addAll(source);
         }

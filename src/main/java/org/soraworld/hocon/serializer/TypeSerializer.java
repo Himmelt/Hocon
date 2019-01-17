@@ -48,13 +48,13 @@ public abstract class TypeSerializer<T, N extends Node> {
      * 此方法第一行应该检查 node 是否为空
      * {@code if (node == null) throw new NullNodeException();}
      *
-     * @param type 实例类型
-     * @param node 结点
+     * @param actualType 实例类型
+     * @param node       结点
      * @return 反序列化后的对象
      * @throws HoconException Hocon操作异常
      */
     @NotNull
-    public abstract T deserialize(@NotNull Type type, @NotNull N node) throws HoconException;
+    public abstract T deserialize(@NotNull Type actualType, @NotNull N node) throws HoconException;
 
     /**
      * 序列化.
