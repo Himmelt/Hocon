@@ -22,7 +22,7 @@ public final class TypeSerializers {
     /**
      * 默认顶级序列化器集合，不可修改.<br>
      * 包含 {@link Number},{@link String},{@link Boolean},{@link Map},{@link Enum}<br>
-     * {@link java.util.Collection},{@link java.io.Serializable},{@link org.soraworld.hocon.node.Node}
+     * {@link java.util.Collection},{@link org.soraworld.hocon.node.Node},{@link java.io.Serializable}
      */
     public static final Map<Type, TypeSerializer> DEFAULT_SERIALIZERS;
 
@@ -61,7 +61,7 @@ public final class TypeSerializers {
             e.printStackTrace();
         }
         try {
-            serializer = new SerializableSerializer();
+            serializer = new EnumSerializer();
             map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();
@@ -73,7 +73,7 @@ public final class TypeSerializers {
             e.printStackTrace();
         }
         try {
-            serializer = new EnumSerializer();
+            serializer = new SerializableSerializer();
             map.put(serializer.getType(), serializer);
         } catch (SerializerException e) {
             e.printStackTrace();

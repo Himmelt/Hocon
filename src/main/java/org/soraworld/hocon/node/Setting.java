@@ -24,23 +24,13 @@ public @interface Setting {
     String comment() default "";
 
     /**
-     * Content trans boolean.
+     * 字段翻译配置字, 默认 0b0001.<br>
+     * bit_0:是否翻译注释<br>
+     * bit_1:是否翻译读取内容<br>
+     * bit_2:是否翻译写入内容<br>
+     * bit_3:是否全部翻译.
      *
-     * @return the boolean
+     * @return 配置字
      */
-    boolean contentTrans() default false;
-
-    /**
-     * Serialize trans boolean.
-     *
-     * @return the boolean
-     */
-    boolean serializeTrans() default false;
-
-    /**
-     * Deserialize trans boolean.
-     *
-     * @return the boolean
-     */
-    boolean deserializeTrans() default false;
+    byte trans() default 0b0001;
 }

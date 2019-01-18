@@ -21,9 +21,9 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * 映射结点类.
  */
-public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node, Map<String, Node> {
+public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node {
 
-    /* value - 不为 null */
+    private static final byte COMMENT = 0, READ = 1, WRITE = 2;
 
     private NodeMap(NodeMap source) {
         super(source.options, new LinkedHashMap<>(source.value));
@@ -75,9 +75,9 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 if (serializer != null) {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     Node node = get(paths);
-                    if (node instanceof NodeBase && (setting.contentTrans() || setting.deserializeTrans())) {
+                    if (node instanceof NodeBase && ((setting.trans() & 0b1010) != 0)) {
                         List<String> comments = ((NodeBase) node).comments;
-                        node = new NodeBase(options, options.transDeserializeText(((NodeBase) node).value));
+                        node = new NodeBase(options, options.translate(READ, ((NodeBase) node).value));
                         node.setComments(comments);
                     }
                     if (node != null) {
@@ -168,7 +168,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             if (setting != null) {
                 try {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
-                    String comment = options.transComment(setting.comment());
+                    String comment = (setting.trans() & 0b1001) == 0 ? setting.comment() : options.translate(COMMENT, setting.comment());
                     Node old = oldNode.get(paths.clone());
                     List<String> list = old != null ? old.getComments() : null;
                     Type fieldType = field.getGenericType();
@@ -178,18 +178,20 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     }
                     if (serializer != null) {
                         Node node = serializer.serialize(fieldType, field.get(source), options);
-                        if (node instanceof NodeBase && (setting.contentTrans() || setting.serializeTrans())) {
-                            node = new NodeBase(options, options.transSerializeText(((NodeBase) node).value));
+                        if (node instanceof NodeBase && (setting.trans() & 0b1100) != 0) {
+                            node = new NodeBase(options, options.translate(WRITE, ((NodeBase) node).value));
                         }
                         if (overwrite) {
                             if (set(paths, node, comment)) {
                                 if (comment.isEmpty() && keepComment) node.setComments(list);
-                            } else if (options.isDebug())
+                            } else if (options.isDebug()) {
                                 System.out.println("NodeMap set failed, paths is empty or not map path !!");
+                            }
                         } else if (put(paths, node, comment)) {
                             if (comment.isEmpty() && keepComment) node.setComments(list);
-                        } else if (options.isDebug())
+                        } else if (options.isDebug()) {
                             System.out.println("NodeMap put failed, node not match or already exist !!");
+                        }
                     } else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
                             + field.getDeclaringClass().getTypeName() + "." + field.getName()
                             + " with @Setting.");
@@ -206,7 +208,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @return 键集合
      */
     public Set<String> keys() {
-        return value.keySet();
+        return Collections.unmodifiableSet(value.keySet());
     }
 
     /**
@@ -214,18 +216,6 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      */
     public void clear() {
         value.clear();
-    }
-
-    public Set<String> keySet() {
-        return value.keySet();
-    }
-
-    public Collection<Node> values() {
-        return value.values();
-    }
-
-    public Set<Entry<String, Node>> entrySet() {
-        return value.entrySet();
     }
 
     /**
@@ -241,31 +231,18 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return value.isEmpty();
     }
 
-    public boolean containsKey(Object key) {
-        return value.containsKey(key);
+    public boolean containsKey(String key) {
+        return value.keySet().contains(key);
     }
 
-    public boolean containsValue(Object value) {
-        return this.value.containsValue(value);
-    }
-
-    public Node get(Object key) {
-        return get(String.valueOf(key));
+    public boolean containsValue(Node node) {
+        return value.values().contains(node);
     }
 
     public Node put(String key, Node value) {
         Node old = remove(key);
         set(key, value);
         return old;
-    }
-
-    public Node remove(Object key) {
-        return value.remove(key);
-    }
-
-    // TODO 循环引用未检查
-    public void putAll(Map<? extends String, ? extends Node> m) {
-        value.putAll(m);
     }
 
     /**
@@ -490,7 +467,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return map;
     }
 
-    public void fromTypeMap(Map<String, Object> map) {
+    public void fromTypeMap(@NotNull Map<String, Object> map) {
         value.clear();
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String key = entry.getKey();
@@ -501,10 +478,8 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 if (serial != null) {
                     try {
                         Node node = serial.serialize(clazz, val, options);
-                        if (node != null) {
-                            node.setTypeToComment(clazz);
-                            set(key, node);
-                        }
+                        node.setTypeToComment(clazz);
+                        set(key, node);
                     } catch (HoconException e) {
                         if (options.isDebug()) e.printStackTrace();
                     }
