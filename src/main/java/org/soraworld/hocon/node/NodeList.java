@@ -97,7 +97,7 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
     }
 
     public boolean notEmpty() {
-        return value != null && !value.isEmpty();
+        return !value.isEmpty();
     }
 
     public void readValue(BufferedReader reader, boolean keepComments) throws Exception {

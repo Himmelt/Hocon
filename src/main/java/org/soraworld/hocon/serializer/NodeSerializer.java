@@ -20,12 +20,12 @@ final class NodeSerializer extends TypeSerializer<Node, Node> {
     }
 
     @NotNull
-    public Node deserialize(@NotNull Type actualType, @NotNull Node node) {
+    public Node deserialize(@NotNull Type fieldType, @NotNull Node node) {
         return node;
     }
 
     @NotNull
-    public Node serialize(@NotNull Type actualType, @NotNull Node value, @NotNull Options options) {
+    public Node serialize(@NotNull Type fieldType, @NotNull Node value, @NotNull Options options) {
         return value;
     }
 }

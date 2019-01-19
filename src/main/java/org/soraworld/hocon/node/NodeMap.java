@@ -2,9 +2,6 @@ package org.soraworld.hocon.node;
 
 import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
-import org.soraworld.hocon.exception.NonRawTypeException;
-import org.soraworld.hocon.exception.NotParamListException;
-import org.soraworld.hocon.exception.NotParamMapException;
 import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.util.Reflects;
 
@@ -12,11 +9,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Serializable;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * 映射结点类.
@@ -64,8 +58,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      *
      * @param target 修改对象
      */
-    public void modify(Object target) {
-        if (target == null) return;
+    public void modify(@NotNull Object target) {
         List<Field> fields = Reflects.getFields(target.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
@@ -82,28 +75,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     }
                     if (node != null) {
                         try {
-                            Object current = field.get(target);
-                            Class<?> clzType = current == null ? field.getType() : current.getClass();
-                            Object value = serializer.deserialize(fieldType, node);
-                            if (Map.class.isAssignableFrom(clzType) && value instanceof Map) {
-                                try {
-                                    if (current == null || current instanceof Map) {
-                                        value = transMap((Map) value, (Map) current, fieldType);
-                                    }
-                                } catch (Throwable e) {
-                                    if (options.isDebug()) e.printStackTrace();
-                                }
-                                field.set(target, value);
-                                continue;
-                            }
-                            if (Collection.class.isAssignableFrom(clzType) && value instanceof Collection) {
-                                if (current == null || current instanceof Collection) {
-                                    value = transCollection((Collection) value, (Collection) current, fieldType);
-                                }
-                                field.set(target, value);
-                                continue;
-                            }
-                            field.set(target, value);
+                            field.set(target, serializer.deserialize(fieldType, node));
                         } catch (Throwable e) {
                             if (options.isDebug()) e.printStackTrace();
                         }
@@ -578,158 +550,5 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 }
             }
         }
-    }
-
-    /* source 不得为 null */
-    private static Map<?, ?> transMap(Map<?, ?> source, Map target, Type targetType) throws HoconException, NotParamMapException, NonRawTypeException, NotParamListException {
-        if (target == null) {
-            Class<?> rawType = Reflects.getRawType(targetType);
-            if (rawType.equals(source.getClass()) || rawType.equals(Map.class)) return source;
-            if (rawType.equals(HashMap.class) || rawType.equals(LinkedHashMap.class)) {
-                LinkedHashMap map = new LinkedHashMap();
-                map.putAll(source);
-                return map;
-            }
-            if (rawType.equals(ConcurrentMap.class) || rawType.equals(ConcurrentHashMap.class)) {
-                ConcurrentMap map = new ConcurrentHashMap();
-                map.putAll(source);
-                return map;
-            }
-            if (rawType.equals(TreeMap.class) || rawType.equals(SortedMap.class) || rawType.equals(NavigableMap.class)) {
-                TreeMap map = new TreeMap();
-                map.putAll(source);
-                return map;
-            }
-            try {
-                target = (Map<?, ?>) rawType.getConstructor().newInstance();
-            } catch (ReflectiveOperationException e) {
-                throw new HoconException("Class " + rawType.getName() + " must have public non-parameter constructor !!");
-            }
-        } else target.clear();
-
-        if (targetType instanceof ParameterizedType) {
-            Type[] params = Reflects.getActualTypes(Map.class, targetType);
-            Type keyType = params[0];
-            Type valType = params[1];
-            if (keyType instanceof Class<?>) {
-                Class<?> keyClazz = (Class<?>) keyType;
-                if (String.class.isAssignableFrom(keyClazz) || NodeBase.class.isAssignableFrom(keyClazz)) {
-                    if (valType instanceof ParameterizedType) {
-                        Class<?> rawValClazz = (Class<?>) ((ParameterizedType) valType).getRawType();
-                        if (Map.class.isAssignableFrom(rawValClazz)) {
-                            for (Map.Entry<?, ?> entry : source.entrySet()) {
-                                Object objKey = entry.getKey();
-                                Object objVal = entry.getValue();
-                                if (objKey instanceof String || objKey instanceof NodeBase) {
-                                    if (objVal instanceof Map<?, ?>) {
-                                        Map<?, ?> value = transMap((Map<?, ?>) objVal, null, valType);
-                                        target.put(objKey, value);
-                                    }
-                                }
-                            }
-                        } else if (Collection.class.isAssignableFrom(rawValClazz)) {
-                            for (Map.Entry<?, ?> entry : source.entrySet()) {
-                                Object objKey = entry.getKey();
-                                Object objVal = entry.getValue();
-                                if (objKey instanceof String || objKey instanceof NodeBase) {
-                                    if (objVal instanceof Collection<?>) {
-                                        Collection<?> value = transCollection((Collection<?>) objVal, null, valType);
-                                        target.put(objKey, value);
-                                    }
-                                }
-                            }
-                        } else transfer(source, target, rawValClazz);
-                    } else if (valType instanceof Class<?>) transfer(source, target, (Class<?>) valType);
-                    else throw new HoconException("Unexpected Map value type : " + valType.getTypeName());
-                } else throw new HoconException("Key Type for Map must be String or NodeBase !!!");
-            } else throw new HoconException("Key Type for Map must be String or NodeBase !!!");
-        } else if (targetType instanceof Class<?>) {
-            target.putAll(source);
-        }
-        return target;
-    }
-
-    private static void transfer(@NotNull Map<?, ?> source, Map target, Class<?> targetClazz) {
-        for (Map.Entry<?, ?> entry : source.entrySet()) {
-            Object objKey = entry.getKey();
-            Object objVal = entry.getValue();
-            if (objKey instanceof String || objKey instanceof NodeBase) {
-                if (targetClazz.isAssignableFrom(objVal.getClass())) {
-                    target.put(objKey, objVal);
-                }
-            }
-        }
-    }
-
-    private static Collection<?> transCollection(@NotNull Collection<?> source, Collection target, Type targetType) throws HoconException, NotParamListException, NotParamMapException, NonRawTypeException {
-        if (target == null) {
-            Class<?> rawType = Reflects.getRawType(targetType);
-            if (rawType.equals(source.getClass()) || rawType.equals(Collection.class)) return source;
-            if (rawType.equals(List.class) || rawType.equals(Queue.class) || rawType.equals(Deque.class)) {
-                LinkedList list = new LinkedList();
-                list.addAll(source);
-                return list;
-            }
-            if (rawType.equals(ArrayList.class)) {
-                ArrayList list = new ArrayList();
-                list.addAll(source);
-                return list;
-            }
-            if (rawType.equals(Set.class) || rawType.equals(HashSet.class) || rawType.equals(LinkedHashSet.class)) {
-                LinkedHashSet set = new LinkedHashSet();
-                set.addAll(source);
-                return set;
-            }
-            if (rawType.equals(TreeSet.class) || rawType.equals(NavigableSet.class) || rawType.equals(SortedSet.class)) {
-                TreeSet set = new TreeSet();
-                set.addAll(source);
-                return set;
-            }
-            try {
-                target = (Collection<?>) rawType.getConstructor().newInstance();
-            } catch (ReflectiveOperationException e) {
-                throw new HoconException("Class " + rawType.getName() + " must have public non-parameter constructor !!");
-            }
-        } else target.clear();
-        if (targetType instanceof ParameterizedType) {
-            Type[] arguments = Reflects.getActualTypes(Collection.class, targetType);
-            if (arguments != null && arguments.length == 1) {
-                Type elementType = arguments[0];
-                if (elementType instanceof ParameterizedType) {
-                    Class<?> elementRawClazz = (Class<?>) ((ParameterizedType) elementType).getRawType();
-                    if (Map.class.isAssignableFrom(elementRawClazz)) {
-                        for (Object element : source) {
-                            if (element instanceof Map<?, ?>) {
-                                Map<?, ?> value = transMap((Map<?, ?>) element, null, elementType);
-                                target.add(value);
-                            }
-                        }
-                    } else if (Collection.class.isAssignableFrom(elementRawClazz)) {
-                        for (Object element : source) {
-                            if (element instanceof Collection<?>) {
-                                Collection<?> value = transCollection((Collection<?>) element, null, elementType);
-                                target.add(value);
-                            }
-                        }
-                    } else {
-                        for (Object value : source) {
-                            if (elementRawClazz.isAssignableFrom(value.getClass())) {
-                                target.add(value);
-                            }
-                        }
-                    }
-                } else if (elementType instanceof Class<?>) {
-                    Class<?> elementClazz = (Class<?>) elementType;
-                    for (Object object : source) {
-                        if (elementClazz.isAssignableFrom(object.getClass())) {
-                            target.add(object);
-                        }
-                    }
-                } else throw new HoconException("Unexpected element type : " + elementType.getTypeName());
-            }
-        } else if (targetType instanceof Class<?>) {
-            target.addAll(source);
-        }
-        return target;
     }
 }

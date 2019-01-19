@@ -21,14 +21,14 @@ final class SerializableSerializer extends TypeSerializer<Serializable, NodeMap>
     }
 
     @NotNull
-    public Serializable deserialize(@NotNull Type actualType, @NotNull NodeMap node) throws HoconException {
-        if (actualType instanceof Class) {
+    public Serializable deserialize(@NotNull Type fieldType, @NotNull NodeMap node) throws HoconException {
+        if (fieldType instanceof Class) {
             try {
-                Serializable object = (Serializable) ((Class<?>) actualType).getConstructor().newInstance();
+                Serializable object = (Serializable) ((Class<?>) fieldType).getConstructor().newInstance();
                 node.modify(object);
                 return object;
             } catch (ReflectiveOperationException | SecurityException e) {
-                throw new SerializerException("Class " + actualType + " annotated with @Serializable must have public non-parameter constructor !!");
+                throw new SerializerException("Class " + fieldType + " annotated with @Serializable must have public non-parameter constructor !!");
             } catch (Throwable e) {
                 throw new SerializerException(e);
             }
@@ -37,7 +37,7 @@ final class SerializableSerializer extends TypeSerializer<Serializable, NodeMap>
     }
 
     @NotNull
-    public NodeMap serialize(@NotNull Type actualType, @NotNull Serializable value, @NotNull Options options) {
+    public NodeMap serialize(@NotNull Type fieldType, @NotNull Serializable value, @NotNull Options options) {
         NodeMap node = new NodeMap(options);
         node.extract(value);
         return node;

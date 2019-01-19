@@ -8,10 +8,9 @@ import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.Options;
 import org.soraworld.hocon.util.Reflects;
 
-import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
+import java.util.*;
 
 /**
  * 序列化器接口.<br>
@@ -47,30 +46,32 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
 
     /**
      * 反序列化.
-     * 此方法第一行应该检查 node 是否为空
-     * {@code if (node == null) throw new NullNodeException();}
      *
-     * @param actualType 实例类型
-     * @param node       结点
+     * @param fieldType 实际类型
+     * @param node      反序列化结点
      * @return 反序列化后的对象
      * @throws HoconException Hocon操作异常
      */
     @NotNull
-    public abstract T deserialize(@NotNull Type actualType, @NotNull N node) throws HoconException;
+    public abstract T deserialize(@NotNull Type fieldType, @NotNull N node) throws HoconException;
 
     /**
      * 序列化.
-     * 此方法可以抛出异常，但不应该返回空值.
      *
-     * @param actualType 实际类型
-     * @param value      序列化对象
-     * @param options    配置选项
+     * @param fieldType 实际类型
+     * @param value     序列化对象
+     * @param options   配置选项
      * @return 序列化后的结点
      * @throws HoconException Hocon操作异常
      */
     @NotNull
-    public abstract N serialize(@NotNull Type actualType, @NotNull T value, @NotNull Options options) throws HoconException;
+    public abstract N serialize(@NotNull Type fieldType, @NotNull T value, @NotNull Options options) throws HoconException;
 
+    /**
+     * 被序列化的对象是否可以作为 Map 的键.
+     *
+     * @return 是否可以作为 Map 的键
+     */
     final boolean keyAble() {
         return types[1] == NodeBase.class;
     }
@@ -82,7 +83,6 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
      */
     @NotNull
     final Type getType() {
-        if (this instanceof SerializableSerializer) return Serializable.class;
         return types[0];
     }
 
@@ -98,5 +98,23 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
         if (this == another) return 0;
         if (Reflects.isAssignableFrom(types[0], another.types[0])) return 1;
         return -1;
+    }
+
+    static Object getTypeInstance(@NotNull Type fieldType) throws SerializerException {
+        Class<?> rawType;
+        if (fieldType instanceof Class<?>) {
+            rawType = (Class<?>) fieldType;
+        } else if (fieldType instanceof ParameterizedType) {
+            rawType = (Class<?>) ((ParameterizedType) fieldType).getRawType();
+        } else throw new SerializerException("Field Type:" + fieldType + " CANT get class raw type !!");
+        try {
+            if (Map.class.equals(rawType)) return new HashMap<>();
+            if (Collection.class.equals(rawType) || List.class.equals(rawType)) return new ArrayList<>();
+            if (Set.class.equals(rawType)) return new HashSet<>();
+            if (Queue.class.equals(rawType)) return new LinkedList<>();
+            return rawType.getConstructor().newInstance();
+        } catch (Throwable e) {
+            throw new SerializerException("Field Type:" + fieldType + " CANT construct instance with non-args constructor !!");
+        }
     }
 }

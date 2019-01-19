@@ -306,9 +306,9 @@ public final class Reflects {
     public static Type[] getActualTypes(@NotNull Class<?> topClass, @NotNull Type actualType) {
         Type[] arguments = null;
         if (actualType instanceof ParameterizedType) {
-            arguments = Reflects.getActualArguments(topClass, (ParameterizedType) actualType);
+            arguments = getActualArguments(topClass, (ParameterizedType) actualType);
         } else if (actualType instanceof Class)
-            arguments = Reflects.getActualArguments(topClass, (Class) actualType);
+            arguments = getActualArguments(topClass, (Class) actualType);
         return arguments;
     }
 

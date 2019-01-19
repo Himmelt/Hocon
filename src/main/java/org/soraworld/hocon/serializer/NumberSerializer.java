@@ -23,10 +23,10 @@ final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
     }
 
     @NotNull
-    public Number deserialize(@NotNull Type actualType, @NotNull NodeBase node) throws HoconException {
+    public Number deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
         String number = node.getString();
-        if (actualType instanceof Class) {
-            Class clazz = Reflects.wrap((Class<?>) actualType);
+        if (fieldType instanceof Class) {
+            Class clazz = Reflects.wrap((Class<?>) fieldType);
             try {
                 if (Integer.class.equals(clazz)) {
                     return Integer.valueOf(number);
@@ -40,16 +40,16 @@ final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
                     return Float.valueOf(number);
                 } else if (Double.class.equals(clazz)) {
                     return Double.valueOf(number);
-                } else throw new NotMatchException(getType(), actualType);
+                } else throw new NotMatchException(getType(), fieldType);
             } catch (Throwable e) {
                 throw new SerializerException(e);
             }
         }
-        throw new NotMatchException(getType(), actualType);
+        throw new NotMatchException(getType(), fieldType);
     }
 
     @NotNull
-    public NodeBase serialize(@NotNull Type actualType, @NotNull Number value, @NotNull Options options) {
+    public NodeBase serialize(@NotNull Type fieldType, @NotNull Number value, @NotNull Options options) {
         return new NodeBase(options, value);
     }
 }

@@ -22,10 +22,10 @@ final class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
     }
 
     @NotNull
-    public Enum<?> deserialize(@NotNull Type actualType, @NotNull NodeBase node) throws HoconException {
+    public Enum<?> deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
         String name = node.getString();
         try {
-            Class<?> rawType = Reflects.getRawType(actualType);
+            Class<?> rawType = Reflects.getRawType(fieldType);
             Enum<?> value = Reflects.getEnum(rawType.asSubclass(Enum.class), name);
             if (value != null) return value;
             else throw new SerializerException("No Enum Value " + name + " for " + rawType.getName());
@@ -35,7 +35,7 @@ final class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
     }
 
     @NotNull
-    public NodeBase serialize(@NotNull Type actualType, @NotNull Enum<?> value, @NotNull Options options) {
+    public NodeBase serialize(@NotNull Type fieldType, @NotNull Enum<?> value, @NotNull Options options) {
         return new NodeBase(options, value.name());
     }
 }

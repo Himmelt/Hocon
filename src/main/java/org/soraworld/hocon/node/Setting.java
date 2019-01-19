@@ -3,7 +3,14 @@ package org.soraworld.hocon.node;
 import java.lang.annotation.*;
 
 /**
- * 序列化配置项注解类.
+ * 序列化配置项注解类.<br>
+ * 引用标有此注解的字段，不应复制引用，<br>
+ * 而应始终使用所在对象的引用.<br>
+ * 这是因为 {@link NodeMap#modify(Object)} 方法会用新的对象替换字段.<br>
+ * !!! 注意:<br>
+ * 1. 本注解修饰的字段请尽量使用具有 公开无参构造器 的 非抽象类.<br>
+ * 2. 请不要使用 Immutable 的容器.<br>
+ * 3. 由于数组可能定长, 所以请使用列表等可变容器.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

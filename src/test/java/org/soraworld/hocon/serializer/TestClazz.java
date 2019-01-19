@@ -33,12 +33,12 @@ public class TestClazz {
         }
 
         @NotNull
-        public A deserialize(@NotNull Type actualType, @NotNull NodeBase node) throws HoconException {
+        public A deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
             return null;
         }
 
         @NotNull
-        public NodeBase serialize(@NotNull Type actualType, @NotNull A value, @NotNull Options options) throws HoconException {
+        public NodeBase serialize(@NotNull Type fieldType, @NotNull A value, @NotNull Options options) throws HoconException {
             return null;
         }
     }
@@ -54,12 +54,12 @@ public class TestClazz {
         }
 
         @NotNull
-        public B deserialize(@NotNull Type actualType, @NotNull NodeBase node) throws HoconException {
+        public B deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
             return null;
         }
 
         @NotNull
-        public NodeBase serialize(@NotNull Type actualType, @NotNull B value, @NotNull Options options) throws HoconException {
+        public NodeBase serialize(@NotNull Type fieldType, @NotNull B value, @NotNull Options options) throws HoconException {
             return null;
         }
     }
@@ -75,12 +75,12 @@ public class TestClazz {
         }
 
         @NotNull
-        public C deserialize(@NotNull Type actualType, @NotNull NodeBase node) throws HoconException {
+        public C deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
             return null;
         }
 
         @NotNull
-        public NodeBase serialize(@NotNull Type actualType, @NotNull C value, @NotNull Options options) throws HoconException {
+        public NodeBase serialize(@NotNull Type fieldType, @NotNull C value, @NotNull Options options) throws HoconException {
             return null;
         }
     }
@@ -96,12 +96,12 @@ public class TestClazz {
         }
 
         @NotNull
-        public D deserialize(@NotNull Type actualType, @NotNull NodeBase node) throws HoconException {
+        public D deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
             return null;
         }
 
         @NotNull
-        public NodeBase serialize(@NotNull Type actualType, @NotNull D value, @NotNull Options options) throws HoconException {
+        public NodeBase serialize(@NotNull Type fieldType, @NotNull D value, @NotNull Options options) throws HoconException {
             return null;
         }
     }
