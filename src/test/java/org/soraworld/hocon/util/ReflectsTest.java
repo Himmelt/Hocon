@@ -7,6 +7,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.Function;
 
 public class ReflectsTest {
 
@@ -19,6 +20,7 @@ public class ReflectsTest {
     private Map<String, String> stringStringMap = null;
     private TestClazz.AMap<Integer> integerAMap = null;
     private TestClazz.AMap<String> stringAMap = null;
+    private Function<String, Integer> function = s -> 2;
 
     @Test
     public void isAssignableFrom() throws NoSuchFieldException {
@@ -41,5 +43,11 @@ public class ReflectsTest {
         System.out.println("stringNumberMap > stringAMap " + Reflects.isAssignableFrom(stringNumberMap, stringAMap));
         System.out.println("stringStringMap > integerAMap " + Reflects.isAssignableFrom(stringStringMap, integerAMap));
         System.out.println("stringStringMap > stringAMap " + Reflects.isAssignableFrom(stringStringMap, stringAMap));
+    }
+
+    @Test
+    public void getLambdaArgs() {
+        Type type = Reflects.getGenericType(Function.class, function.getClass());
+        System.out.println(type);
     }
 }

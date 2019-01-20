@@ -13,11 +13,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public final class Reflects {
 
+    private static final Double JAVA_VERSION;
+    private static final Map<String, Method> OBJECT_METHODS;
     private static final Map<Class<?>, Class<?>> PRIMITIVE_WRAPPER;
     private static final Map<Class<?>, Class<?>> WRAPPER_PRIMITIVE;
     private static final ConcurrentHashMap<Class<?>, CopyOnWriteArrayList<Field>> CLAZZ_FIELDS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Class<?>, CopyOnWriteArrayList<Field>> STATIC_FIELDS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Class<? extends Enum<?>>, ConcurrentHashMap<String, Enum<?>>> ENUM_FIELDS = new ConcurrentHashMap<>();
+    private static boolean RESOLVES_LAMBDAS;
+    private static Method GET_CONSTANT_POOL;
+    private static Method GET_CONSTANT_POOL_SIZE;
+    private static Method GET_CONSTANT_POOL_METHOD_AT;
 
     static {
         Map<Class<?>, Class<?>> map1 = new HashMap<>();
@@ -42,6 +48,27 @@ public final class Reflects {
         map2.put(Void.class, void.class);
         PRIMITIVE_WRAPPER = Collections.unmodifiableMap(map1);
         WRAPPER_PRIMITIVE = Collections.unmodifiableMap(map2);
+        Map<String, Method> map3 = new HashMap<>();
+        for (Method method : Object.class.getDeclaredMethods()) map3.put(method.getName(), method);
+        OBJECT_METHODS = Collections.unmodifiableMap(map3);
+        JAVA_VERSION = Double.parseDouble(System.getProperty("java.specification.version", "0"));
+        try {
+            GET_CONSTANT_POOL = Class.class.getDeclaredMethod("getConstantPool");
+            String constantPoolName = JAVA_VERSION < 9 ? "sun.reflect.ConstantPool" : "jdk.internal.reflect.ConstantPool";
+            Class<?> constantPoolClass = Class.forName(constantPoolName);
+            GET_CONSTANT_POOL_SIZE = constantPoolClass.getDeclaredMethod("getSize");
+            GET_CONSTANT_POOL_METHOD_AT = constantPoolClass.getDeclaredMethod("getMethodAt", int.class);
+
+            GET_CONSTANT_POOL.setAccessible(true);
+            GET_CONSTANT_POOL_SIZE.setAccessible(true);
+            GET_CONSTANT_POOL_METHOD_AT.setAccessible(true);
+
+            Object constantPool = GET_CONSTANT_POOL.invoke(Object.class);
+            GET_CONSTANT_POOL_SIZE.invoke(constantPool);
+            RESOLVES_LAMBDAS = true;
+        } catch (Throwable e) {
+            e.printStackTrace();
+        }
     }
 
     private Reflects() {
@@ -168,8 +195,10 @@ public final class Reflects {
             rawType = (Class<?>) ((ParameterizedType) child).getRawType();
             paramType = (ParameterizedType) child;
         } else return null;
+
         if (ancestor.equals(rawType)) return paramType;
         ParameterizedType result = null;
+
         if (ancestor.isInterface()) {
             for (Type parent : rawType.getGenericInterfaces()) {
                 if (parent instanceof ParameterizedType) {
@@ -178,7 +207,7 @@ public final class Reflects {
                             TypeVariable[] variables = rawType.getTypeParameters();
                             Type[] arguments = paramType.getActualTypeArguments();
                             if (variables.length == arguments.length) {
-                                HashMap<TypeVariable, Type> map = new HashMap<>();
+                                HashMap<TypeVariable<?>, Type> map = new HashMap<>();
                                 for (int i = 0; i < variables.length; i++) {
                                     map.put(variables[i], arguments[i]);
                                 }
@@ -187,6 +216,14 @@ public final class Reflects {
                         } else result = getGenericType(ancestor, parent);
                     }
                 } else if (parent instanceof Class<?> && isAssignableFrom(ancestor, (Class<?>) parent)) {
+                    if (RESOLVES_LAMBDAS && rawType.isSynthetic()) {
+                        Map<TypeVariable<?>, Type> map = getLambdaArgs(ancestor, rawType);
+                        TypeVariable<?>[] variables = ((Class<?>) parent).getTypeParameters();
+                        if (variables != null) {
+                            ParameterizedType type = new ParameterizedTypeImpl((Class<?>) parent, variables, ((Class<?>) parent).getDeclaringClass());
+                            parent = fillParameter(type, map);
+                        }
+                    }
                     result = getGenericType(ancestor, parent);
                 }
                 if (result != null) return result;
@@ -200,7 +237,7 @@ public final class Reflects {
                         TypeVariable[] variables = rawType.getTypeParameters();
                         Type[] arguments = paramType.getActualTypeArguments();
                         if (variables.length == arguments.length) {
-                            HashMap<TypeVariable, Type> map = new HashMap<>();
+                            HashMap<TypeVariable<?>, Type> map = new HashMap<>();
                             for (int i = 0; i < variables.length; i++) {
                                 map.put(variables[i], arguments[i]);
                             }
@@ -216,17 +253,130 @@ public final class Reflects {
     }
 
     @NotNull
-    private static ParameterizedType fillParameter(@NotNull ParameterizedType type, @NotNull Map<TypeVariable, Type> map) {
+    private static ParameterizedType fillParameter(@NotNull ParameterizedType type, @NotNull Map<TypeVariable<?>, Type> map) {
         Class<?> rawClass = (Class<?>) type.getRawType();
         Type[] arguments = type.getActualTypeArguments();
+        Type[] params = new Type[arguments.length];
         for (int i = 0; i < arguments.length; i++) {
-            if (arguments[i] instanceof TypeVariable) {
-                TypeVariable variable = (TypeVariable) arguments[i];
-                arguments[i] = map.getOrDefault(variable, variable);
+            if (arguments[i] instanceof TypeVariable<?>) {
+                TypeVariable<?> variable = (TypeVariable<?>) arguments[i];
+                params[i] = map.getOrDefault(variable, variable);
             } else if (arguments[i] instanceof ParameterizedType) {
-                arguments[i] = fillParameter((ParameterizedType) arguments[i], map);
+                params[i] = fillParameter((ParameterizedType) arguments[i], map);
+            } else params[i] = arguments[i];
+        }
+        return new ParameterizedTypeImpl(rawClass, params, type.getOwnerType());
+    }
+
+    @NotNull
+    private static HashMap<TypeVariable<?>, Type> getLambdaArgs(@NotNull Class<?> ancestor, @NotNull final Class<?> child) {
+        HashMap<TypeVariable<?>, Type> map = new HashMap<>();
+        if (RESOLVES_LAMBDAS) {
+            for (Method m : ancestor.getMethods()) {
+                if (!isDefaultMethod(m) && !Modifier.isStatic(m.getModifiers()) && !m.isBridge()) {
+                    // Skip methods that override Object.class
+                    Method objectMethod = OBJECT_METHODS.get(m.getName());
+                    if (objectMethod != null && Arrays.equals(m.getTypeParameters(), objectMethod.getTypeParameters()))
+                        continue;
+
+                    // Get functional interface's type params
+                    Type returnTypeVar = m.getGenericReturnType();
+                    Type[] paramTypeVars = m.getGenericParameterTypes();
+
+                    Member member = getMemberRef(child);
+                    if (member == null) return map;
+
+                    // Populate return type argument
+                    if (returnTypeVar instanceof TypeVariable) {
+                        Class<?> returnType = member instanceof Method ? ((Method) member).getReturnType()
+                                : ((Constructor<?>) member).getDeclaringClass();
+                        returnType = wrap(returnType);
+                        if (!returnType.equals(Void.class))
+                            map.put((TypeVariable<?>) returnTypeVar, returnType);
+                    }
+
+                    Class<?>[] arguments = member instanceof Method ? ((Method) member).getParameterTypes()
+                            : ((Constructor<?>) member).getParameterTypes();
+
+                    // Populate object type from arbitrary object method reference
+                    int paramOffset = 0;
+                    if (paramTypeVars.length > 0 && paramTypeVars[0] instanceof TypeVariable
+                            && paramTypeVars.length == arguments.length + 1) {
+                        Class<?> instanceType = member.getDeclaringClass();
+                        map.put((TypeVariable<?>) paramTypeVars[0], instanceType);
+                        paramOffset = 1;
+                    }
+
+                    // Handle additional arguments that are captured from the lambda's enclosing scope
+                    int argOffset = 0;
+                    if (paramTypeVars.length < arguments.length) {
+                        argOffset = arguments.length - paramTypeVars.length;
+                    }
+
+                    // Populate type arguments
+                    for (int i = 0; i + argOffset < arguments.length; i++) {
+                        if (paramTypeVars[i] instanceof TypeVariable)
+                            map.put((TypeVariable<?>) paramTypeVars[i + paramOffset], wrap(arguments[i + argOffset]));
+                    }
+                    return map;
+                }
             }
         }
-        return new ParameterizedTypeImpl(rawClass, arguments, type.getOwnerType());
+        return map;
+    }
+
+    @Nullable
+    private static Member getMemberRef(@NotNull Class<?> type) {
+        Object constantPool;
+        try {
+            constantPool = GET_CONSTANT_POOL.invoke(type);
+        } catch (Exception ignore) {
+            return null;
+        }
+
+        Member result = null;
+        for (int i = getConstantPoolSize(constantPool) - 1; i >= 0; i--) {
+            Member member = getConstantPoolMethodAt(constantPool, i);
+            // Skip SerializedLambda constructors and members of the "type" class
+            if (member == null
+                    || (member instanceof Constructor
+                    && member.getDeclaringClass().getName().equals("java.lang.invoke.SerializedLambda"))
+                    || member.getDeclaringClass().isAssignableFrom(type))
+                continue;
+
+            result = member;
+
+            // Return if not valueOf method
+            if (!(member instanceof Method) || !isAutoBoxingMethod((Method) member)) break;
+        }
+
+        return result;
+    }
+
+    private static boolean isAutoBoxingMethod(@NotNull Method method) {
+        Class<?>[] params = method.getParameterTypes();
+        return method.getName().equals("valueOf") && params.length == 1
+                && params[0].isPrimitive() && wrap(params[0]).equals(method.getDeclaringClass());
+    }
+
+    private static int getConstantPoolSize(@NotNull Object constantPool) {
+        try {
+            return (Integer) GET_CONSTANT_POOL_SIZE.invoke(constantPool);
+        } catch (Exception ignore) {
+            return 0;
+        }
+    }
+
+    @Nullable
+    private static Member getConstantPoolMethodAt(@NotNull Object constantPool, int i) {
+        try {
+            return (Member) GET_CONSTANT_POOL_METHOD_AT.invoke(constantPool, i);
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    private static boolean isDefaultMethod(@NotNull Method method) {
+        return JAVA_VERSION >= 1.8 && method.isDefault();
     }
 }
