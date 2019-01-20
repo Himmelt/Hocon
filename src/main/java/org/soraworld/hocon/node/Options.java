@@ -19,6 +19,7 @@ public class Options {
     private final TypeSerializers serializers = new TypeSerializers();
 
     private static final Options defaults = new Options(true);
+    public static final byte COMMENT = 0, READ = 1, WRITE = 2;
 
     private Options(boolean seal) {
         this.seal = seal;

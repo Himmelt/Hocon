@@ -12,12 +12,12 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
 
+import static org.soraworld.hocon.node.Options.*;
+
 /**
  * 映射结点类.
  */
 public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node {
-
-    private static final byte COMMENT = 0, READ = 1, WRITE = 2;
 
     private NodeMap(NodeMap source) {
         super(source.options, new LinkedHashMap<>(source.value));
