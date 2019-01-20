@@ -2,7 +2,6 @@ package org.soraworld.hocon.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.soraworld.hocon.exception.NonRawTypeException;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -48,10 +47,12 @@ public final class Reflects {
     private Reflects() {
     }
 
+    @NotNull
     public static Class<?> wrap(@NotNull Class<?> clazz) {
         return clazz.isPrimitive() ? PRIMITIVE_WRAPPER.get(clazz) : clazz;
     }
 
+    @NotNull
     public static Class<?> unwrap(@NotNull Class<?> clazz) {
         return WRAPPER_PRIMITIVE.getOrDefault(clazz, clazz);
     }
@@ -102,235 +103,102 @@ public final class Reflects {
         if (fields == null) {
             fields = new ConcurrentHashMap<>();
             Enum[] enums = clazz.getEnumConstants();
-            if (enums != null) {
-                for (Enum field : enums) {
-                    fields.put(field.name(), field);
-                }
-            }
+            if (enums != null) for (Enum field : enums) fields.put(field.name(), field);
             ENUM_FIELDS.put(clazz, fields);
         }
         return (T) fields.get(name);
     }
 
-    /**
-     * 获取原始类型.
-     *
-     * @param type 类型
-     * @return 原始类型
-     * @throws NonRawTypeException 无原始类型异常
-     */
-    public static Class<?> getRawType(Type type) throws NonRawTypeException {
-        if (type instanceof Class) return (Class<?>) type;
-        if (type instanceof ParameterizedType) return (Class<?>) ((ParameterizedType) type).getRawType();
-        else throw new NonRawTypeException(type);
-    }
-
-    // TODO BUG Clooection<?> <= Enum<?>
-    public static boolean isAssignableFrom(@NotNull Type ancestor, @NotNull Type child) {
-        if (ancestor.equals(child) || Object.class == ancestor) return true;
-
-        if (ancestor instanceof Class<?>) {
-            Class<?> parent = (Class<?>) ancestor;
-            if (child instanceof Class<?>) {
-                return isAssignableFrom(parent, (Class<?>) child);
+    public static boolean isAssignableFrom(@NotNull Type upper, @NotNull Type lower) {
+        if (upper instanceof Class<?>) {
+            if (lower instanceof Class<?>) {
+                return isAssignableFrom((Class<?>) upper, (Class<?>) lower);
+            } else if (lower instanceof ParameterizedType) {
+                Class<?> rawType = (Class<?>) ((ParameterizedType) lower).getRawType();
+                return isAssignableFrom((Class<?>) upper, rawType);
             }
-            if (child instanceof ParameterizedType) {
-                Type childRaw = ((ParameterizedType) child).getRawType();
-                if (childRaw instanceof Class) {
-                    return isAssignableFrom(parent, (Class<?>) childRaw);
-                }
-            } else if (parent.isArray() && child instanceof GenericArrayType) {
-                Type childComponent = ((GenericArrayType) child).getGenericComponentType();
-                return isAssignableFrom(parent.getComponentType(), childComponent);
-            }
+            return false;
         }
-
-        if (ancestor instanceof ParameterizedType) {
-            if (child instanceof Class<?>) {
-                Type parent = ((ParameterizedType) ancestor).getRawType();
-                if (parent instanceof Class<?>) {
-                    return isAssignableFrom((Class<?>) parent, (Class<?>) child);
-                }
-            } else if (child instanceof ParameterizedType) {
-                return isAssignableFrom((ParameterizedType) ancestor, (ParameterizedType) child);
-            }
+        if (upper instanceof ParameterizedType) {
+            Class<?> upperRaw = (Class<?>) ((ParameterizedType) upper).getRawType();
+            ParameterizedType paramType = getGenericType(upperRaw, lower);
+            if (paramType != null) return isAssignableFrom((ParameterizedType) upper, paramType);
+            return false;
         }
-
-        if (ancestor instanceof GenericArrayType) {
-            Type parentComponent = ((GenericArrayType) ancestor).getGenericComponentType();
-            if (child instanceof Class<?>) {
-                Class<?> childClazz = (Class<?>) child;
-                if (childClazz.isArray()) {
-                    return isAssignableFrom(parentComponent, childClazz.getComponentType());
-                }
-            } else if (child instanceof GenericArrayType) {
-                Type childComponent = ((GenericArrayType) child).getGenericComponentType();
-                return isAssignableFrom(parentComponent, childComponent);
-            }
+        if (upper instanceof WildcardType || upper instanceof TypeVariable) {
+            return Bounds.getBounds(upper).isSuperOf(Bounds.getBounds(lower));
         }
-
-        if (ancestor instanceof WildcardType) {
-            return isAssignableFrom((WildcardType) ancestor, child);
-        }
-
         return false;
     }
 
-    public static boolean isAssignableFrom(@NotNull Class<?> ancestor, @NotNull Class<?> child) {
-        if (ancestor.isAssignableFrom(child)) return true;
-        if (ancestor.isPrimitive()) {
-            Class<?> primitive = WRAPPER_PRIMITIVE.get(child);
-            return ancestor == primitive;
-        } else {
-            Class<?> wrapper = PRIMITIVE_WRAPPER.get(child);
-            return wrapper != null && ancestor.isAssignableFrom(wrapper);
-        }
+    public static boolean isAssignableFrom(@NotNull Class<?> upper, @NotNull Class<?> lower) {
+        if (upper.isAssignableFrom(lower)) return true;
+        if (upper.isPrimitive()) return upper == unwrap(lower);
+        else return upper.isAssignableFrom(wrap(lower));
     }
 
-    private static boolean isAssignableFrom(ParameterizedType ancestor, ParameterizedType child) {
-        if (ancestor.equals(child)) return true;
-
-        Type[] ancestorArgs = ancestor.getActualTypeArguments();
-        Type[] childArgs = child.getActualTypeArguments();
-
-        if (ancestorArgs.length != childArgs.length) return false;
-
-        for (int i = 0; i < ancestorArgs.length; ++i) {
-            Type lhsArg = ancestorArgs[i];
-            Type rhsArg = childArgs[i];
-
-            if (!lhsArg.equals(rhsArg) && !(lhsArg instanceof WildcardType && isAssignableFrom((WildcardType) lhsArg, rhsArg))) {
-                return false;
+    public static boolean isAssignableFrom(@NotNull ParameterizedType upper, @NotNull ParameterizedType lower) {
+        if (isAssignableFrom((Class<?>) upper.getRawType(), (Class<?>) lower.getRawType())) {
+            Type[] upArgs = upper.getActualTypeArguments();
+            Type[] lowArgs = lower.getActualTypeArguments();
+            if (upArgs.length == lowArgs.length) {
+                for (int i = 0; i < upArgs.length; i++) {
+                    if (!isAssignableFrom(upArgs[i], lowArgs[i])) return false;
+                }
+                return true;
             }
         }
-
-        return true;
+        return false;
     }
 
-    private static boolean isAssignableFrom(WildcardType lhsType, Type rhsType) {
-        Type[] lUpperBounds = lhsType.getUpperBounds();
-
-        // supply the implicit upper bound if none are specified
-        if (lUpperBounds.length == 0) {
-            lUpperBounds = new Type[]{Object.class};
-        }
-
-        Type[] lLowerBounds = lhsType.getLowerBounds();
-
-        // supply the implicit lower bound if none are specified
-        if (lLowerBounds.length == 0) {
-            lLowerBounds = new Type[]{null};
-        }
-
-        if (rhsType instanceof WildcardType) {
-            // both the upper and lower bounds of the right-hand side must be
-            // completely enclosed in the upper and lower bounds of the left-
-            // hand side.
-            WildcardType rhsWcType = (WildcardType) rhsType;
-            Type[] rUpperBounds = rhsWcType.getUpperBounds();
-
-            if (rUpperBounds.length == 0) {
-                rUpperBounds = new Type[]{Object.class};
-            }
-
-            Type[] rLowerBounds = rhsWcType.getLowerBounds();
-
-            if (rLowerBounds.length == 0) {
-                rLowerBounds = new Type[]{null};
-            }
-
-            for (Type lBound : lUpperBounds) {
-                for (Type rBound : rUpperBounds) {
-                    if (!isAssignableBound(lBound, rBound)) {
-                        return false;
-                    }
-                }
-
-                for (Type rBound : rLowerBounds) {
-                    if (!isAssignableBound(lBound, rBound)) {
-                        return false;
-                    }
-                }
-            }
-
-            for (Type lBound : lLowerBounds) {
-                for (Type rBound : rUpperBounds) {
-                    if (!isAssignableBound(rBound, lBound)) {
-                        return false;
-                    }
-                }
-
-                for (Type rBound : rLowerBounds) {
-                    if (!isAssignableBound(rBound, lBound)) {
-                        return false;
-                    }
-                }
-            }
-        } else {
-            for (Type lBound : lUpperBounds) {
-                if (!isAssignableBound(lBound, rhsType)) {
-                    return false;
-                }
-            }
-
-            for (Type lBound : lLowerBounds) {
-                if (!isAssignableBound(rhsType, lBound)) {
-                    return false;
-                }
-            }
-        }
-
-        return true;
-    }
-
-    public static boolean isAssignableBound(@Nullable Type lhsType, @Nullable Type rhsType) {
-        if (rhsType == null) {
-            return true;
-        }
-        if (lhsType == null) {
-            return false;
-        }
-        return isAssignableFrom(lhsType, rhsType);
-    }
-
-    public static <T, S extends T> Type[] getActualArguments(@NotNull Class<T> ancestor, @NotNull Class<S> child) {
-        ParameterizedType type = getGenericType(ancestor, child);
-        return type == null ? null : type.getActualTypeArguments();
-    }
-
-    public static Type[] getActualArguments(@NotNull Class<?> ancestor, @NotNull ParameterizedType child) {
-        ParameterizedType type = getGenericType(ancestor, child);
-        return type == null ? null : type.getActualTypeArguments();
-    }
-
+    @Nullable
     public static Type[] getActualTypes(@NotNull Class<?> topClass, @NotNull Type actualType) {
-        Type[] arguments = null;
-        if (actualType instanceof ParameterizedType) {
-            arguments = getActualArguments(topClass, (ParameterizedType) actualType);
-        } else if (actualType instanceof Class)
-            arguments = getActualArguments(topClass, (Class) actualType);
-        return arguments;
-    }
-
-    public static ParameterizedType getGenericType(@NotNull Class<?> ancestor, @NotNull Class<?> child) {
-        return getGenericType(ancestor, null, child);
+        ParameterizedType type = getGenericType(topClass, actualType);
+        return type == null ? null : type.getActualTypeArguments();
     }
 
     @Nullable
-    public static ParameterizedType getGenericType(@NotNull Class<?> ancestor, @NotNull ParameterizedType child) {
-        return getGenericType(ancestor, child, (Class<?>) child.getRawType());
-    }
-
-    @Nullable
-    private static ParameterizedType getGenericType(@NotNull Class<?> ancestor, @Nullable ParameterizedType child, @NotNull Class<?> rawType) {
-        if (ancestor.equals(rawType)) return child;
+    public static ParameterizedType getGenericType(@NotNull Class<?> ancestor, @NotNull Type child) {
+        Class<?> rawType;
+        ParameterizedType paramType;
+        if (child instanceof Class<?>) {
+            rawType = (Class<?>) child;
+            paramType = null;
+        } else if (child instanceof ParameterizedType) {
+            rawType = (Class<?>) ((ParameterizedType) child).getRawType();
+            paramType = (ParameterizedType) child;
+        } else return null;
+        if (ancestor.equals(rawType)) return paramType;
         ParameterizedType result = null;
         if (ancestor.isInterface()) {
             for (Type parent : rawType.getGenericInterfaces()) {
                 if (parent instanceof ParameterizedType) {
-                    if (child != null) {
+                    if (isAssignableFrom(ancestor, (Class<?>) ((ParameterizedType) parent).getRawType())) {
+                        if (paramType != null) {
+                            TypeVariable[] variables = rawType.getTypeParameters();
+                            Type[] arguments = paramType.getActualTypeArguments();
+                            if (variables.length == arguments.length) {
+                                HashMap<TypeVariable, Type> map = new HashMap<>();
+                                for (int i = 0; i < variables.length; i++) {
+                                    map.put(variables[i], arguments[i]);
+                                }
+                                result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
+                            }
+                        } else result = getGenericType(ancestor, parent);
+                    }
+                } else if (parent instanceof Class<?> && isAssignableFrom(ancestor, (Class<?>) parent)) {
+                    result = getGenericType(ancestor, parent);
+                }
+                if (result != null) return result;
+            }
+        }
+        Type parent = rawType.getGenericSuperclass();
+        if (parent != null && !parent.equals(Object.class)) {
+            if (parent instanceof ParameterizedType) {
+                if (isAssignableFrom(ancestor, (Class<?>) ((ParameterizedType) parent).getRawType())) {
+                    if (paramType != null) {
                         TypeVariable[] variables = rawType.getTypeParameters();
-                        Type[] arguments = child.getActualTypeArguments();
+                        Type[] arguments = paramType.getActualTypeArguments();
                         if (variables.length == arguments.length) {
                             HashMap<TypeVariable, Type> map = new HashMap<>();
                             for (int i = 0; i < variables.length; i++) {
@@ -338,26 +206,11 @@ public final class Reflects {
                             }
                             result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
                         }
-                    } else result = getGenericType(ancestor, (ParameterizedType) parent);
-                } else if (parent instanceof Class<?>) result = getGenericType(ancestor, (Class<?>) parent);
-                if (result != null) return result;
+                    } else result = getGenericType(ancestor, parent);
+                }
+            } else if (parent instanceof Class<?> && isAssignableFrom(ancestor, (Class<?>) parent)) {
+                result = getGenericType(ancestor, parent);
             }
-        }
-        Type parent = rawType.getGenericSuperclass();
-        if (parent != null && !parent.equals(Object.class)) {
-            if (parent instanceof ParameterizedType) {
-                if (child != null) {
-                    TypeVariable[] variables = rawType.getTypeParameters();
-                    Type[] arguments = child.getActualTypeArguments();
-                    if (variables.length == arguments.length) {
-                        HashMap<TypeVariable, Type> map = new HashMap<>();
-                        for (int i = 0; i < variables.length; i++) {
-                            map.put(variables[i], arguments[i]);
-                        }
-                        result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
-                    }
-                } else result = getGenericType(ancestor, (ParameterizedType) parent);
-            } else if (parent instanceof Class<?>) result = getGenericType(ancestor, (Class<?>) parent);
         }
         return result;
     }
@@ -366,18 +219,14 @@ public final class Reflects {
     private static ParameterizedType fillParameter(@NotNull ParameterizedType type, @NotNull Map<TypeVariable, Type> map) {
         Class<?> rawClass = (Class<?>) type.getRawType();
         Type[] arguments = type.getActualTypeArguments();
-        boolean changed = false;
         for (int i = 0; i < arguments.length; i++) {
             if (arguments[i] instanceof TypeVariable) {
                 TypeVariable variable = (TypeVariable) arguments[i];
                 arguments[i] = map.getOrDefault(variable, variable);
-                changed |= arguments[i] != variable;
             } else if (arguments[i] instanceof ParameterizedType) {
                 arguments[i] = fillParameter((ParameterizedType) arguments[i], map);
             }
         }
-        if (changed) {
-            return new ParameterizedTypeImpl(rawClass, arguments, type.getOwnerType());
-        } else return type;
+        return new ParameterizedTypeImpl(rawClass, arguments, type.getOwnerType());
     }
 }

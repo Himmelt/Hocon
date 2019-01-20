@@ -1,6 +1,7 @@
 package org.soraworld.hocon.serializer;
 
 import org.junit.Test;
+import org.soraworld.hocon.TestClazz;
 import org.soraworld.hocon.exception.SerializerException;
 
 import java.util.TreeSet;
