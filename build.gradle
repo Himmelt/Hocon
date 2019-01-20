@@ -17,8 +17,6 @@ repositories {
 
 dependencies {
     testCompile 'junit:junit:4.12'
-    testCompileOnly 'org.jetbrains:annotations:16.0.2'
-    compileOnly 'org.jetbrains:annotations:16.0.2'
 }
 
 tasks.withType(JavaCompile) {
