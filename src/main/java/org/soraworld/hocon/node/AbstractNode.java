@@ -150,7 +150,7 @@ abstract class AbstractNode<T> implements Node {
      * @return 处理后的文本
      */
     public static String quotation(@NotNull String text) {
-        if (text.equals("null") || text.startsWith(" ") || text.endsWith(" ") || ILLEGAL.matcher(text).matches()) {
+        if (text.startsWith(" ") || text.endsWith(" ") || ILLEGAL.matcher(text).matches()) {
             String target = text
                     .replace("\\", "\\\\")
                     .replace("\b", "\\b")

@@ -130,7 +130,7 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
                 value.add(list);
                 if (!line.endsWith("]")) list.readValue(reader, keepComments);
             } else {
-                NodeBase base = new NodeBase(options, line);
+                NodeBase base = new NodeBase(options, unquotation(line));
                 if (keepComments) {
                     base.setComments(commentTemp);
                     commentTemp = new ArrayList<>();

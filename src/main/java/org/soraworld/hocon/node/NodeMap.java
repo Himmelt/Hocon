@@ -503,7 +503,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             } else if (line.contains("=")) {
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 String text = line.substring(line.indexOf('=') + 1).trim();
-                NodeBase base = new NodeBase(options, text);
+                NodeBase base = new NodeBase(options, unquotation(text));
                 if (keepComments) {
                     base.setComments(commentTemp);
                     commentTemp = new ArrayList<>();
