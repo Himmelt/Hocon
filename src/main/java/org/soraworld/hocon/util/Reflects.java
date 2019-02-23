@@ -95,7 +95,8 @@ public final class Reflects {
         if (CLAZZ_FIELDS.containsKey(clazz)) return CLAZZ_FIELDS.get(clazz);
         CopyOnWriteArrayList<Field> fields = new CopyOnWriteArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         fields.removeIf(field -> Modifier.isStatic(field.getModifiers()));
-        fields.addAll(0, getFields(clazz.getSuperclass()));
+        Class<?> supClz = clazz.getSuperclass();
+        if (supClz != null && supClz != Object.class) fields.addAll(0, getFields(supClz));
         fields.forEach(field -> field.setAccessible(true));
         CLAZZ_FIELDS.put(clazz, fields);
         return fields;
