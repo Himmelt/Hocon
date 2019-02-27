@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.util.Reflects;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -126,7 +127,9 @@ public final class TypeSerializers {
             } else if (type.equals(serial.getType())) {
                 throw new SerializerException("Serializer of the same type " + type.getTypeName() + " is already exist !!");
             }
-            System.out.println("WARNING Serializer of " + type.getTypeName() + " has been registered with related type " + serial.getType().getTypeName());
+            if (!serial.getType().equals(Serializable.class)) {
+                System.out.println("WARNING Serializer of " + type.getTypeName() + " has been registered with related type " + serial.getType().getTypeName());
+            }
         }
         serializers.add(serializer);
         typeMatches.clear();
