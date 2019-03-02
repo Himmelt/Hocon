@@ -4,12 +4,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * 基础结点类.
  * 此类会把对象以字符串的形式存储.
  */
-public class NodeBase extends AbstractNode<String> implements Node, java.io.Serializable, Comparable<NodeBase>, CharSequence {
+public class NodeBase extends AbstractNode<String> implements Node, Serializable, Comparable<NodeBase>, CharSequence {
 
     private static final long serialVersionUID = 511187959363727820L;
 
@@ -38,6 +40,10 @@ public class NodeBase extends AbstractNode<String> implements Node, java.io.Seri
         super(options, obj.toString(), comment);
     }
 
+    public NodeBase(@NotNull Options options, @NotNull Object obj, List<String> comments) {
+        super(options, obj.toString(), comments);
+    }
+
     public boolean notEmpty() {
         return true;
     }
@@ -48,6 +54,11 @@ public class NodeBase extends AbstractNode<String> implements Node, java.io.Seri
     @Override
     public void writeValue(int indent, BufferedWriter writer) throws Exception {
         writer.write(quotation(value));
+    }
+
+    @NotNull
+    public NodeBase translate(byte cfg) {
+        return new NodeBase(options, options.translate(cfg, value), comments);
     }
 
     /**

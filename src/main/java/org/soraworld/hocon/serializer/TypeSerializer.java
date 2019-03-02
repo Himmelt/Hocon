@@ -72,7 +72,7 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
      *
      * @return 是否可以作为 Map 的键
      */
-    final boolean keyAble() {
+    public final boolean keyAble() {
         return types[1] == NodeBase.class;
     }
 

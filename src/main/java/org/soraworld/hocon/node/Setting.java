@@ -31,7 +31,7 @@ public @interface Setting {
     String comment() default "";
 
     /**
-     * 字段翻译配置字, 默认 0b0001.<br>
+     * NodeBase结点及直接子结点 字段翻译配置字, 默认 0b0001.<br>
      * bit_0:是否翻译注释<br>
      * bit_1:是否翻译读取内容<br>
      * bit_2:是否翻译写入内容<br>

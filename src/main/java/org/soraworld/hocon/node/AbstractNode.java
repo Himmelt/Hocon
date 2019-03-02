@@ -61,6 +61,12 @@ abstract class AbstractNode<T> implements Node {
         addComment(comment);
     }
 
+    protected AbstractNode(@NotNull Options options, @NotNull T value, @NotNull List<String> comments) {
+        this.options = options;
+        this.value = value;
+        setComments(comments);
+    }
+
     /**
      * 检查循环引用.
      *

@@ -42,6 +42,10 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         super(options, new LinkedHashMap<>(), comment);
     }
 
+    public NodeMap(Options options, List<String> comments) {
+        super(options, new LinkedHashMap<>(), comments);
+    }
+
     /**
      * 用 {@link NodeMap} 里结点的值修改对象 {@link Setting} 修饰的字段.<br>
      * !!! 特别注意<br>
@@ -68,13 +72,9 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 if (serializer != null) {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     Node node = get(paths);
-                    if (node instanceof NodeBase && ((setting.trans() & 0b1010) != 0)) {
-                        List<String> comments = ((NodeBase) node).comments;
-                        node = new NodeBase(options, options.translate(READ, ((NodeBase) node).value));
-                        node.setComments(comments);
-                    }
                     if (node != null) {
                         try {
+                            if ((setting.trans() & 0b1010) != 0) node = node.translate(READ);
                             field.set(target, serializer.deserialize(fieldType, node));
                         } catch (Throwable e) {
                             if (options.isDebug()) e.printStackTrace();
@@ -150,9 +150,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     }
                     if (serializer != null) {
                         Node node = serializer.serialize(fieldType, field.get(source), options);
-                        if (node instanceof NodeBase && (setting.trans() & 0b1100) != 0) {
-                            node = new NodeBase(options, options.translate(WRITE, ((NodeBase) node).value));
-                        }
+                        if ((setting.trans() & 0b1100) != 0) node = node.translate(WRITE);
                         if (overwrite) {
                             if (set(paths, node, comment)) {
                                 if (comment.isEmpty() && keepComment) node.setComments(list);
@@ -550,5 +548,12 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 }
             }
         }
+    }
+
+    @NotNull
+    public NodeMap translate(byte cfg) {
+        NodeMap map = new NodeMap(options, comments);
+        value.forEach((k, v) -> map.value.put(k, v instanceof NodeBase ? v.translate(cfg) : v));
+        return map;
     }
 }

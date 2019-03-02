@@ -1,5 +1,6 @@
 package org.soraworld.hocon.node;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.serializer.TypeSerializer;
 
@@ -84,6 +85,9 @@ public interface Node {
     void setTypeToComment(Class<?> clazz);
 
     Class<?> getTypeFromComment();
+
+    @NotNull
+    Node translate(byte cfg);
 
     default <C> C toType(Class<C> clazz) throws HoconException {
         TypeSerializer serializer = options().getSerializer(clazz);

@@ -1,9 +1,12 @@
 package org.soraworld.hocon.node;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * 列表结点类.
@@ -28,6 +31,10 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
      */
     public NodeList(Options options, String comment) {
         super(options, new ArrayList<>(), comment);
+    }
+
+    public NodeList(Options options, List<String> comments) {
+        super(options, new ArrayList<>(), comments);
     }
 
     /**
@@ -168,5 +175,12 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
                 if (it.hasNext()) writer.newLine();
             }
         }
+    }
+
+    @NotNull
+    public NodeList translate(byte cfg) {
+        NodeList list = new NodeList(options, comments);
+        value.forEach(n -> list.value.add(n instanceof NodeBase ? n.translate(cfg) : n));
+        return list;
     }
 }
