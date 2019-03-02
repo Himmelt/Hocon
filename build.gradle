@@ -11,10 +11,6 @@ archivesBaseName = "Hocon"
 
 sourceCompatibility = targetCompatibility = 1.8
 
-repositories {
-    jcenter()
-}
-
 dependencies {
     testCompile 'junit:junit:4.12'
 }
