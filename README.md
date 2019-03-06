@@ -2,7 +2,8 @@
 Simple Hocon Configuration Library
 轻量 Hocon 配置库
 
-[ ![Download](https://api.bintray.com/packages/himmelt/Minecraft/Hocon/images/download.svg) ](https://bintray.com/himmelt/Minecraft/Hocon/_latestVersion)
+[![Build Status](https://travis-ci.org/Himmelt/Hocon.svg?branch=master)](https://travis-ci.org/Himmelt/Hocon)
+[![Download](https://api.bintray.com/packages/himmelt/Minecraft/Hocon/images/download.svg)](https://bintray.com/himmelt/Minecraft/Hocon/_latestVersion)
 
 ### 简介
 这是一个轻量级的 Hocon 配置库，没有其他依赖项。
@@ -29,9 +30,6 @@ Simple Hocon Configuration Library
 ```groovy
 compile 'org.soraworld:hocon:1.2.1'
 ```
-
-#### 手动添加请下载
-[发行版](https://gitee.com/himmelt/Hocon/releases)
 
 ### 专用HOCON格式
 0. #### 根结点
