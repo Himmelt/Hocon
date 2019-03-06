@@ -9,6 +9,9 @@ group = 'org.soraworld'
 version = '1.2.1'
 archivesBaseName = "Hocon"
 
+def _BINTRAY_KEY = System.getenv('BINTRAY_KEY') != null ? System.getenv('BINTRAY_KEY') : BINTRAY_KEY
+def _BINTRAY_USER = System.getenv('BINTRAY_USER') != null ? System.getenv('BINTRAY_USER') : BINTRAY_USER
+
 sourceCompatibility = targetCompatibility = 1.8
 
 repositories {
@@ -58,8 +61,8 @@ publishing {
 }
 
 bintray {
-    key = BINTRAY_KEY
-    user = BINTRAY_USER
+    key = _BINTRAY_KEY
+    user = _BINTRAY_USER
     publications = ['mavenJava']
     publish = true
     override = true
