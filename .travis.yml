@@ -9,6 +9,7 @@ cache:
     - $HOME/.gradle/caches/
     - $HOME/.gradle/wrapper/
 script:
-  - gradle clean
-  - gradle build
-  - gradle bintrayUpload
+  - ./gradlew clean
+  - ./gradlew build
+  - ./gradlew test
+  - ./gradlew bintrayUpload
