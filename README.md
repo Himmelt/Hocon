@@ -2,8 +2,8 @@
 Simple Hocon Configuration Library
 轻量 Hocon 配置库
 
-[![TravisCI](https://travis-ci.org/Himmelt/Hocon.svg?branch=master)](https://travis-ci.org/Himmelt/Hocon)
-[![CircleCI](https://circleci.com/gh/Himmelt/Hocon.svg?style=svg)](https://circleci.com/gh/Himmelt/Hocon)
+[![TravisCI](https://img.shields.io/travis/Himmelt/Hocon/master.svg?label=TravisCI&style=flat-square)](https://travis-ci.org/Himmelt/Hocon)
+[![CircleCI](https://img.shields.io/circleci/project/github/Himmelt/Hocon/master.svg?label=CircleCI&style=flat-square)](https://circleci.com/gh/Himmelt/Hocon)
 [![Download](https://api.bintray.com/packages/himmelt/Minecraft/Hocon/images/download.svg)](https://bintray.com/himmelt/Minecraft/Hocon/_latestVersion)
 
 ### 简介
