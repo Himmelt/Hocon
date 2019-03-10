@@ -34,8 +34,5 @@ jobs:
       - store_test_results:
           path: build/test-results
       - run:
-          name: Bintray Release
-          command: ./gradlew bintrayUpload
-      - run:
-          name: Artifactory Publish
-          command: ./gradlew artifactoryPublish
+          name: Publish Maven
+          command: ./gradlew publishMaven

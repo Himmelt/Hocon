@@ -110,5 +110,6 @@ static boolean isMasterBranch() {
     return gitBranch().contains('* master')
 }
 
-tasks.bintrayUpload.enabled = isMasterBranch()
-tasks.artifactoryPublish.enabled = !isMasterBranch()
+task publishMaven()
+
+tasks.publishMaven.dependsOn(isMasterBranch() ? 'bintrayUpload' : 'artifactoryPublish')
