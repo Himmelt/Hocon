@@ -7,8 +7,10 @@ apply plugin: 'java'
 apply plugin: 'maven-publish'
 
 group = 'org.soraworld'
-version = '1.2.1'
+version = '1.2.1'.concat(isMasterBranch() ? '' : '-SNAPSHOT')
 archivesBaseName = "Hocon"
+
+println 'Current Version ' + project.version
 
 def _BINTRAY_KEY = System.getenv('BINTRAY_KEY') != null ? System.getenv('BINTRAY_KEY') : BINTRAY_KEY
 def _BINTRAY_USER = System.getenv('BINTRAY_USER') != null ? System.getenv('BINTRAY_USER') : BINTRAY_USER
@@ -79,4 +81,12 @@ bintray {
             released = new Date()
         }
     }
+}
+
+static boolean isMasterBranch() {
+    def info = 'git branch'.execute().text.trim()
+    info.eachLine {
+        line -> if (line.contains('*')) println 'Current Branch ' + line.trim()
+    }
+    return info.contains('* master')
 }
