@@ -14,4 +14,3 @@ script:
   - ./gradlew clean
   - ./gradlew build
   - ./gradlew test
-# - ./gradlew bintrayUpload

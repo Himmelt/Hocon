@@ -10,10 +10,11 @@ group = 'org.soraworld'
 version = '1.2.1'.concat(isMasterBranch() ? '' : '-SNAPSHOT')
 archivesBaseName = "Hocon"
 
+println 'Current Branch  ' + gitBranch()
 println 'Current Version ' + project.version
 
-def _BINTRAY_KEY = System.getenv('BINTRAY_KEY') != null ? System.getenv('BINTRAY_KEY') : BINTRAY_KEY
 def _BINTRAY_USER = System.getenv('BINTRAY_USER') != null ? System.getenv('BINTRAY_USER') : BINTRAY_USER
+def _BINTRAY_KEY = System.getenv('BINTRAY_KEY') != null ? System.getenv('BINTRAY_KEY') : BINTRAY_KEY
 
 sourceCompatibility = targetCompatibility = 1.8
 
@@ -83,10 +84,31 @@ bintray {
     }
 }
 
-static boolean isMasterBranch() {
-    def info = 'git branch'.execute().text.trim()
-    info.eachLine {
-        line -> if (line.contains('*')) println 'Current Branch ' + line.trim()
+artifactory {
+    contextUrl = 'https://oss.jfrog.org/artifactory'
+    publish {
+        repository {
+            repoKey = 'oss-snapshot-local'
+            username = _BINTRAY_USER
+            password = _BINTRAY_KEY
+            maven = true
+        }
+        defaults {
+            publications('mavenJava')
+        }
     }
-    return info.contains('* master')
 }
+
+static String gitBranch() {
+    def info = 'git branch'.execute().text.trim()
+    def version = 'unknown'
+    info.eachLine { line -> if (line.contains('*')) version = line.trim() }
+    return version
+}
+
+static boolean isMasterBranch() {
+    return gitBranch().contains('* master')
+}
+
+tasks.bintrayUpload.enabled = isMasterBranch()
+tasks.artifactoryPublish.enabled = !isMasterBranch()
