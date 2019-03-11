@@ -1,10 +1,19 @@
-plugins {
-    id "com.jfrog.bintray" version "1.8.0"
-    id "com.jfrog.artifactory" version "4.9.3"
+buildscript {
+    repositories {
+        maven {
+            url = 'https://plugins.gradle.org/m2/'
+        }
+    }
+    dependencies {
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:latest.release"
+    }
 }
 
 apply plugin: 'java'
 apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'com.jfrog.artifactory'
 
 group = 'org.soraworld'
 version = '1.2.1'.concat(isMasterBranch() ? '' : '-SNAPSHOT')
@@ -15,6 +24,8 @@ println 'Current Version ' + project.version
 
 def _BINTRAY_USER = System.getenv('BINTRAY_USER') != null ? System.getenv('BINTRAY_USER') : BINTRAY_USER
 def _BINTRAY_KEY = System.getenv('BINTRAY_KEY') != null ? System.getenv('BINTRAY_KEY') : BINTRAY_KEY
+def _REPO_KEY = isMasterBranch() ? 'oss-release-local' : 'oss-snapshot-local'
+def _PUBLISH_CFG = isMasterBranch() ? 'mavenRelease' : 'mavenSnapshot'
 
 sourceCompatibility = targetCompatibility = 1.8
 
@@ -95,13 +106,13 @@ artifactory {
     contextUrl = 'https://oss.jfrog.org/artifactory'
     publish {
         repository {
-            repoKey = 'oss-snapshot-local'
+            repoKey = _REPO_KEY
             username = _BINTRAY_USER
             password = _BINTRAY_KEY
             maven = true
         }
         defaults {
-            publications('mavenSnapshot')
+            publications(_PUBLISH_CFG)
         }
     }
 }
@@ -120,7 +131,3 @@ static String gitBranch() {
 static boolean isMasterBranch() {
     return gitBranch().equalsIgnoreCase('master')
 }
-
-task publishMaven()
-
-tasks.publishMaven.dependsOn(isMasterBranch() ? 'bintrayUpload' : 'artifactoryPublish')
