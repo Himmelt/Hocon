@@ -100,14 +100,18 @@ artifactory {
 }
 
 static String gitBranch() {
+    def branch = System.getenv('CIRCLE_BRANCH')
+    if (branch != null) return branch.trim()
+    branch = System.getenv('TRAVIS_BRANCH')
+    if (branch != null) return branch.trim()
+    branch = 'unknown'
     def info = 'git branch'.execute().text.trim()
-    def version = 'unknown'
-    info.eachLine { line -> if (line.contains('*')) version = line.trim() }
-    return version
+    info.eachLine { line -> if (line.contains('*')) branch = line.replace('*', '').trim() }
+    return branch
 }
 
 static boolean isMasterBranch() {
-    return gitBranch().contains('* master')
+    return gitBranch().equalsIgnoreCase('master')
 }
 
 task publishMaven()
