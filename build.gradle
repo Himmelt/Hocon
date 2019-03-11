@@ -53,7 +53,7 @@ artifacts {
 
 publishing {
     publications {
-        mavenJava(MavenPublication) {
+        mavenRelease(MavenPublication) {
             from components.java
             groupId = 'org.soraworld'
             artifactId = 'hocon'
@@ -61,13 +61,20 @@ publishing {
             artifact sourcesJar
             artifact javadocJar
         }
+        mavenSnapshot(MavenPublication) {
+            from components.java
+            groupId = 'org.soraworld'
+            artifactId = 'hocon'
+            version = project.version
+            artifact sourcesJar
+        }
     }
 }
 
 bintray {
     key = _BINTRAY_KEY
     user = _BINTRAY_USER
-    publications = ['mavenJava']
+    publications = ['mavenRelease']
     publish = true
     override = true
     pkg {
@@ -94,7 +101,7 @@ artifactory {
             maven = true
         }
         defaults {
-            publications('mavenJava')
+            publications('mavenSnapshot')
         }
     }
 }
