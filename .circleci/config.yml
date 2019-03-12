@@ -65,11 +65,14 @@ workflows:
   version: 2
   workflow:
     jobs:
-      - build
+      - build:
+          context: BINTRAY
       - test:
+          context: BINTRAY
           requires:
             - build
       - bintray:
+          context: BINTRAY
           requires:
             - test
           filters:
@@ -77,5 +80,6 @@ workflows:
               only:
                 - master
       - publish:
+          context: BINTRAY
           requires:
             - test
