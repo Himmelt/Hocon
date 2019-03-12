@@ -2,9 +2,13 @@
 Simple Hocon Configuration Library
 轻量 Hocon 配置库
 
-[![TravisCI](https://img.shields.io/travis/Himmelt/Hocon/master.svg?label=TravisCI&style=flat-square)](https://travis-ci.org/Himmelt/Hocon)
-[![CircleCI](https://img.shields.io/circleci/project/github/Himmelt/Hocon/master.svg?label=CircleCI&style=flat-square)](https://circleci.com/gh/Himmelt/Hocon)
+[![TravisCI](https://img.shields.io/travis/Himmelt/Hocon/master.svg?label=TravisCI&logo=travis-ci)](https://travis-ci.org/Himmelt/Hocon)
+[![CircleCI](https://img.shields.io/circleci/project/github/Himmelt/Hocon/master.svg?label=CircleCI&logo=circleci)](https://circleci.com/gh/Himmelt/Hocon)
+[![License](https://img.shields.io/github/license/Himmelt/Hocon.svg?color=important)](https://github.com/Himmelt/Hocon/blob/master/LICENSE)
+
 [![Download](https://api.bintray.com/packages/himmelt/Minecraft/Hocon/images/download.svg)](https://bintray.com/himmelt/Minecraft/Hocon/_latestVersion)
+[![Download](https://img.shields.io/badge/Download-release-success.svg)](https://oss.jfrog.org/artifactory/libs-release/org/soraworld/hocon/)
+[![Download](https://img.shields.io/badge/Download-snapshot-success.svg)](https://oss.jfrog.org/artifactory/libs-snapshot/org/soraworld/hocon/)
 
 ### 简介
 这是一个轻量级的 Hocon 配置库，没有其他依赖项。
@@ -17,7 +21,8 @@ Simple Hocon Configuration Library
 
 具体使用方法可以查看 [Javadoc](https://docs.soraworld.org/hocon/)
 
-#### Maven 使用 jcenter
+### 使用依赖
+#### Maven
 ```xml
 <dependency>
   <groupId>org.soraworld</groupId>
@@ -26,10 +31,21 @@ Simple Hocon Configuration Library
   <type>pom</type>
 </dependency>
 ```
-
-#### Gradle 使用 jcenter
+#### Gradle
 ```groovy
 compile 'org.soraworld:hocon:1.2.1'
+```
+#### 仓库
+```groovy
+repositories {
+    jcenter()
+    maven {
+        url = 'https://oss.jfrog.org/artifactory/libs-release/'
+    }
+    maven {
+        url = 'https://oss.jfrog.org/artifactory/libs-snapshot/'
+    }
+}
 ```
 
 ### 专用HOCON格式
