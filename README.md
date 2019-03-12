@@ -7,8 +7,8 @@ Simple Hocon Configuration Library
 [![License](https://img.shields.io/github/license/Himmelt/Hocon.svg?color=important)](https://github.com/Himmelt/Hocon/blob/master/LICENSE)
 
 [![Download](https://api.bintray.com/packages/himmelt/Minecraft/Hocon/images/download.svg)](https://bintray.com/himmelt/Minecraft/Hocon/_latestVersion)
-[![Download](https://img.shields.io/badge/Download-release-success.svg)](https://oss.jfrog.org/artifactory/libs-release/org/soraworld/hocon/)
-[![Download](https://img.shields.io/badge/Download-snapshot-success.svg)](https://oss.jfrog.org/artifactory/libs-snapshot/org/soraworld/hocon/)
+[![Download](https://img.shields.io/badge/Download-release-success.svg)](https://oss.jfrog.org/artifactory/oss-release-local/org/soraworld/hocon/)
+[![Download](https://img.shields.io/badge/Download-snapshot-success.svg)](https://oss.jfrog.org/artifactory/oss-snapshot-local/org/soraworld/hocon/)
 
 ### 简介
 这是一个轻量级的 Hocon 配置库，没有其他依赖项。
@@ -40,10 +40,10 @@ compile 'org.soraworld:hocon:1.2.1'
 repositories {
     jcenter()
     maven {
-        url = 'https://oss.jfrog.org/artifactory/libs-release/'
+        url = 'https://oss.jfrog.org/artifactory/oss-release-local/' //''https://oss.jfrog.org/artifactory/libs-release/'
     }
     maven {
-        url = 'https://oss.jfrog.org/artifactory/libs-snapshot/'
+        url = 'https://oss.jfrog.org/artifactory/oss-snapshot-local/' //'https://oss.jfrog.org/artifactory/libs-snapshot/'
     }
 }
 ```
