@@ -5,8 +5,8 @@ buildscript {
         }
     }
     dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:latest.release'
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:latest.release"
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.2"
     }
 }
 
@@ -16,7 +16,7 @@ apply plugin: 'com.jfrog.bintray'
 apply plugin: 'com.jfrog.artifactory'
 
 group = 'org.soraworld'
-version = '1.2.1'.concat(isMasterBranch() ? '' : '-SNAPSHOT')
+version = '1.2.2'.concat(isMasterBranch() ? '' : '-SNAPSHOT')
 archivesBaseName = "Hocon"
 
 println 'Current Branch  ' + gitBranch()
