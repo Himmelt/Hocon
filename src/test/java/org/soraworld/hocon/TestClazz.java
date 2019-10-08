@@ -41,11 +41,13 @@ public class TestClazz {
         public SA() throws SerializerException {
         }
 
+        @Override
         @NotNull
         public TestClazz.IA deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
             return null;
         }
 
+        @Override
         @NotNull
         public NodeBase serialize(@NotNull Type fieldType, @NotNull TestClazz.IA value, @NotNull Options options) throws HoconException {
             return null;
@@ -62,11 +64,13 @@ public class TestClazz {
         public SB() throws SerializerException {
         }
 
+        @Override
         @NotNull
         public TestClazz.IB deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
             return null;
         }
 
+        @Override
         @NotNull
         public NodeBase serialize(@NotNull Type fieldType, @NotNull TestClazz.IB value, @NotNull Options options) throws HoconException {
             return null;
@@ -83,11 +87,13 @@ public class TestClazz {
         public SC() throws SerializerException {
         }
 
+        @Override
         @NotNull
         public TestClazz.CC deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
             return null;
         }
 
+        @Override
         @NotNull
         public NodeBase serialize(@NotNull Type fieldType, @NotNull TestClazz.CC value, @NotNull Options options) throws HoconException {
             return null;
@@ -104,11 +110,13 @@ public class TestClazz {
         public SD() throws SerializerException {
         }
 
+        @Override
         @NotNull
         public TestClazz.CD deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
             return null;
         }
 
+        @Override
         @NotNull
         public NodeBase serialize(@NotNull Type fieldType, @NotNull TestClazz.CD value, @NotNull Options options) throws HoconException {
             return null;

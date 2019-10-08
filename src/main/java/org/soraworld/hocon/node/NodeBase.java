@@ -10,6 +10,7 @@ import java.util.List;
 /**
  * 基础结点类.
  * 此类会把对象以字符串的形式存储.
+ * @author Himmelt
  */
 public class NodeBase extends AbstractNode<String> implements Node, Serializable, Comparable<NodeBase>, CharSequence {
 
@@ -44,10 +45,12 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
         super(options, obj.toString(), comments);
     }
 
+    @Override
     public boolean notEmpty() {
         return true;
     }
 
+    @Override
     public void readValue(BufferedReader reader, boolean keepComments) {
     }
 
@@ -56,6 +59,7 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
         writer.write(quotation(value));
     }
 
+    @Override
     @NotNull
     public NodeBase translate(byte cfg) {
         return new NodeBase(options, options.translate(cfg, value), comments);
@@ -121,30 +125,37 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
                 || value.equalsIgnoreCase("y");
     }
 
+    @Override
     public int length() {
         return value.length();
     }
 
+    @Override
     public char charAt(int index) {
         return value.charAt(index);
     }
 
+    @Override
     public CharSequence subSequence(int start, int end) {
         return value.subSequence(start, end);
     }
 
-    public int compareTo(NodeBase o) {
-        return o == null ? 0 : value.compareTo(o.value);
+    @Override
+    public int compareTo(@NotNull NodeBase o) {
+        return value.compareTo(o.value);
     }
 
+    @Override
     public int hashCode() {
         return value.hashCode();
     }
 
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof NodeBase && value.equals(((NodeBase) obj).value);
     }
 
+    @Override
     @NotNull
     public String toString() {
         return value;

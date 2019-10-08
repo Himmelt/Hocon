@@ -4,6 +4,7 @@ import java.util.StringJoiner;
 
 /**
  * 路径树, 以 . 分隔
+ * @author Himmelt
  */
 public class Paths {
 
@@ -75,7 +76,9 @@ public class Paths {
      * @return 下移后的路径树
      */
     public Paths next() {
-        if (current < length) current++;
+        if (current < length) {
+            current++;
+        }
         return this;
     }
 
@@ -85,7 +88,9 @@ public class Paths {
      * @return 上移后的路径树
      */
     public Paths revert() {
-        if (current > 0) current--;
+        if (current > 0) {
+            current--;
+        }
         return this;
     }
 
@@ -104,7 +109,9 @@ public class Paths {
      * @return 当前路径段
      */
     public String first() {
-        if (current >= length) return "";
+        if (current >= length) {
+            return "";
+        }
         return paths[current];
     }
 
@@ -115,7 +122,9 @@ public class Paths {
      * @return 路径段
      */
     public String get(int index) {
-        if (current + index >= length) return "";
+        if (current + index >= length) {
+            return "";
+        }
         return paths[current + index];
     }
 
@@ -133,13 +142,17 @@ public class Paths {
         }
     }
 
+    @Override
     protected Paths clone() {
         return new Paths(this);
     }
 
+    @Override
     public String toString() {
         StringJoiner joiner = new StringJoiner(", ", "{ ", " }");
-        for (String arg : paths) joiner.add(arg);
+        for (String arg : paths) {
+            joiner.add(arg);
+        }
         return joiner.toString();
     }
 }

@@ -22,8 +22,9 @@ final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
     NumberSerializer() throws SerializerException {
     }
 
-    @NotNull
-    public Number deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
+    @Override
+
+    public @NotNull Number deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
         String number = node.getString();
         if (fieldType instanceof Class) {
             Class clazz = Reflects.wrap((Class<?>) fieldType);
@@ -48,8 +49,8 @@ final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
         throw new NotMatchException(getType(), fieldType);
     }
 
-    @NotNull
-    public NodeBase serialize(@NotNull Type fieldType, @NotNull Number value, @NotNull Options options) {
+    @Override
+    public @NotNull NodeBase serialize(@NotNull Type fieldType, @NotNull Number value, @NotNull Options options) {
         return new NodeBase(options, value);
     }
 }

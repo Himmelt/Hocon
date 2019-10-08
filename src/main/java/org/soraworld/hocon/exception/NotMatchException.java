@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 
 /**
  * 序列化类型不匹配异常.
+ * @author Himmelt
  */
 public class NotMatchException extends HoconException {
     private static final long serialVersionUID = 3542459413725412836L;

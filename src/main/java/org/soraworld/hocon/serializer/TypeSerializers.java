@@ -15,6 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 序列化器集合类.
+ * @author Himmelt
  */
 public final class TypeSerializers {
 

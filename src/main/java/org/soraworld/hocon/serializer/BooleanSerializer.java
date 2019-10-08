@@ -19,11 +19,13 @@ final class BooleanSerializer extends TypeSerializer<Boolean, NodeBase> {
     BooleanSerializer() throws SerializerException {
     }
 
+    @Override
     @NotNull
     public Boolean deserialize(@NotNull Type fieldType, @NotNull NodeBase node) {
         return node.getBoolean();
     }
 
+    @Override
     @NotNull
     public NodeBase serialize(@NotNull Type fieldType, @NotNull Boolean value, @NotNull Options options) {
         return new NodeBase(options, value);

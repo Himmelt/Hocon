@@ -27,18 +27,22 @@ final class ParameterizedTypeImpl implements ParameterizedType {
         }
     }
 
+    @Override
     public Type[] getActualTypeArguments() {
         return arguments.clone();
     }
 
+    @Override
     public Class<?> getRawType() {
         return rawType;
     }
 
+    @Override
     public Type getOwnerType() {
         return ownerType;
     }
 
+    @Override
     public boolean equals(Object obj) {
         if (obj instanceof ParameterizedType) {
             ParameterizedType type = (ParameterizedType) obj;
@@ -46,14 +50,20 @@ final class ParameterizedTypeImpl implements ParameterizedType {
                 Type ownerType = type.getOwnerType();
                 Type rawType = type.getRawType();
                 return Objects.equals(this.ownerType, ownerType) && Objects.equals(this.rawType, rawType) && Arrays.equals(this.arguments, type.getActualTypeArguments());
-            } else return true;
-        } else return false;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
     }
 
+    @Override
     public int hashCode() {
         return Arrays.hashCode(this.arguments) ^ Objects.hashCode(this.ownerType) ^ Objects.hashCode(this.rawType);
     }
 
+    @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
         if (ownerType != null) {
@@ -77,7 +87,9 @@ final class ParameterizedTypeImpl implements ParameterizedType {
             builder.append("<");
             boolean flag = true;
             for (Type type : this.arguments) {
-                if (!flag) builder.append(", ");
+                if (!flag) {
+                    builder.append(", ");
+                }
                 builder.append(type.getTypeName());
                 flag = false;
             }

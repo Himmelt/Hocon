@@ -20,8 +20,8 @@ final class SerializableSerializer extends TypeSerializer<Serializable, NodeMap>
     SerializableSerializer() throws SerializerException {
     }
 
-    @NotNull
-    public Serializable deserialize(@NotNull Type fieldType, @NotNull NodeMap node) throws HoconException {
+    @Override
+    public @NotNull Serializable deserialize(@NotNull Type fieldType, @NotNull NodeMap node) throws HoconException {
         if (fieldType instanceof Class) {
             try {
                 Serializable object = (Serializable) ((Class<?>) fieldType).getConstructor().newInstance();
@@ -36,8 +36,8 @@ final class SerializableSerializer extends TypeSerializer<Serializable, NodeMap>
         throw new NotMatchException("Annotation type must be Class");
     }
 
-    @NotNull
-    public NodeMap serialize(@NotNull Type fieldType, @NotNull Serializable value, @NotNull Options options) {
+    @Override
+    public @NotNull NodeMap serialize(@NotNull Type fieldType, @NotNull Serializable value, @NotNull Options options) {
         NodeMap node = new NodeMap(options);
         node.extract(value);
         return node;

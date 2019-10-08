@@ -18,6 +18,7 @@ import java.util.*;
  * 2. 实现类不得含有参数类型<br>
  * 3. 预作为 Map 的键类型，理应实现有效的hashcode和equals方法.
  *
+ * @author Himmelt
  * @param <T> 序列化类型参数
  * @param <N> 序列化结点类型参数
  */
@@ -86,17 +87,24 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
         return types[0];
     }
 
+    @Override
     public int hashCode() {
         return Arrays.hashCode(types);
     }
 
+    @Override
     public String toString() {
         return types[0].getTypeName() + " <-> " + types[1].getTypeName();
     }
 
+    @Override
     public int compareTo(@NotNull TypeSerializer another) {
-        if (this == another) return 0;
-        if (Reflects.isAssignableFrom(types[0], another.types[0])) return 1;
+        if (this == another) {
+            return 0;
+        }
+        if (Reflects.isAssignableFrom(types[0], another.types[0])) {
+            return 1;
+        }
         return -1;
     }
 
@@ -106,12 +114,22 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
             rawType = (Class<?>) fieldType;
         } else if (fieldType instanceof ParameterizedType) {
             rawType = (Class<?>) ((ParameterizedType) fieldType).getRawType();
-        } else throw new SerializerException("Field Type:" + fieldType + " CANT get class raw type !!");
+        } else {
+            throw new SerializerException("Field Type:" + fieldType + " CANT get class raw type !!");
+        }
         try {
-            if (Map.class.equals(rawType)) return new HashMap<>();
-            if (Collection.class.equals(rawType) || List.class.equals(rawType)) return new ArrayList<>();
-            if (Set.class.equals(rawType)) return new HashSet<>();
-            if (Queue.class.equals(rawType)) return new LinkedList<>();
+            if (Map.class.equals(rawType)) {
+                return new HashMap<>();
+            }
+            if (Collection.class.equals(rawType) || List.class.equals(rawType)) {
+                return new ArrayList<>();
+            }
+            if (Set.class.equals(rawType)) {
+                return new HashSet<>();
+            }
+            if (Queue.class.equals(rawType)) {
+                return new LinkedList<>();
+            }
             return rawType.getConstructor().newInstance();
         } catch (Throwable e) {
             throw new SerializerException("Field Type:" + fieldType + " CANT construct instance with non-args constructor !!");
