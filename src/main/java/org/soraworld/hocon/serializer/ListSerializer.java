@@ -25,6 +25,7 @@ final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
     ListSerializer() throws SerializerException {
     }
 
+    @Override
     @NotNull
     public Collection<?> deserialize(@NotNull Type fieldType, @NotNull NodeList node) throws HoconException {
         Type[] arguments = Reflects.getActualTypes(Collection.class, fieldType);
@@ -36,7 +37,9 @@ final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
                 list = (Collection) getTypeInstance(fieldType);
             } catch (Throwable e) {
                 System.out.println("Failed to construct instance for " + fieldType.getTypeName() + " , will fall back to LinkedList.");
-                if (options.isDebug()) e.printStackTrace();
+                if (options.isDebug()) {
+                    e.printStackTrace();
+                }
                 list = new LinkedList<>();
             }
             int size = node.size();
@@ -44,17 +47,24 @@ final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
                 list.add(KEY.deserialize(arguments[0], node.get(i)));
             }
             return list;
-        } else throw new NotMatchException(getType(), fieldType);
+        } else {
+            throw new NotMatchException(getType(), fieldType);
+        }
     }
 
+    @Override
     @NotNull
     public NodeList serialize(@NotNull Type fieldType, @NotNull Collection<?> value, @NotNull Options options) throws HoconException {
         Type[] arguments = Reflects.getActualTypes(Collection.class, fieldType);
         if (arguments != null && arguments.length == 1) {
             NodeList nodeList = new NodeList(options);
             TypeSerializer ELEMENT = options.getSerializer(arguments[0]);
-            for (Object obj : value) nodeList.add(ELEMENT.serialize(arguments[0], obj, options));
+            for (Object obj : value) {
+                nodeList.add(ELEMENT.serialize(arguments[0], obj, options));
+            }
             return nodeList;
-        } else throw new NotMatchException(getType(), fieldType);
+        } else {
+            throw new NotMatchException(getType(), fieldType);
+        }
     }
 }

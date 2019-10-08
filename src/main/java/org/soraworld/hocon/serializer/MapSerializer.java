@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NotMatchException;
 import org.soraworld.hocon.exception.SerializerException;
+import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.NodeBase;
 import org.soraworld.hocon.node.NodeMap;
 import org.soraworld.hocon.node.Options;
@@ -68,8 +69,9 @@ final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
                     TypeSerializer VAL = VAL_S != null ? VAL_S : options.getSerializer(obj.getClass());
                     if (KEY != null && VAL != null) {
                         if (KEY.keyAble() && key != null && obj != null) {
-                            NodeBase base = (NodeBase) KEY.serialize(arguments[0], key, options);
-                            if (!node.add(base.getString(), VAL.serialize(arguments[1], obj, options))) {
+                            NodeBase base = (NodeBase) KEY.serialize(KEY_S != null ? arguments[0] : key.getClass(), key, options);
+                            Node valNode = VAL.serialize(VAL_S != null ? arguments[1] : obj.getClass(), obj, options);
+                            if (!node.add(base.getString(), valNode)) {
                                 throw new SerializerException("Node for key <" + base.getString() + "> already exist !");
                             }
                         }

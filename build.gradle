@@ -1,31 +1,7 @@
-buildscript {
-    repositories {
-        maven {
-            url = 'https://plugins.gradle.org/m2/'
-        }
-    }
-    dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.2"
-    }
-}
-
 apply plugin: 'java'
-apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'com.jfrog.artifactory'
 
 group = 'org.soraworld'
-version = '1.2.2'.concat(isMasterBranch() ? '' : '-SNAPSHOT')
-archivesBaseName = "Hocon"
-
-println 'Current Branch  ' + gitBranch()
-println 'Current Version ' + project.version
-
-def _BINTRAY_USER = System.getenv('BINTRAY_USER') != null ? System.getenv('BINTRAY_USER') : BINTRAY_USER
-def _BINTRAY_KEY = System.getenv('BINTRAY_KEY') != null ? System.getenv('BINTRAY_KEY') : BINTRAY_KEY
-def _REPO_KEY = isMasterBranch() ? 'oss-release-local' : 'oss-snapshot-local'
-def _PUBLISH_CFG = isMasterBranch() ? 'mavenRelease' : 'mavenSnapshot'
+version = '1.2.2-SNAPSHOT'
 
 sourceCompatibility = targetCompatibility = 1.8
 
@@ -46,88 +22,7 @@ task sourcesJar(type: Jar) {
     from sourceSets.main.allJava
 }
 
-javadoc {
-    options.encoding = 'UTF-8'
-    options.charSet = 'UTF-8'
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
 artifacts {
     archives jar
-    archives javadocJar
     archives sourcesJar
-}
-
-publishing {
-    publications {
-        mavenRelease(MavenPublication) {
-            from components.java
-            groupId = 'org.soraworld'
-            artifactId = 'hocon'
-            version = project.version
-            artifact sourcesJar
-            artifact javadocJar
-        }
-        mavenSnapshot(MavenPublication) {
-            from components.java
-            groupId = 'org.soraworld'
-            artifactId = 'hocon'
-            version = project.version
-            artifact sourcesJar
-        }
-    }
-}
-
-bintray {
-    key = _BINTRAY_KEY
-    user = _BINTRAY_USER
-    publications = ['mavenRelease']
-    publish = true
-    override = true
-    pkg {
-        repo = 'Minecraft'
-        name = 'Hocon'
-        licenses = ['MIT']
-        vcsUrl = 'https://github.com/Himmelt/Hocon.git'
-        publicDownloadNumbers = true
-        version {
-            name = project.version
-            desc = 'Simple Hocon Configuration Library.'
-            released = new Date()
-        }
-    }
-}
-
-artifactory {
-    contextUrl = 'https://oss.jfrog.org/artifactory'
-    publish {
-        repository {
-            repoKey = _REPO_KEY
-            username = _BINTRAY_USER
-            password = _BINTRAY_KEY
-            maven = true
-        }
-        defaults {
-            publications(_PUBLISH_CFG)
-        }
-    }
-}
-
-static String gitBranch() {
-    def branch = System.getenv('CIRCLE_BRANCH')
-    if (branch != null) return branch.trim()
-    branch = System.getenv('TRAVIS_BRANCH')
-    if (branch != null) return branch.trim()
-    branch = 'unknown'
-    def info = 'git branch'.execute().text.trim()
-    info.eachLine { line -> if (line.contains('*')) branch = line.replace('*', '').trim() }
-    return branch
-}
-
-static boolean isMasterBranch() {
-    return gitBranch().equalsIgnoreCase('master')
 }

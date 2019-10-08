@@ -67,7 +67,9 @@ public class Options {
      * @param indent 缩进尺寸
      */
     public void setIndent(int indent) {
-        if (!seal) this.indent = indent;
+        if (!seal) {
+            this.indent = indent;
+        }
     }
 
     /**
@@ -86,11 +88,15 @@ public class Options {
      * @param debug 是否调试
      */
     public void setDebug(boolean debug) {
-        if (!seal) this.debug = debug;
+        if (!seal) {
+            this.debug = debug;
+        }
     }
 
     public void setTranslator(int type, Function<String, String> function) {
-        if (type >= 0 && type <= 2) translators[type] = function;
+        if (type >= 0 && type <= 2) {
+            translators[type] = function;
+        }
     }
 
     /**
@@ -104,7 +110,9 @@ public class Options {
      * @return 翻译结果
      */
     public String translate(byte type, String text) {
-        if (type >= 0 && type <= 2 && translators[type] != null) return translators[type].apply(text);
+        if (type >= 0 && type <= 2 && translators[type] != null) {
+            return translators[type].apply(text);
+        }
         return text;
     }
 
@@ -129,7 +137,9 @@ public class Options {
                 serializers.registerType(serializer);
             } catch (SerializerException e) {
                 System.out.println(e.getMessage());
-                if (debug) e.printStackTrace();
+                if (debug) {
+                    e.printStackTrace();
+                }
             }
         }
     }

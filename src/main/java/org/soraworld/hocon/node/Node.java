@@ -1,8 +1,6 @@
 package org.soraworld.hocon.node;
 
 import org.jetbrains.annotations.NotNull;
-import org.soraworld.hocon.exception.HoconException;
-import org.soraworld.hocon.serializer.TypeSerializer;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -11,6 +9,8 @@ import java.util.List;
 
 /**
  * Node 接口.
+ *
+ * @author Himmelt
  */
 public interface Node {
 
@@ -31,6 +31,13 @@ public interface Node {
         readValue(reader, false);
     }
 
+    /**
+     * 读取值
+     *
+     * @param reader       读
+     * @param keepComments 是否保持注释
+     * @throws Exception 异常
+     */
     void readValue(BufferedReader reader, boolean keepComments) throws Exception;
 
     /**
@@ -82,24 +89,13 @@ public interface Node {
      */
     void writeComment(int indent, BufferedWriter writer) throws IOException;
 
-    void setTypeToComment(Class<?> clazz);
-
-    Class<?> getTypeFromComment();
-
-    @NotNull
-    Node translate(byte cfg);
-
-    default <C> C toType(Class<C> clazz) throws HoconException {
-        TypeSerializer serializer = options().getSerializer(clazz);
-        if (serializer != null) return (C) serializer.deserialize(clazz, this);
-        return null;
-    }
-
-    default Object toType() throws HoconException {
-        Class<?> clz = getTypeFromComment();
-        if (clz != null) return toType(clz);
-        return null;
-    }
+    /**
+     * 翻译
+     *
+     * @param cfg 配置字
+     * @return 节点
+     */
+    @NotNull Node translate(byte cfg);
 
     /**
      * 获取 配置选项 options.

@@ -20,13 +20,13 @@ final class StringSerializer extends TypeSerializer<String, NodeBase> {
     StringSerializer() throws SerializerException {
     }
 
-    @NotNull
-    public String deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
+    @Override
+    public @NotNull String deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
         return node.getString();
     }
 
-    @NotNull
-    public NodeBase serialize(@NotNull Type fieldType, @NotNull String value, @NotNull Options options) {
+    @Override
+    public @NotNull NodeBase serialize(@NotNull Type fieldType, @NotNull String value, @NotNull Options options) {
         return new NodeBase(options, value);
     }
 }

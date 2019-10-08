@@ -21,14 +21,23 @@ final class Bounds {
         if (type instanceof WildcardType) {
             Type[] upper = ((WildcardType) type).getUpperBounds();
             Type[] lower = ((WildcardType) type).getLowerBounds();
-            if (upper.length == 0) this.upper = Object.class;
-            else this.upper = upper[0];
-            if (lower.length == 0) this.lower = null;
-            else this.lower = lower[0];
+            if (upper.length == 0) {
+                this.upper = Object.class;
+            } else {
+                this.upper = upper[0];
+            }
+            if (lower.length == 0) {
+                this.lower = null;
+            } else {
+                this.lower = lower[0];
+            }
         } else if (type instanceof TypeVariable) {
             Type[] upper = ((TypeVariable) type).getBounds();
-            if (upper.length == 0) this.upper = Object.class;
-            else this.upper = upper[0];
+            if (upper.length == 0) {
+                this.upper = Object.class;
+            } else {
+                this.upper = upper[0];
+            }
             lower = null;
         } else if (type instanceof ParameterizedType) {
             this.upper = ((ParameterizedType) type).getRawType();

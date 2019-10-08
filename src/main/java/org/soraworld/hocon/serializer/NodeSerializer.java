@@ -19,13 +19,13 @@ final class NodeSerializer extends TypeSerializer<Node, Node> {
     NodeSerializer() throws SerializerException {
     }
 
-    @NotNull
-    public Node deserialize(@NotNull Type fieldType, @NotNull Node node) {
+    @Override
+    public @NotNull Node deserialize(@NotNull Type fieldType, @NotNull Node node) {
         return node;
     }
 
-    @NotNull
-    public Node serialize(@NotNull Type fieldType, @NotNull Node value, @NotNull Options options) {
+    @Override
+    public @NotNull Node serialize(@NotNull Type fieldType, @NotNull Node value, @NotNull Options options) {
         return value;
     }
 }
