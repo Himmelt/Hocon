@@ -20,14 +20,6 @@ import java.util.Map;
  * @author Himmelt
  */
 final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
-    /**
-     * 实例化,并计算类型标记.
-     *
-     * @throws SerializerException the serializer exception
-     */
-    MapSerializer() throws SerializerException {
-    }
-
     @Override
     public @NotNull Map<?, ?> deserialize(@NotNull Type fieldType, @NotNull NodeMap node) throws HoconException {
         Type[] arguments = Reflects.getActualTypes(Map.class, fieldType);

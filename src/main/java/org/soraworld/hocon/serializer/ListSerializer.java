@@ -3,7 +3,6 @@ package org.soraworld.hocon.serializer;
 import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NotMatchException;
-import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.node.NodeList;
 import org.soraworld.hocon.node.Options;
 import org.soraworld.hocon.util.Reflects;
@@ -19,17 +18,8 @@ import java.util.LinkedList;
  * @author Himmelt
  */
 final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
-    /**
-     * 实例化,并计算类型标记.
-     *
-     * @throws SerializerException the serializer exception
-     */
-    ListSerializer() throws SerializerException {
-    }
-
     @Override
-    @NotNull
-    public Collection<?> deserialize(@NotNull Type fieldType, @NotNull NodeList node) throws HoconException {
+    public @NotNull Collection<?> deserialize(@NotNull Type fieldType, @NotNull NodeList node) throws HoconException {
         Type[] arguments = Reflects.getActualTypes(Collection.class, fieldType);
         if (arguments != null && arguments.length == 1) {
             Options options = node.options();
@@ -55,8 +45,7 @@ final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
     }
 
     @Override
-    @NotNull
-    public NodeList serialize(@NotNull Type fieldType, @NotNull Collection<?> value, @NotNull Options options) throws HoconException {
+    public @NotNull NodeList serialize(@NotNull Type fieldType, @NotNull Collection<?> value, @NotNull Options options) throws HoconException {
         Type[] arguments = Reflects.getActualTypes(Collection.class, fieldType);
         if (arguments != null && arguments.length == 1) {
             NodeList nodeList = new NodeList(options);

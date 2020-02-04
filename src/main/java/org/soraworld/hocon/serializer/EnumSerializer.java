@@ -16,17 +16,8 @@ import java.lang.reflect.Type;
  * @author Himmelt
  */
 final class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
-    /**
-     * 实例化,并计算类型标记.
-     *
-     * @throws SerializerException the serializer exception
-     */
-    EnumSerializer() throws SerializerException {
-    }
-
     @Override
-    @NotNull
-    public Enum<?> deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
+    public @NotNull Enum<?> deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
         String name = node.getString();
         try {
             Class<?> rawType;
@@ -49,8 +40,7 @@ final class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
     }
 
     @Override
-    @NotNull
-    public NodeBase serialize(@NotNull Type fieldType, @NotNull Enum<?> value, @NotNull Options options) {
+    public @NotNull NodeBase serialize(@NotNull Type fieldType, @NotNull Enum<?> value, @NotNull Options options) {
         return new NodeBase(options, value.name());
     }
 }

@@ -24,25 +24,24 @@ import java.util.*;
  */
 public abstract class TypeSerializer<T, N extends Node> implements Comparable<TypeSerializer<T, N>> {
 
+    private final boolean valid;
     private Type[] types = new Type[2];
 
     /**
      * 实例化,并计算类型标记.
-     *
-     * @throws SerializerException 序列化器实例化异常
      */
-    public TypeSerializer() throws SerializerException {
-        // 必须获取两个有效类型，否则抛出异常
+    public TypeSerializer() {
         ParameterizedType type = Reflects.getGenericType(TypeSerializer.class, getClass());
         if (type != null) {
             Type[] types = type.getActualTypeArguments();
             if (types.length == 2) {
                 this.types[0] = types[0];
                 this.types[1] = types[1];
+                valid = true;
                 return;
             }
         }
-        throw new SerializerException("Type " + getClass().getName() + " MUST has 2 parameters extends 'TypeSerializer<T, N extends Node>'");
+        valid = false;
     }
 
     /**
@@ -53,8 +52,7 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
      * @return 反序列化后的对象
      * @throws HoconException Hocon操作异常
      */
-    @NotNull
-    public abstract T deserialize(@NotNull Type fieldType, @NotNull N node) throws HoconException;
+    public abstract @NotNull T deserialize(@NotNull Type fieldType, @NotNull N node) throws HoconException;
 
     /**
      * 序列化.
@@ -65,8 +63,7 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
      * @return 序列化后的结点
      * @throws HoconException Hocon操作异常
      */
-    @NotNull
-    public abstract N serialize(@NotNull Type fieldType, @NotNull T value, @NotNull Options options) throws HoconException;
+    public abstract @NotNull N serialize(@NotNull Type fieldType, @NotNull T value, @NotNull Options options) throws HoconException;
 
     /**
      * 被序列化的对象是否可以作为 Map 的键.
@@ -82,8 +79,7 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
      *
      * @return 注册类型
      */
-    @NotNull
-    final Type getType() {
+    final @NotNull Type getType() {
         return types[0];
     }
 
@@ -134,5 +130,9 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
         } catch (Throwable e) {
             throw new SerializerException("Field Type:" + fieldType + " CANT construct instance with non-parameter constructor !!");
         }
+    }
+
+    public boolean isValid() {
+        return valid;
     }
 }

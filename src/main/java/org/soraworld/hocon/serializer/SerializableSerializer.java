@@ -16,15 +16,6 @@ import java.lang.reflect.Type;
  * @author Himmelt
  */
 final class SerializableSerializer extends TypeSerializer<Serializable, NodeMap> {
-
-    /**
-     * Instantiates a new Annotation serializer.
-     *
-     * @throws SerializerException the serializer exception
-     */
-    SerializableSerializer() throws SerializerException {
-    }
-
     @Override
     public @NotNull Serializable deserialize(@NotNull Type fieldType, @NotNull NodeMap node) throws HoconException {
         if (fieldType instanceof Class) {

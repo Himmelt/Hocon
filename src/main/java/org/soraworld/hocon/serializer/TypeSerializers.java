@@ -33,54 +33,22 @@ public final class TypeSerializers {
         // 默认顶级序列化器
         Map<Type, TypeSerializer> map = new LinkedHashMap<>();
         TypeSerializer serializer;
-        try {
-            serializer = new NumberSerializer();
-            map.put(serializer.getType(), serializer);
-        } catch (SerializerException e) {
-            e.printStackTrace();
-        }
-        try {
-            serializer = new StringSerializer();
-            map.put(serializer.getType(), serializer);
-        } catch (SerializerException e) {
-            e.printStackTrace();
-        }
-        try {
-            serializer = new BooleanSerializer();
-            map.put(serializer.getType(), serializer);
-        } catch (SerializerException e) {
-            e.printStackTrace();
-        }
-        try {
-            serializer = new MapSerializer();
-            map.put(serializer.getType(), serializer);
-        } catch (SerializerException e) {
-            e.printStackTrace();
-        }
-        try {
-            serializer = new ListSerializer();
-            map.put(serializer.getType(), serializer);
-        } catch (SerializerException e) {
-            e.printStackTrace();
-        }
-        try {
-            serializer = new EnumSerializer();
-            map.put(serializer.getType(), serializer);
-        } catch (SerializerException e) {
-            e.printStackTrace();
-        }
-        try {
-            serializer = new NodeSerializer();
-            map.put(serializer.getType(), serializer);
-        } catch (SerializerException e) {
-            e.printStackTrace();
-        }
-        try {
-            serializer = new SerializableSerializer();
-            map.put(serializer.getType(), serializer);
-        } catch (SerializerException e) {
-            e.printStackTrace();
-        }
+        serializer = new NumberSerializer();
+        map.put(serializer.getType(), serializer);
+        serializer = new StringSerializer();
+        map.put(serializer.getType(), serializer);
+        serializer = new BooleanSerializer();
+        map.put(serializer.getType(), serializer);
+        serializer = new MapSerializer();
+        map.put(serializer.getType(), serializer);
+        serializer = new ListSerializer();
+        map.put(serializer.getType(), serializer);
+        serializer = new EnumSerializer();
+        map.put(serializer.getType(), serializer);
+        serializer = new NodeSerializer();
+        map.put(serializer.getType(), serializer);
+        serializer = new SerializableSerializer();
+        map.put(serializer.getType(), serializer);
         DEFAULT_SERIALIZERS = Collections.unmodifiableMap(map);
     }
 
@@ -127,6 +95,9 @@ public final class TypeSerializers {
      * @throws SerializerException 序列化异常
      */
     public void registerType(@NotNull TypeSerializer serializer) throws SerializerException {
+        if (!serializer.isValid()) {
+            throw new SerializerException("Class " + serializer.getClass() + " MUST has 2 parameters extends 'TypeSerializer<T, N extends Node>'");
+        }
         Type type = serializer.getType();
         TypeSerializer serial = get(type);
         if (serial != null) {
