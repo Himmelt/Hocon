@@ -10,6 +10,11 @@ import org.soraworld.hocon.node.Options;
 import java.io.Serializable;
 import java.lang.reflect.Type;
 
+/**
+ * Serializable 序列化器.
+ *
+ * @author Himmelt
+ */
 final class SerializableSerializer extends TypeSerializer<Serializable, NodeMap> {
 
     /**

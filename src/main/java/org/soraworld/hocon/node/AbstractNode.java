@@ -13,6 +13,7 @@ import java.util.regex.Pattern;
  * 抽象结点类.
  *
  * @param <T> 封装内容的参数类型
+ * @author Himmelt
  */
 abstract class AbstractNode<T> implements Node {
 

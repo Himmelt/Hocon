@@ -9,6 +9,8 @@ import java.lang.reflect.Type;
 
 /**
  * 结点类型序列化器.
+ *
+ * @author Himmelt
  */
 final class NodeSerializer extends TypeSerializer<Node, Node> {
     /**

@@ -10,6 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 泛型类型边界.
+ *
+ * @author Himmelt
  */
 final class Bounds {
 

@@ -11,6 +11,7 @@ import java.util.List;
 /**
  * 列表结点类.
  * 此类存储一个结点列表.
+ *
  * @author Himmelt
  */
 public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
@@ -200,7 +201,6 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
     }
 
     @Override
-
     public @NotNull NodeList translate(byte cfg) {
         NodeList list = new NodeList(options, comments);
         value.forEach(n -> list.value.add(n instanceof NodeBase ? n.translate(cfg) : n));

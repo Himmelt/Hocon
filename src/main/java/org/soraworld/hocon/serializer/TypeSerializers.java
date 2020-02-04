@@ -15,6 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 序列化器集合类.
+ *
  * @author Himmelt
  */
 public final class TypeSerializers {
@@ -90,11 +91,15 @@ public final class TypeSerializers {
      * @return 序列化器 type serializer
      */
     public TypeSerializer get(@NotNull Type type) {
-        if (type instanceof Class<?>) type = Reflects.wrap((Class<?>) type);
+        if (type instanceof Class<?>) {
+            type = Reflects.wrap((Class<?>) type);
+        }
         TypeSerializer serializer = typeMatches.computeIfAbsent(type, actual -> {
             TreeSet<TypeSerializer> set = new TreeSet<>();
             for (TypeSerializer serial : serializers) {
-                if (Reflects.isAssignableFrom(serial.getType(), actual)) set.add(serial);
+                if (Reflects.isAssignableFrom(serial.getType(), actual)) {
+                    set.add(serial);
+                }
             }
             return set.isEmpty() ? null : set.first();
         });
@@ -106,7 +111,9 @@ public final class TypeSerializers {
                     break;
                 }
             }
-            if (serializer != null) typeMatches.put(type, serializer);
+            if (serializer != null) {
+                typeMatches.put(type, serializer);
+            }
         }
         return serializer;
     }

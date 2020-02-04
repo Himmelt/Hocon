@@ -16,6 +16,7 @@ import static org.soraworld.hocon.node.Options.*;
 
 /**
  * 映射结点类.
+ *
  * @author Himmelt
  */
 public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node {
@@ -100,7 +101,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      *
      * @param source 源对象
      */
-    public void extract(Object source) {
+    public void extract(@NotNull Object source) {
         extract(source, true, true, true);
     }
 
@@ -111,7 +112,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param source      源对象
      * @param keepComment 是否保留旧结点注释
      */
-    public void extract(Object source, boolean keepComment) {
+    public void extract(@NotNull Object source, boolean keepComment) {
         extract(source, keepComment, true, true);
     }
 
@@ -123,7 +124,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param keepComment 是否保留旧结点注释
      * @param clearOld    是否清除所有旧结点
      */
-    public void extract(Object source, boolean keepComment, boolean clearOld) {
+    public void extract(@NotNull Object source, boolean keepComment, boolean clearOld) {
         extract(source, keepComment, clearOld, true);
     }
 
@@ -138,7 +139,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param clearOld    是否清除所有旧结点
      * @param overwrite   是否覆盖旧结点内容
      */
-    public void extract(Object source, boolean keepComment, boolean clearOld, boolean overwrite) {
+    public void extract(@NotNull Object source, boolean keepComment, boolean clearOld, boolean overwrite) {
         NodeMap oldNode = new NodeMap(this);
         if (clearOld) {
             value.clear();
@@ -192,9 +193,9 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     /**
-     * map 的键集合.
+     * map 的不可变键集合.
      *
-     * @return 键集合
+     * @return 不可变键集合
      */
     public Set<String> keys() {
         return Collections.unmodifiableSet(value.keySet());
@@ -228,7 +229,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return value.containsValue(node);
     }
 
-    public Node put(String key, Node value) {
+    public Node put(@NotNull String key, @NotNull Node value) {
         Node old = remove(key);
         set(key, value);
         return old;
@@ -243,7 +244,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param comment 注释
      * @return 是否成功
      */
-    public boolean put(Paths paths, Object obj, String comment) {
+    public boolean put(@NotNull Paths paths, @NotNull Object obj, String comment) {
         if (paths.empty()) {
             return false;
         }
@@ -269,7 +270,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param obj  对象
      * @return 是否成功
      */
-    public boolean add(String path, Object obj) {
+    public boolean add(@NotNull String path, @NotNull Object obj) {
         if (value.get(path) != null) {
             return false;
         }
@@ -285,7 +286,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param comment 注释
      * @return 是否成功
      */
-    public boolean put(String path, Object obj, String comment) {
+    public boolean put(@NotNull String path, @NotNull Object obj, String comment) {
         if (value.get(path) != null) {
             return false;
         }
@@ -308,7 +309,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param paths 路径树
      * @return 对应结点
      */
-    public Node get(Paths paths) {
+    public Node get(@NotNull Paths paths) {
         if (paths.hasNext()) {
             Node node = get(paths.first());
             if (node instanceof NodeMap) {
@@ -330,7 +331,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param comment 注释
      * @return 是否成功
      */
-    public boolean set(Paths paths, Object obj, String comment) {
+    public boolean set(@NotNull Paths paths, @NotNull Object obj, String comment) {
         if (paths.empty()) {
             return false;
         }
@@ -356,7 +357,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param obj  对象
      * @return 是否成功
      */
-    public boolean set(String path, Object obj) {
+    public boolean set(@NotNull String path, @NotNull Object obj) {
         if (obj instanceof Node) {
             if (checkCycle((Node) obj)) {
                 value.put(path, (Node) obj);
@@ -574,8 +575,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     @Override
-    @NotNull
-    public NodeMap translate(byte cfg) {
+    public @NotNull NodeMap translate(byte cfg) {
         NodeMap map = new NodeMap(options, comments);
         value.forEach((k, v) -> map.value.put(k, v instanceof NodeBase ? v.translate(cfg) : v));
         return map;

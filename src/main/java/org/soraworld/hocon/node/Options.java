@@ -9,8 +9,10 @@ import java.util.function.Function;
 
 /**
  * 配置选项类.
+ *
+ * @author Himmelt
  */
-public class Options {
+public final class Options {
 
     private int indent = 2;
     private boolean seal;

@@ -12,6 +12,8 @@ import java.lang.reflect.Type;
 
 /**
  * 枚举类型序列化器.
+ *
+ * @author Himmelt
  */
 final class EnumSerializer extends TypeSerializer<Enum<?>, NodeBase> {
     /**

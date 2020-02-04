@@ -2,6 +2,7 @@ package org.soraworld.hocon.exception;
 
 /**
  * Hocon 操作异常.
+ *
  * @author Himmelt
  */
 public class HoconException extends Exception {

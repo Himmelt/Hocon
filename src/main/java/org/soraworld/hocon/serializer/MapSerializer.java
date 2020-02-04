@@ -16,6 +16,8 @@ import java.util.Map;
 
 /**
  * 映射类型序列化器.
+ *
+ * @author Himmelt
  */
 final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
     /**

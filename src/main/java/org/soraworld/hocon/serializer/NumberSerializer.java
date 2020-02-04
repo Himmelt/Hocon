@@ -12,6 +12,8 @@ import java.lang.reflect.Type;
 
 /**
  * 数值类型序列化器.
+ *
+ * @author Himmelt
  */
 final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
     /**

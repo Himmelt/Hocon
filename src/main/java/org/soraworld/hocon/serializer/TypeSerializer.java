@@ -22,7 +22,7 @@ import java.util.*;
  * @param <N> 序列化结点类型参数
  * @author Himmelt
  */
-public abstract class TypeSerializer<T, N extends Node> implements Comparable<TypeSerializer> {
+public abstract class TypeSerializer<T, N extends Node> implements Comparable<TypeSerializer<T, N>> {
 
     private Type[] types = new Type[2];
 

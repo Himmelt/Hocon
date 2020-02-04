@@ -10,6 +10,8 @@ import java.lang.reflect.Type;
 
 /**
  * 字符串类型序列化器.
+ *
+ * @author Himmelt
  */
 final class StringSerializer extends TypeSerializer<String, NodeBase> {
     /**

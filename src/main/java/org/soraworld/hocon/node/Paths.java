@@ -4,9 +4,10 @@ import java.util.StringJoiner;
 
 /**
  * 路径树, 以 . 分隔
+ *
  * @author Himmelt
  */
-public class Paths {
+public final class Paths {
 
     private int current;
     private final int length;

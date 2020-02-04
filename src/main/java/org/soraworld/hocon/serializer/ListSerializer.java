@@ -15,6 +15,8 @@ import java.util.LinkedList;
 /**
  * 集合类型序列化器.
  * 目前支持 {@link java.util.List} {@link java.util.Set} {@link java.util.Queue}
+ *
+ * @author Himmelt
  */
 final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
     /**

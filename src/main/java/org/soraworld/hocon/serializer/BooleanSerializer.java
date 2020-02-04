@@ -9,6 +9,8 @@ import java.lang.reflect.Type;
 
 /**
  * 逻辑类型序列化器.
+ *
+ * @author Himmelt
  */
 final class BooleanSerializer extends TypeSerializer<Boolean, NodeBase> {
     /**

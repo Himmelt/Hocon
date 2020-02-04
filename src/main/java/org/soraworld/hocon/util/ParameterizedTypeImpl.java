@@ -7,6 +7,11 @@ import java.lang.reflect.TypeVariable;
 import java.util.Arrays;
 import java.util.Objects;
 
+/**
+ * 参数类型实现.
+ *
+ * @author Himmelt
+ */
 final class ParameterizedTypeImpl implements ParameterizedType {
 
     private final Type[] arguments;

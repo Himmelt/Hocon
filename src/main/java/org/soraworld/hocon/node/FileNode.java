@@ -12,6 +12,7 @@ import java.util.List;
 
 /**
  * 文件结点类.
+ *
  * @author Himmelt
  */
 public class FileNode extends NodeMap {

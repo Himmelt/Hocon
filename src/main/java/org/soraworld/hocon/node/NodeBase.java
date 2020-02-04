@@ -70,8 +70,7 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
      *
      * @return 字符串
      */
-    @NotNull
-    public String getString() {
+    public @NotNull String getString() {
         return value;
     }
 
@@ -118,11 +117,11 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
      * @return 逻辑值
      */
     public Boolean getBoolean() {
-        return value.equalsIgnoreCase("true")
-                || value.equalsIgnoreCase("yes")
-                || value.equalsIgnoreCase("1")
-                || value.equalsIgnoreCase("t")
-                || value.equalsIgnoreCase("y");
+        return "true".equalsIgnoreCase(value)
+                || "yes".equalsIgnoreCase(value)
+                || "1".equalsIgnoreCase(value)
+                || "t".equalsIgnoreCase(value)
+                || "y".equalsIgnoreCase(value);
     }
 
     @Override
@@ -156,8 +155,7 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
     }
 
     @Override
-    @NotNull
-    public String toString() {
+    public @NotNull String toString() {
         return value;
     }
 }
