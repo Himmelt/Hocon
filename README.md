@@ -2,13 +2,7 @@
 Simple Hocon Configuration Library
 轻量 Hocon 配置库
 
-[![TravisCI](https://img.shields.io/travis/Himmelt/Hocon/master.svg?label=TravisCI&logo=travis-ci)](https://travis-ci.org/Himmelt/Hocon)
-[![CircleCI](https://img.shields.io/circleci/project/github/Himmelt/Hocon/master.svg?label=CircleCI&logo=circleci)](https://circleci.com/gh/Himmelt/Hocon)
-[![License](https://img.shields.io/github/license/Himmelt/Hocon.svg?color=important)](https://github.com/Himmelt/Hocon/blob/master/LICENSE)
-
-[![Download](https://api.bintray.com/packages/himmelt/Minecraft/Hocon/images/download.svg)](https://bintray.com/himmelt/Minecraft/Hocon/_latestVersion)
-[![Download](https://img.shields.io/badge/Download-release-success.svg)](https://oss.jfrog.org/artifactory/oss-release-local/org/soraworld/hocon/)
-[![Download](https://img.shields.io/badge/Download-snapshot-success.svg)](https://oss.jfrog.org/artifactory/oss-snapshot-local/org/soraworld/hocon/)
+![Hocon](https://github.com/Himmelt/Hocon/workflows/Hocon/badge.svg)
 
 ### 简介
 这是一个轻量级的 Hocon 配置库，没有其他依赖项。
