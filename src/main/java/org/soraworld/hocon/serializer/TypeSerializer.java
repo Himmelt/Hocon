@@ -18,9 +18,9 @@ import java.util.*;
  * 2. 实现类不得含有参数类型<br>
  * 3. 预作为 Map 的键类型，理应实现有效的hashcode和equals方法.
  *
- * @author Himmelt
  * @param <T> 序列化类型参数
  * @param <N> 序列化结点类型参数
+ * @author Himmelt
  */
 public abstract class TypeSerializer<T, N extends Node> implements Comparable<TypeSerializer> {
 

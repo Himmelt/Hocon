@@ -10,6 +10,7 @@ import java.util.List;
 /**
  * 基础结点类.
  * 此类会把对象以字符串的形式存储.
+ *
  * @author Himmelt
  */
 public class NodeBase extends AbstractNode<String> implements Node, Serializable, Comparable<NodeBase>, CharSequence {
@@ -60,7 +61,7 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
     }
 
     @Override
-    public  @NotNull NodeBase translate(byte cfg) {
+    public @NotNull NodeBase translate(byte cfg) {
         return new NodeBase(options, options.translate(cfg, value), comments);
     }
 
