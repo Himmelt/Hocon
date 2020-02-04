@@ -89,15 +89,15 @@ public final class Reflects {
     }
 
     /**
-     * 获取类的非静态字段.
+     * 获取本类及父类的非静态字段.
+     * 父类的非静态字段排在前面.
      *
      * @param clazz 类
-     * @return 字段列表
+     * @return 不可变字段列表
      */
-    @NotNull
-    public static List<Field> getFields(@NotNull Class<?> clazz) {
+    public static @NotNull List<Field> getFields(@NotNull Class<?> clazz) {
         if (CLAZZ_FIELDS.containsKey(clazz)) {
-            return CLAZZ_FIELDS.get(clazz);
+            return Collections.unmodifiableList(CLAZZ_FIELDS.get(clazz));
         }
         CopyOnWriteArrayList<Field> fields = new CopyOnWriteArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         fields.removeIf(field -> Modifier.isStatic(field.getModifiers()));
@@ -107,25 +107,24 @@ public final class Reflects {
         }
         fields.forEach(field -> field.setAccessible(true));
         CLAZZ_FIELDS.put(clazz, fields);
-        return fields;
+        return Collections.unmodifiableList(fields);
     }
 
     /**
-     * 获取类的静态字段.
+     * 获取本类的静态字段.
      *
      * @param clazz 类
-     * @return 字段列表
+     * @return 不可变字段列表
      */
-    @NotNull
-    public static List<Field> getStaticFields(@NotNull Class<?> clazz) {
+    public static @NotNull List<Field> getStaticFields(@NotNull Class<?> clazz) {
         if (STATIC_FIELDS.containsKey(clazz)) {
-            return STATIC_FIELDS.get(clazz);
+            return Collections.unmodifiableList(STATIC_FIELDS.get(clazz));
         }
         CopyOnWriteArrayList<Field> fields = new CopyOnWriteArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         fields.removeIf(field -> !Modifier.isStatic(field.getModifiers()));
         fields.forEach(field -> field.setAccessible(true));
         STATIC_FIELDS.put(clazz, fields);
-        return fields;
+        return Collections.unmodifiableList(fields);
     }
 
     /**
