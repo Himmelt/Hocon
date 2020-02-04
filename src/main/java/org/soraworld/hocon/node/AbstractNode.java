@@ -68,31 +68,6 @@ abstract class AbstractNode<T> implements Node {
         setComments(comments);
     }
 
-    /**
-     * 检查循环引用.
-     *
-     * @param node 被检查 node
-     * @return 如果不存在循环引用则返回 true，否则返回 false
-     */
-    protected boolean checkCycle(Node node) {
-        if (this.equals(node)) return false;
-        if (node instanceof NodeMap) {
-            for (Node sub : ((NodeMap) node).value.values()) {
-                if (!checkCycle(sub)) return false;
-            }
-            return true;
-        } else if (node instanceof NodeList) {
-            for (Node sub : ((NodeList) node).value) {
-                if (!checkCycle(sub)) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            return true;
-        }
-    }
-
     @Override
     public List<String> getComments() {
         return comments;
@@ -163,7 +138,9 @@ abstract class AbstractNode<T> implements Node {
                     .replace("\"", "\\\"");
             return '"' + target + '"';
         }
-        if (text.isEmpty()) return "\"\"";
+        if (text.isEmpty()) {
+            return "\"\"";
+        }
         return text;
     }
 
@@ -175,8 +152,12 @@ abstract class AbstractNode<T> implements Node {
      * @return 处理后的文本
      */
     public static String unquotation(@NotNull String text) {
-        if (text.startsWith("\"")) text = text.substring(1);
-        if (text.endsWith("\"")) text = text.substring(0, text.length() - 1);
+        if (text.startsWith("\"")) {
+            text = text.substring(1);
+        }
+        if (text.endsWith("\"")) {
+            text = text.substring(0, text.length() - 1);
+        }
         return text
                 .replace("\\b", "\b")
                 .replace("\\n", "\n")

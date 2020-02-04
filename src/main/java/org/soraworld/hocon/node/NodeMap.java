@@ -1,6 +1,7 @@
 package org.soraworld.hocon.node;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.util.Reflects;
@@ -47,6 +48,32 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
 
     public NodeMap(@NotNull Options options, List<String> comments) {
         super(options, new LinkedHashMap<>(), comments);
+    }
+
+    /**
+     * 检查循环引用.
+     *
+     * @param child 被检查 node
+     * @return 如果不存在循环引用则返回 true，否则返回 false
+     */
+    private boolean checkCycle(@NotNull Node child) {
+        if (this == child) {
+            return false;
+        }
+        if (child instanceof NodeMap) {
+            for (Node grandchild : ((NodeMap) child).value.values()) {
+                if (!checkCycle(grandchild)) {
+                    return false;
+                }
+            }
+        } else if (child instanceof NodeList) {
+            for (Node grandchild : ((NodeList) child).value) {
+                if (!checkCycle(grandchild)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -230,12 +257,6 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return value.containsValue(node);
     }
 
-    public Node put(@NotNull String key, @NotNull Node value) {
-        Node old = remove(key);
-        set(key, value);
-        return old;
-    }
-
     /**
      * 添加一个新的结点映射.
      * 如果对应路径树上已有非空结点，则失败.
@@ -245,22 +266,23 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param comment 注释
      * @return 是否成功
      */
+    // TODO
     public boolean put(@NotNull Paths paths, @NotNull Object obj, String comment) {
         if (paths.empty()) {
             return false;
         }
         if (paths.hasNext()) {
-            Node parent = get(paths.first());
+            Node parent = value.get(paths.first());
             if (parent == null) {
                 parent = new NodeMap(options);
-                set(paths.first(), parent);
+                putCheck(paths.first(), parent);
             }
             if (parent instanceof NodeMap) {
                 return ((NodeMap) parent).put(paths.next(), obj, comment);
             }
             return false;
         }
-        return put(paths.first(), obj, comment);
+        return putCheck(paths.first(), obj, comment);
     }
 
     /**
@@ -271,37 +293,21 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param obj  对象
      * @return 是否成功
      */
-    public boolean add(@NotNull String path, @NotNull Object obj) {
-        if (value.get(path) != null) {
+    public boolean put(@NotNull String path, @NotNull Object obj) {
+        if (get(new Paths(path)) != null) {
             return false;
         }
-        return set(path, obj);
-    }
-
-    /**
-     * 添加一个新的结点映射.
-     * 如果对应路径上已有非空结点，则失败.
-     *
-     * @param path    路径
-     * @param obj     对象
-     * @param comment 注释
-     * @return 是否成功
-     */
-    public boolean put(@NotNull String path, @NotNull Object obj, String comment) {
-        if (value.get(path) != null) {
-            return false;
-        }
-        return set(path, obj, comment);
+        return set(new Paths(path), obj);
     }
 
     /**
      * 获取路径对应的结点.
      *
-     * @param path 路径
+     * @param paths 路径
      * @return 对应结点
      */
-    public Node get(String path) {
-        return value.get(path);
+    public Node get(String paths) {
+        return get(new Paths(paths));
     }
 
     /**
@@ -312,19 +318,47 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      */
     public Node get(@NotNull Paths paths) {
         if (paths.hasNext()) {
-            Node node = get(paths.first());
+            Node node = value.get(paths.first());
             if (node instanceof NodeMap) {
                 return ((NodeMap) node).get(paths.next());
             } else {
                 return null;
             }
         }
-        return get(paths.first());
+        return value.get(paths.first());
+    }
+
+    public NodeBase getBase(String paths) {
+        Node node = get(new Paths(paths));
+        return node instanceof NodeBase ? (NodeBase) node : null;
+    }
+
+    public NodeList getList(String paths) {
+        Node node = get(new Paths(paths));
+        return node instanceof NodeList ? (NodeList) node : null;
+    }
+
+    public NodeMap getMap(String paths) {
+        Node node = get(new Paths(paths));
+        return node instanceof NodeMap ? (NodeMap) node : null;
+    }
+
+    public boolean set(String paths, @NotNull Object obj) {
+        return set(new Paths(paths), obj);
+    }
+
+    public boolean set(String paths, @NotNull Object obj, String comment) {
+        return set(new Paths(paths), obj, comment);
+    }
+
+    public boolean set(@NotNull Paths paths, @NotNull Object obj) {
+        return set(paths, obj, "");
     }
 
     /**
      * 添加一个新的结点映射.<br>
      * 如果对应路径树上已有非空结点，则覆盖.<br>
+     * 如果路径树中间节点不存在，则创建.<br>
      * 如果路径中间存在 非空非Map 结点则失败.
      *
      * @param paths   路径树
@@ -337,56 +371,36 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             return false;
         }
         if (paths.hasNext()) {
-            Node parent = get(paths.first());
+            Node parent = value.get(paths.first());
             if (parent == null) {
                 parent = new NodeMap(options);
-                set(paths.first(), parent);
+                putCheck(paths.first(), parent);
             }
             if (parent instanceof NodeMap) {
                 return ((NodeMap) parent).set(paths.next(), obj, comment);
             }
             return false;
         }
-        return set(paths.first(), obj, comment);
+        return putCheck(paths.first(), obj, comment);
     }
 
     /**
      * 强制设置(覆盖)路径对应结点.
      * 如果存在循环引用则失败.
      *
-     * @param path 路径
-     * @param obj  对象
+     * @param key 路径
+     * @param obj 对象
      * @return 是否成功
      */
-    public boolean set(@NotNull String path, @NotNull Object obj) {
-        if (obj instanceof Node) {
-            if (checkCycle((Node) obj)) {
-                value.put(path, (Node) obj);
-                return true;
-            }
-            if (options.isDebug()) {
-                System.out.println("NodeMap Cycle Reference !!");
-            }
-            return false;
-        }
-        value.put(path, new NodeBase(options, obj));
-        return true;
+    public boolean putCheck(@NotNull String key, @NotNull Object obj) {
+        return putCheck(key, obj, "");
     }
 
-    /**
-     * 强制设置(覆盖)路径对应结点.
-     * 如果存在循环引用则失败.
-     *
-     * @param path    路径
-     * @param obj     对象
-     * @param comment 注释
-     * @return 是否成功
-     */
-    public boolean set(@NotNull String path, @NotNull Object obj, @NotNull String comment) {
+    public boolean putCheck(@NotNull String key, @NotNull Object obj, @Nullable String comment) {
         if (obj instanceof Node) {
             if (checkCycle((Node) obj)) {
                 ((Node) obj).addComment(comment);
-                value.put(path, (Node) obj);
+                value.put(key, (Node) obj);
                 return true;
             }
             if (options.isDebug()) {
@@ -394,38 +408,51 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             }
             return false;
         }
-        value.put(path, new NodeBase(options, obj, comment));
+        // TODO 序列化
+        value.put(key, new NodeBase(options, obj, comment));
         return true;
     }
 
     /**
      * 移除路径对应结点.
      *
-     * @param path 路径
+     * @param paths 路径
      * @return 移除的结点
      */
-    public Node remove(String path) {
-        return value.remove(path);
+    public Node remove(String paths) {
+        return remove(new Paths(paths));
     }
 
     /**
-     * 移除路径和结点.
+     * 移除路径对应结点.
      *
-     * @param path 路径
-     * @param node 结点
+     * @param paths 路径
+     * @return 移除的结点
      */
-    public void remove(String path, Node node) {
-        value.remove(path, node);
+    public Node remove(@NotNull Paths paths) {
+        if (paths.hasNext()) {
+            Node node = value.get(paths.first());
+            if (node instanceof NodeMap) {
+                return ((NodeMap) node).remove(paths.next());
+            } else {
+                return null;
+            }
+        }
+        return value.remove(paths.first());
     }
 
     /**
      * 为对应路径的结点添加注释.
      *
-     * @param path    路径
+     * @param paths   路径
      * @param comment 注释
      */
-    public void addComment(String path, String comment) {
-        Node node = value.get(path);
+    public void addComment(String paths, String comment) {
+        addComment(new Paths(paths), comment);
+    }
+
+    public void addComment(@NotNull Paths paths, String comment) {
+        Node node = get(paths);
         if (node != null) {
             node.addComment(comment);
         }
@@ -434,11 +461,15 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     /**
      * 为对应路径的结点设置多行注释.
      *
-     * @param path     路径
+     * @param paths    路径
      * @param comments 多行注释
      */
-    public void setComments(String path, List<String> comments) {
-        Node node = value.get(path);
+    public void setComments(String paths, List<String> comments) {
+        setComments(new Paths(paths), comments);
+    }
+
+    public void setComments(@NotNull Paths paths, List<String> comments) {
+        Node node = get(paths);
         if (node != null) {
             node.setComments(comments);
         }
