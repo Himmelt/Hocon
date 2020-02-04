@@ -65,7 +65,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param target 修改对象
      */
     public void modify(@NotNull Object target) {
-        List<Field> fields = Reflects.getFields(target.getClass());
+        List<Field> fields = target instanceof Class<?> ? Reflects.getStaticFields((Class<?>) target) : Reflects.getFields(target.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
@@ -144,7 +144,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         if (clearOld) {
             value.clear();
         }
-        List<Field> fields = Reflects.getFields(source.getClass());
+        List<Field> fields = source instanceof Class<?> ? Reflects.getStaticFields((Class<?>) source) : Reflects.getFields(source.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
