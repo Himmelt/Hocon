@@ -150,9 +150,9 @@ public final class Paths {
 
     @Override
     public String toString() {
-        StringJoiner joiner = new StringJoiner(", ", "{ ", " }");
-        for (String arg : paths) {
-            joiner.add(arg);
+        StringJoiner joiner = new StringJoiner(".");
+        for (String path : paths) {
+            joiner.add(path);
         }
         return joiner.toString();
     }

@@ -12,7 +12,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static org.soraworld.hocon.node.Options.*;
+import static org.soraworld.hocon.node.Options.READ;
+import static org.soraworld.hocon.node.Options.WRITE;
 
 /**
  * 映射结点类.
@@ -150,7 +151,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             if (setting != null) {
                 try {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
-                    String comment = (setting.trans() & 0b1001) == 0 ? setting.comment() : options.translate(COMMENT, setting.comment());
+                    String comment = (setting.trans() & 0b1001) == 0 ? setting.comment() : options.translateComment(setting.comment(), paths);
                     Node old = oldNode.get(paths.clone());
                     List<String> list = old != null ? old.getComments() : null;
                     Type fieldType = field.getGenericType();

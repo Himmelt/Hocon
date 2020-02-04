@@ -1,5 +1,6 @@
 package org.soraworld.hocon.node;
 
+import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.serializer.TypeSerializers;
@@ -17,10 +18,11 @@ public final class Options {
     private int indent = 2;
     private boolean seal;
     private boolean debug = false;
+    private boolean useDefaultCommentKey = false;
     private final Function<String, String>[] translators = new Function[3];
     private final TypeSerializers serializers = new TypeSerializers();
 
-    private static final Options defaults = new Options(true);
+    private static final Options DEFAULTS = new Options(true);
     public static final byte COMMENT = 0, READ = 1, WRITE = 2;
 
     private Options(boolean seal) {
@@ -33,7 +35,7 @@ public final class Options {
      * @return 默认选项
      */
     public static Options defaults() {
-        return defaults;
+        return DEFAULTS;
     }
 
     /**
@@ -95,9 +97,15 @@ public final class Options {
         }
     }
 
-    public void setTranslator(int type, Function<String, String> function) {
-        if (type >= 0 && type <= 2) {
-            translators[type] = function;
+    public void setUseDefaultCommentKey(boolean useDefaultCommentKey) {
+        if (!seal) {
+            this.useDefaultCommentKey = useDefaultCommentKey;
+        }
+    }
+
+    public void setTranslator(int type, Function<String, String> translator) {
+        if (!seal && type >= 0 && type <= 2) {
+            translators[type] = translator;
         }
     }
 
@@ -124,7 +132,7 @@ public final class Options {
      * @param type 类型
      * @return 序列化器
      */
-    public TypeSerializer getSerializer(Type type) {
+    public TypeSerializer getSerializer(@NotNull Type type) {
         return serializers.get(type);
     }
 
@@ -133,7 +141,7 @@ public final class Options {
      *
      * @param serializer 序列化器
      */
-    public void registerType(TypeSerializer serializer) {
+    public void registerType(@NotNull TypeSerializer serializer) {
         if (!seal) {
             try {
                 serializers.registerType(serializer);
@@ -143,6 +151,19 @@ public final class Options {
                     e.printStackTrace();
                 }
             }
+        } else {
+            System.out.println("Options has been sealed, can't register " + serializer.getClass());
         }
+    }
+
+    public String translateComment(String comment, Paths paths) {
+        if (translators[COMMENT] != null) {
+            if (useDefaultCommentKey && comment.isEmpty()) {
+                return translators[COMMENT].apply("comment." + paths);
+            } else {
+                return translators[COMMENT].apply(comment);
+            }
+        }
+        return comment;
     }
 }
