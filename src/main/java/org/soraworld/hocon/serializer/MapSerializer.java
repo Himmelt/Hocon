@@ -66,7 +66,7 @@ final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
                             NodeBase base = (NodeBase) KEY.serialize(KEY_S != null ? arguments[0] : key.getClass(), key, options);
                             Node valNode = VAL.serialize(VAL_S != null ? arguments[1] : obj.getClass(), obj, options);
                             if (!map.put(base.getString(), valNode)) {
-                                throw new SerializerException("Node for key <" + base.getString() + "> already exist !");
+                                throw new SerializerException("Node for key <" + base.getString() + "> put failed !");
                             }
                         }
                     } else {
