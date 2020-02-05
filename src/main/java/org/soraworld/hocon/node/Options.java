@@ -134,7 +134,7 @@ public final class Options {
      * @param type 类型
      * @return 序列化器
      */
-    public TypeSerializer getSerializer(@NotNull Type type) {
+    public TypeSerializer<?, ?> getSerializer(@NotNull Type type) {
         return serializers.get(type);
     }
 
@@ -143,7 +143,7 @@ public final class Options {
      *
      * @param serializer 序列化器
      */
-    public void registerType(@NotNull TypeSerializer serializer) {
+    public void registerType(@NotNull TypeSerializer<?, ?> serializer) {
         if (!seal) {
             try {
                 serializers.registerType(serializer);

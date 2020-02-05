@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
@@ -15,7 +16,19 @@ import java.util.List;
  */
 public class NodeBase extends AbstractNode<String> implements Node, Serializable, Comparable<NodeBase>, CharSequence {
 
+    private static final Field FIELD_VALUE;
     private static final long serialVersionUID = 511187959363727820L;
+
+    static {
+        Field field = null;
+        try {
+            field = AbstractNode.class.getDeclaredField("value");
+            field.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        FIELD_VALUE = field;
+    }
 
     public NodeBase(@NotNull NodeBase origin) {
         super(origin.options, origin.value, origin.comments);
@@ -61,8 +74,12 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
     }
 
     @Override
-    public @NotNull NodeBase translate(byte cfg) {
-        return new NodeBase(options, options.translate(cfg, value), comments);
+    public void translate(byte cfg) {
+        try {
+            FIELD_VALUE.set(this, options.translate(cfg, value));
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

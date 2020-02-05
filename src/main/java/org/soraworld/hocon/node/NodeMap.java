@@ -51,32 +51,6 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     /**
-     * 检查循环引用.
-     *
-     * @param child 被检查 node
-     * @return 如果不存在循环引用则返回 true，否则返回 false
-     */
-    private boolean checkCycle(@NotNull Node child) {
-        if (this == child) {
-            return false;
-        }
-        if (child instanceof NodeMap) {
-            for (Node grandchild : ((NodeMap) child).value.values()) {
-                if (!checkCycle(grandchild)) {
-                    return false;
-                }
-            }
-        } else if (child instanceof NodeList) {
-            for (Node grandchild : ((NodeList) child).value) {
-                if (!checkCycle(grandchild)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    /**
      * 用 {@link NodeMap} 里结点的值修改对象 {@link Setting} 修饰的字段.<br>
      * !!! 特别注意<br>
      * 此方法不会修改 对应结点不存在，或 对应结点反序列化失败 的字段<br>
@@ -105,7 +79,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     if (node != null) {
                         try {
                             if ((setting.trans() & 0b1010) != 0) {
-                                node = node.translate(READ);
+                                node.translate(READ);
                             }
                             field.set(target, serializer.deserialize(fieldType, node));
                         } catch (Throwable e) {
@@ -189,7 +163,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     if (serializer != null) {
                         Node node = serializer.serialize(fieldType, field.get(source), options);
                         if ((setting.trans() & 0b1100) != 0) {
-                            node = node.translate(WRITE);
+                            node.translate(WRITE);
                         }
                         if (overwrite) {
                             if (set(paths, node, comment)) {
@@ -560,10 +534,8 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     @Override
-    public @NotNull NodeMap translate(byte cfg) {
-        NodeMap map = new NodeMap(options, comments);
-        value.forEach((k, v) -> map.value.put(k, v instanceof NodeBase ? v.translate(cfg) : v));
-        return map;
+    public void translate(byte cfg) {
+        value.values().forEach(val -> val.translate(cfg));
     }
 
     @Override

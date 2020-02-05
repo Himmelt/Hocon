@@ -206,10 +206,8 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
     }
 
     @Override
-    public @NotNull NodeList translate(byte cfg) {
-        NodeList list = new NodeList(options, comments);
-        value.forEach(n -> list.value.add(n instanceof NodeBase ? n.translate(cfg) : n));
-        return list;
+    public void translate(byte cfg) {
+        value.forEach(element -> element.translate(cfg));
     }
 
     @Override

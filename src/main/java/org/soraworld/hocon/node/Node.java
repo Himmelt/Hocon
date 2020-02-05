@@ -1,7 +1,5 @@
 package org.soraworld.hocon.node;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -93,9 +91,8 @@ public interface Node {
      * 翻译
      *
      * @param cfg 配置字
-     * @return 结点
      */
-    @NotNull Node translate(byte cfg);
+    void translate(byte cfg);
 
     /**
      * 获取 配置选项 options.

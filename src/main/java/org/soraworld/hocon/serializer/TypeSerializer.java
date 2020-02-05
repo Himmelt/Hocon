@@ -89,6 +89,11 @@ public abstract class TypeSerializer<T, N extends Node> implements Comparable<Ty
     }
 
     @Override
+    public boolean equals(Object obj) {
+        return obj instanceof TypeSerializer<?, ?> && types[0] == ((TypeSerializer<?, ?>) obj).types[0] && types[1] == ((TypeSerializer<?, ?>) obj).types[1];
+    }
+
+    @Override
     public String toString() {
         return types[0].getTypeName() + " <-> " + types[1].getTypeName();
     }

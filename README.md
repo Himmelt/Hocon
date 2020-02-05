@@ -21,7 +21,7 @@ Simple Hocon Configuration Library
 <dependency>
   <groupId>org.soraworld</groupId>
   <artifactId>hocon</artifactId>
-  <version>1.2.1</version>
+  <version>1.2.2</version>
   <type>pom</type>
 </dependency>
 ```
