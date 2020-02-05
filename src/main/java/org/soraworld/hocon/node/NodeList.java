@@ -11,15 +11,22 @@ import java.util.List;
 /**
  * 列表结点类.
  * 此类存储一个结点列表.
+ *
+ * @author Himmelt
  */
 public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
+
+    public NodeList(@NotNull NodeList origin) {
+        super(origin.options, new ArrayList<>(), origin.comments);
+        origin.value.forEach(element -> this.value.add(element.copy()));
+    }
 
     /**
      * 实例化一个新的列表结点.
      *
      * @param options 配置选项
      */
-    public NodeList(Options options) {
+    public NodeList(@NotNull Options options) {
         super(options, new ArrayList<>());
     }
 
@@ -29,11 +36,11 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
      * @param options 配置选项
      * @param comment 注释
      */
-    public NodeList(Options options, String comment) {
+    public NodeList(@NotNull Options options, String comment) {
         super(options, new ArrayList<>(), comment);
     }
 
-    public NodeList(Options options, List<String> comments) {
+    public NodeList(@NotNull Options options, List<String> comments) {
         super(options, new ArrayList<>(), comments);
     }
 
@@ -58,8 +65,8 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
      *
      * @param node 结点
      */
-    public void add(Node node) {
-        value.add(node);
+    public void add(@NotNull Node node) {
+        value.add(node.copy());
     }
 
     /**
@@ -70,7 +77,9 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
      * @return 对应结点
      */
     public Node get(int index) {
-        if (index >= 0 && index < value.size()) return value.get(index);
+        if (index >= 0 && index < value.size()) {
+            return value.get(index);
+        }
         return null;
     }
 
@@ -81,8 +90,10 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
      * @param index 索引位置
      * @param node  对应结点
      */
-    public void set(int index, Node node) {
-        if (index >= 0 && index < value.size()) value.set(index, node);
+    public void set(int index, @NotNull Node node) {
+        if (index >= 0 && index < value.size()) {
+            value.set(index, node.copy());
+        }
     }
 
     /**
@@ -91,7 +102,9 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
      * @param index 索引位置
      */
     public void remove(int index) {
-        if (index >= 0 && index < value.size()) value.remove(index);
+        if (index >= 0 && index < value.size()) {
+            value.remove(index);
+        }
     }
 
     /**
@@ -103,22 +116,28 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
         value.remove(node);
     }
 
+    @Override
     public boolean notEmpty() {
         return !value.isEmpty();
     }
 
+    @Override
     public void readValue(BufferedReader reader, boolean keepComments) throws Exception {
         value.clear();
         String line;
         ArrayList<String> commentTemp = new ArrayList<>();
         while ((line = reader.readLine()) != null) {
             line = line.trim();
-            if (line.startsWith("]")) return;
+            if (line.startsWith("]")) {
+                return;
+            }
             if (line.startsWith("#")) {
                 if (keepComments) {
                     int index = line.startsWith("#! ") ? 3 : line.startsWith("#!") || line.startsWith("# ") ? 2 : 1;
                     commentTemp.add(line.substring(index));
-                } else continue;
+                } else {
+                    continue;
+                }
             }
             if (line.startsWith("{")) {
                 NodeMap node = new NodeMap(options);
@@ -127,7 +146,9 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
                     commentTemp = new ArrayList<>();
                 }
                 value.add(node);
-                if (!line.endsWith("}")) node.readValue(reader, keepComments);
+                if (!line.endsWith("}")) {
+                    node.readValue(reader, keepComments);
+                }
             } else if (line.startsWith("[")) {
                 NodeList list = new NodeList(options);
                 if (keepComments) {
@@ -135,7 +156,9 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
                     commentTemp = new ArrayList<>();
                 }
                 value.add(list);
-                if (!line.endsWith("]")) list.readValue(reader, keepComments);
+                if (!line.endsWith("]")) {
+                    list.readValue(reader, keepComments);
+                }
             } else {
                 NodeBase base = new NodeBase(options, unquotation(line));
                 if (keepComments) {
@@ -147,6 +170,7 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
         }
     }
 
+    @Override
     public void writeValue(int indent, BufferedWriter writer) throws Exception {
         if (notEmpty()) {
             Iterator<Node> it = value.iterator();
@@ -171,16 +195,28 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
                         writeIndent(indent, writer);
                     }
                     writer.write("]");
-                } else node.writeValue(indent + 1, writer);
-                if (it.hasNext()) writer.newLine();
+                } else {
+                    node.writeValue(indent + 1, writer);
+                }
+                if (it.hasNext()) {
+                    writer.newLine();
+                }
             }
         }
     }
 
-    @NotNull
-    public NodeList translate(byte cfg) {
-        NodeList list = new NodeList(options, comments);
-        value.forEach(n -> list.value.add(n instanceof NodeBase ? n.translate(cfg) : n));
-        return list;
+    @Override
+    public void translate(byte cfg) {
+        value.forEach(element -> element.translate(cfg));
+    }
+
+    @Override
+    public NodeList copy() {
+        return new NodeList(this);
+    }
+
+    @Override
+    public final byte getType() {
+        return TYPE_LIST;
     }
 }

@@ -12,6 +12,8 @@ import java.util.List;
 
 /**
  * 文件结点类.
+ *
+ * @author Himmelt
  */
 public class FileNode extends NodeMap {
 
@@ -66,7 +68,9 @@ public class FileNode extends NodeMap {
                 writer.write("#! " + head);
                 writer.newLine();
             }
-            if (notEmpty()) writer.newLine();
+            if (notEmpty()) {
+                writer.newLine();
+            }
         }
 
         writeValue(0, writer);
@@ -102,13 +106,17 @@ public class FileNode extends NodeMap {
             } catch (Exception e) {
                 try {
                     FD_VALUE.set(this, value);
-                    if (options.isDebug()) System.out.println("Fail-Recover success.");
+                    if (options.isDebug()) {
+                        System.out.println("Fail-Recover success.");
+                    }
                 } catch (IllegalAccessException ignored) {
                     System.out.println("IllegalAccessException recover failed !!!");
                     throw e;
                 }
             }
-        } else readValue(reader, keepComments);
+        } else {
+            readValue(reader, keepComments);
+        }
         reader.close();
     }
 
@@ -122,7 +130,9 @@ public class FileNode extends NodeMap {
             this.heads = new ArrayList<>();
             heads.forEach(s -> this.heads.addAll(Arrays.asList(s.split("[\n\r]"))));
             this.heads.removeIf(String::isEmpty);
-        } else this.heads = null;
+        } else {
+            this.heads = null;
+        }
     }
 
     /**
@@ -132,7 +142,9 @@ public class FileNode extends NodeMap {
      */
     public void addHead(String head) {
         if (head != null && !head.isEmpty()) {
-            if (heads == null) heads = new ArrayList<>();
+            if (heads == null) {
+                heads = new ArrayList<>();
+            }
             heads.addAll(Arrays.asList(head.split("[\n\r]")));
             heads.removeIf(String::isEmpty);
         }

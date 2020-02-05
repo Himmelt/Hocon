@@ -1,5 +1,8 @@
 package org.soraworld.hocon.node;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.serializer.TypeSerializers;
@@ -9,16 +12,19 @@ import java.util.function.Function;
 
 /**
  * 配置选项类.
+ *
+ * @author Himmelt
  */
-public class Options {
+public final class Options {
 
     private int indent = 2;
     private boolean seal;
     private boolean debug = false;
+    private boolean useDefaultCommentKey = false;
     private final Function<String, String>[] translators = new Function[3];
     private final TypeSerializers serializers = new TypeSerializers();
 
-    private static final Options defaults = new Options(true);
+    private static final Options DEFAULTS = new Options(true);
     public static final byte COMMENT = 0, READ = 1, WRITE = 2;
 
     private Options(boolean seal) {
@@ -31,7 +37,7 @@ public class Options {
      * @return 默认选项
      */
     public static Options defaults() {
-        return defaults;
+        return DEFAULTS;
     }
 
     /**
@@ -67,7 +73,9 @@ public class Options {
      * @param indent 缩进尺寸
      */
     public void setIndent(int indent) {
-        if (!seal) this.indent = indent;
+        if (!seal) {
+            this.indent = indent;
+        }
     }
 
     /**
@@ -86,11 +94,21 @@ public class Options {
      * @param debug 是否调试
      */
     public void setDebug(boolean debug) {
-        if (!seal) this.debug = debug;
+        if (!seal) {
+            this.debug = debug;
+        }
     }
 
-    public void setTranslator(int type, Function<String, String> function) {
-        if (type >= 0 && type <= 2) translators[type] = function;
+    public void setUseDefaultCommentKey(boolean useDefaultCommentKey) {
+        if (!seal) {
+            this.useDefaultCommentKey = useDefaultCommentKey;
+        }
+    }
+
+    public void setTranslator(int type, Function<String, String> translator) {
+        if (!seal && type >= 0 && type <= 2) {
+            translators[type] = translator;
+        }
     }
 
     /**
@@ -104,7 +122,9 @@ public class Options {
      * @return 翻译结果
      */
     public String translate(byte type, String text) {
-        if (type >= 0 && type <= 2 && translators[type] != null) return translators[type].apply(text);
+        if (type >= 0 && type <= 2 && translators[type] != null) {
+            return translators[type].apply(text);
+        }
         return text;
     }
 
@@ -114,7 +134,7 @@ public class Options {
      * @param type 类型
      * @return 序列化器
      */
-    public TypeSerializer getSerializer(Type type) {
+    public TypeSerializer<?, ?> getSerializer(@NotNull Type type) {
         return serializers.get(type);
     }
 
@@ -123,14 +143,43 @@ public class Options {
      *
      * @param serializer 序列化器
      */
-    public void registerType(TypeSerializer serializer) {
+    public void registerType(@NotNull TypeSerializer<?, ?> serializer) {
         if (!seal) {
             try {
                 serializers.registerType(serializer);
             } catch (SerializerException e) {
                 System.out.println(e.getMessage());
-                if (debug) e.printStackTrace();
+                if (debug) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            System.out.println("Options has been sealed, can't register " + serializer.getClass());
+        }
+    }
+
+    public String translateComment(String comment, Paths paths) {
+        if (translators[COMMENT] != null) {
+            if (useDefaultCommentKey && comment.isEmpty()) {
+                return translators[COMMENT].apply("comment." + paths);
+            } else {
+                return translators[COMMENT].apply(comment);
             }
         }
+        return comment;
+    }
+
+    public @Nullable Node serialize(@NotNull Object object) {
+        if (object instanceof Node) {
+            return ((Node) object).copy();
+        }
+        TypeSerializer type = getSerializer(object.getClass());
+        if (type != null) {
+            try {
+                return type.serialize(object.getClass(), object, this);
+            } catch (HoconException ignored) {
+            }
+        }
+        return null;
     }
 }

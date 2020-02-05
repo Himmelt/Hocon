@@ -12,15 +12,19 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.*;
 
-import static org.soraworld.hocon.node.Options.*;
+import static org.soraworld.hocon.node.Options.READ;
+import static org.soraworld.hocon.node.Options.WRITE;
 
 /**
  * 映射结点类.
+ *
+ * @author Himmelt
  */
 public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node {
 
-    private NodeMap(NodeMap source) {
-        super(source.options, new LinkedHashMap<>(source.value));
+    public NodeMap(@NotNull NodeMap origin) {
+        super(origin.options, new LinkedHashMap<>(), origin.comments);
+        origin.value.forEach((key, val) -> this.value.put(key, val.copy()));
     }
 
     /**
@@ -42,7 +46,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         super(options, new LinkedHashMap<>(), comment);
     }
 
-    public NodeMap(Options options, List<String> comments) {
+    public NodeMap(@NotNull Options options, List<String> comments) {
         super(options, new LinkedHashMap<>(), comments);
     }
 
@@ -63,7 +67,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param target 修改对象
      */
     public void modify(@NotNull Object target) {
-        List<Field> fields = Reflects.getFields(target.getClass());
+        List<Field> fields = target instanceof Class<?> ? Reflects.getStaticFields((Class<?>) target) : Reflects.getFields(target.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
@@ -74,15 +78,21 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     Node node = get(paths);
                     if (node != null) {
                         try {
-                            if ((setting.trans() & 0b1010) != 0) node = node.translate(READ);
+                            if ((setting.trans() & 0b1010) != 0) {
+                                node.translate(READ);
+                            }
                             field.set(target, serializer.deserialize(fieldType, node));
                         } catch (Throwable e) {
-                            if (options.isDebug()) e.printStackTrace();
+                            if (options.isDebug()) {
+                                e.printStackTrace();
+                            }
                         }
                     }
-                } else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
-                        + field.getDeclaringClass().getTypeName() + "." + field.getName()
-                        + " with @Setting.");
+                } else if (options.isDebug()) {
+                    System.out.println("No TypeSerializer for the type of field "
+                            + field.getDeclaringClass().getTypeName() + "." + field.getName()
+                            + " with @Setting.");
+                }
             }
         }
     }
@@ -93,7 +103,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      *
      * @param source 源对象
      */
-    public void extract(Object source) {
+    public void extract(@NotNull Object source) {
         extract(source, true, true, true);
     }
 
@@ -104,7 +114,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param source      源对象
      * @param keepComment 是否保留旧结点注释
      */
-    public void extract(Object source, boolean keepComment) {
+    public void extract(@NotNull Object source, boolean keepComment) {
         extract(source, keepComment, true, true);
     }
 
@@ -116,7 +126,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param keepComment 是否保留旧结点注释
      * @param clearOld    是否清除所有旧结点
      */
-    public void extract(Object source, boolean keepComment, boolean clearOld) {
+    public void extract(@NotNull Object source, boolean keepComment, boolean clearOld) {
         extract(source, keepComment, clearOld, true);
     }
 
@@ -131,16 +141,18 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
      * @param clearOld    是否清除所有旧结点
      * @param overwrite   是否覆盖旧结点内容
      */
-    public void extract(Object source, boolean keepComment, boolean clearOld, boolean overwrite) {
+    public void extract(@NotNull Object source, boolean keepComment, boolean clearOld, boolean overwrite) {
         NodeMap oldNode = new NodeMap(this);
-        if (clearOld) value.clear();
-        List<Field> fields = Reflects.getFields(source.getClass());
+        if (clearOld) {
+            value.clear();
+        }
+        List<Field> fields = source instanceof Class<?> ? Reflects.getStaticFields((Class<?>) source) : Reflects.getFields(source.getClass());
         for (Field field : fields) {
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
                 try {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
-                    String comment = (setting.trans() & 0b1001) == 0 ? setting.comment() : options.translate(COMMENT, setting.comment());
+                    String comment = (setting.trans() & 0b1001) == 0 ? setting.comment() : options.translateComment(setting.comment(), paths);
                     Node old = oldNode.get(paths.clone());
                     List<String> list = old != null ? old.getComments() : null;
                     Type fieldType = field.getGenericType();
@@ -150,32 +162,42 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                     }
                     if (serializer != null) {
                         Node node = serializer.serialize(fieldType, field.get(source), options);
-                        if ((setting.trans() & 0b1100) != 0) node = node.translate(WRITE);
+                        if ((setting.trans() & 0b1100) != 0) {
+                            node.translate(WRITE);
+                        }
                         if (overwrite) {
                             if (set(paths, node, comment)) {
-                                if (comment.isEmpty() && keepComment) node.setComments(list);
+                                if (comment.isEmpty() && keepComment) {
+                                    node.setComments(list);
+                                }
                             } else if (options.isDebug()) {
-                                System.out.println("NodeMap set failed, paths is empty or not map path !!");
+                                System.out.println("NodeMap set failed, paths is empty or not-map path !!");
                             }
                         } else if (put(paths, node, comment)) {
-                            if (comment.isEmpty() && keepComment) node.setComments(list);
+                            if (comment.isEmpty() && keepComment) {
+                                node.setComments(list);
+                            }
                         } else if (options.isDebug()) {
-                            System.out.println("NodeMap put failed, node not match or already exist !!");
+                            System.out.println("NodeMap put failed, node type not match !!");
                         }
-                    } else if (options.isDebug()) System.out.println("No TypeSerializer for the type of field "
-                            + field.getDeclaringClass().getTypeName() + "." + field.getName()
-                            + " with @Setting.");
+                    } else if (options.isDebug()) {
+                        System.out.println("No TypeSerializer for the type of field "
+                                + field.getDeclaringClass().getTypeName() + "." + field.getName()
+                                + " with @Setting.");
+                    }
                 } catch (HoconException | IllegalAccessException e) {
-                    if (options.isDebug()) e.printStackTrace();
+                    if (options.isDebug()) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
     }
 
     /**
-     * map 的键集合.
+     * map 的不可变键集合.
      *
-     * @return 键集合
+     * @return 不可变键集合
      */
     public Set<String> keys() {
         return Collections.unmodifiableSet(value.keySet());
@@ -202,202 +224,182 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     }
 
     public boolean containsKey(String key) {
-        return value.keySet().contains(key);
+        return value.containsKey(key);
     }
 
     public boolean containsValue(Node node) {
-        return value.values().contains(node);
+        return value.containsValue(node);
     }
 
-    public Node put(String key, Node value) {
-        Node old = remove(key);
-        set(key, value);
-        return old;
+    public boolean put(@NotNull String paths, @NotNull Object obj) {
+        return put(new Paths(paths), obj, "");
     }
 
-    /**
-     * 添加一个新的结点映射.
-     * 如果对应路径树上已有非空结点，则失败.
-     *
-     * @param paths   路径树
-     * @param obj     对象
-     * @param comment 注释
-     * @return 是否成功
-     */
-    public boolean put(Paths paths, Object obj, String comment) {
-        if (paths.empty()) return false;
+    public boolean put(@NotNull String paths, @NotNull Object obj, String comment) {
+        return put(new Paths(paths), obj, comment);
+    }
+
+    public boolean put(@NotNull Paths paths, @NotNull Object obj) {
+        return put(paths, obj, "");
+    }
+
+    public boolean put(@NotNull Paths paths, @NotNull Object obj, String comment) {
+        if (paths.empty()) {
+            return false;
+        }
         if (paths.hasNext()) {
-            Node parent = get(paths.first());
+            Node parent = value.get(paths.first());
             if (parent == null) {
-                parent = new NodeMap(options);
-                set(paths.first(), parent);
+                // 父结点为空，满足条件，直接 set
+                NodeMap map = new NodeMap(options);
+                value.put(paths.first(), map);
+                return map.set(paths.next(), obj, comment);
             }
-            if (parent instanceof NodeMap) return ((NodeMap) parent).put(paths.next(), obj, comment);
+            if (parent instanceof NodeMap) {
+                return ((NodeMap) parent).put(paths.next(), obj, comment);
+            }
+            // 中间结点不是 NodeMap 无法添加子结点
             return false;
         }
-        return put(paths.first(), obj, comment);
+        // 最后结点
+        Node old = value.get(paths.first());
+        Node node = options.serialize(obj);
+        if (node == null) {
+            node = new NodeBase(options, String.valueOf(obj));
+        }
+        node.setComment(comment);
+        // 最后结点为空或可接受类型
+        if (old == null || old.getType() == node.getType()) {
+            value.put(paths.first(), node);
+            return true;
+        }
+        return false;
     }
 
-    /**
-     * 添加一个新的结点映射.
-     * 如果对应路径上已有非空结点，则失败.
-     *
-     * @param path 路径
-     * @param obj  对象
-     * @return 是否成功
-     */
-    public boolean add(String path, Object obj) {
-        if (value.get(path) != null) return false;
-        return set(path, obj);
+    public boolean set(String paths, @NotNull Object obj) {
+        return set(new Paths(paths), obj);
     }
 
-    /**
-     * 添加一个新的结点映射.
-     * 如果对应路径上已有非空结点，则失败.
-     *
-     * @param path    路径
-     * @param obj     对象
-     * @param comment 注释
-     * @return 是否成功
-     */
-    public boolean put(String path, Object obj, String comment) {
-        if (value.get(path) != null) return false;
-        return set(path, obj, comment);
+    public boolean set(String paths, @NotNull Object obj, String comment) {
+        return set(new Paths(paths), obj, comment);
     }
 
-    /**
-     * 获取路径对应的结点.
-     *
-     * @param path 路径
-     * @return 对应结点
-     */
-    public Node get(String path) {
-        return value.get(path);
+    public boolean set(@NotNull Paths paths, @NotNull Object obj) {
+        return set(paths, obj, "");
     }
 
-    /**
-     * 获取路径树对应的结点.
-     *
-     * @param paths 路径树
-     * @return 对应结点
-     */
-    public Node get(Paths paths) {
+    public boolean set(@NotNull Paths paths, @NotNull Object obj, String comment) {
+        if (paths.empty()) {
+            return false;
+        }
         if (paths.hasNext()) {
-            Node node = get(paths.first());
-            if (node instanceof NodeMap) return ((NodeMap) node).get(paths.next());
-            else return null;
-        }
-        return get(paths.first());
-    }
-
-    /**
-     * 添加一个新的结点映射.<br>
-     * 如果对应路径树上已有非空结点，则覆盖.<br>
-     * 如果路径中间存在 非空非Map 结点则失败.
-     *
-     * @param paths   路径树
-     * @param obj     对象
-     * @param comment 注释
-     * @return 是否成功
-     */
-    public boolean set(Paths paths, Object obj, String comment) {
-        if (paths.empty()) return false;
-        if (paths.hasNext()) {
-            Node parent = get(paths.first());
-            if (parent == null) {
-                parent = new NodeMap(options);
-                set(paths.first(), parent);
+            Node parent = value.computeIfAbsent(paths.first(), key -> new NodeMap(options));
+            if (parent instanceof NodeMap) {
+                return ((NodeMap) parent).set(paths.next(), obj, comment);
             }
-            if (parent instanceof NodeMap) return ((NodeMap) parent).set(paths.next(), obj, comment);
             return false;
         }
-        return set(paths.first(), obj, comment);
-    }
-
-    /**
-     * 强制设置(覆盖)路径对应结点.
-     * 如果存在循环引用则失败.
-     *
-     * @param path 路径
-     * @param obj  对象
-     * @return 是否成功
-     */
-    public boolean set(String path, Object obj) {
-        if (obj instanceof Node) {
-            if (checkCycle((Node) obj)) {
-                value.put(path, (Node) obj);
-                return true;
-            }
-            if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
-            return false;
+        // 最后结点
+        Node node = options.serialize(obj);
+        if (node == null) {
+            node = new NodeBase(options, String.valueOf(obj));
         }
-        value.put(path, new NodeBase(options, obj));
+        node.setComment(comment);
+        value.put(paths.first(), node);
         return true;
     }
 
-    /**
-     * 强制设置(覆盖)路径对应结点.
-     * 如果存在循环引用则失败.
-     *
-     * @param path    路径
-     * @param obj     对象
-     * @param comment 注释
-     * @return 是否成功
-     */
-    public boolean set(@NotNull String path, @NotNull Object obj, @NotNull String comment) {
-        if (obj instanceof Node) {
-            if (checkCycle((Node) obj)) {
-                ((Node) obj).addComment(comment);
-                value.put(path, (Node) obj);
-                return true;
+    public Node get(String paths) {
+        return get(new Paths(paths));
+    }
+
+    public Node get(@NotNull Paths paths) {
+        if (paths.hasNext()) {
+            Node node = value.get(paths.first());
+            if (node instanceof NodeMap) {
+                return ((NodeMap) node).get(paths.next());
+            } else {
+                return null;
             }
-            if (options.isDebug()) System.out.println("NodeMap Cycle Reference !!");
-            return false;
         }
-        value.put(path, new NodeBase(options, obj, comment));
-        return true;
+        return value.get(paths.first());
+    }
+
+    public NodeBase getBase(String paths) {
+        Node node = get(new Paths(paths));
+        return node instanceof NodeBase ? (NodeBase) node : null;
+    }
+
+    public NodeList getList(String paths) {
+        Node node = get(new Paths(paths));
+        return node instanceof NodeList ? (NodeList) node : null;
+    }
+
+    public NodeMap getMap(String paths) {
+        Node node = get(new Paths(paths));
+        return node instanceof NodeMap ? (NodeMap) node : null;
     }
 
     /**
      * 移除路径对应结点.
      *
-     * @param path 路径
+     * @param paths 路径
      * @return 移除的结点
      */
-    public Node remove(String path) {
-        return value.remove(path);
+    public Node remove(String paths) {
+        return remove(new Paths(paths));
     }
 
     /**
-     * 移除路径和结点.
+     * 移除路径对应结点.
      *
-     * @param path 路径
-     * @param node 结点
+     * @param paths 路径
+     * @return 移除的结点
      */
-    public void remove(String path, Node node) {
-        value.remove(path, node);
+    public Node remove(@NotNull Paths paths) {
+        if (paths.hasNext()) {
+            Node node = value.get(paths.first());
+            if (node instanceof NodeMap) {
+                return ((NodeMap) node).remove(paths.next());
+            } else {
+                return null;
+            }
+        }
+        return value.remove(paths.first());
     }
 
     /**
      * 为对应路径的结点添加注释.
      *
-     * @param path    路径
+     * @param paths   路径
      * @param comment 注释
      */
-    public void addComment(String path, String comment) {
-        Node node = value.get(path);
-        if (node != null) node.addComment(comment);
+    public void addComment(String paths, String comment) {
+        addComment(new Paths(paths), comment);
+    }
+
+    public void addComment(@NotNull Paths paths, String comment) {
+        Node node = get(paths);
+        if (node != null) {
+            node.addComment(comment);
+        }
     }
 
     /**
      * 为对应路径的结点设置多行注释.
      *
-     * @param path     路径
+     * @param paths    路径
      * @param comments 多行注释
      */
-    public void setComments(String path, List<String> comments) {
-        Node node = value.get(path);
-        if (node != null) node.setComments(comments);
+    public void setComments(String paths, List<String> comments) {
+        setComments(new Paths(paths), comments);
+    }
+
+    public void setComments(@NotNull Paths paths, List<String> comments) {
+        Node node = get(paths);
+        if (node != null) {
+            node.setComments(comments);
+        }
     }
 
     /**
@@ -422,62 +424,36 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return map;
     }
 
-    public LinkedHashMap<String, Object> toTypeMap() {
-        LinkedHashMap<String, Object> map = new LinkedHashMap<>();
-        for (Map.Entry<String, Node> entry : value.entrySet()) {
-            Node node = entry.getValue();
-            if (node != null) {
-                try {
-                    map.put(entry.getKey(), node.toType());
-                } catch (HoconException e) {
-                    if (options.isDebug()) e.printStackTrace();
-                }
-            }
-        }
-        return map;
-    }
-
-    public void fromTypeMap(@NotNull Map<String, Object> map) {
-        value.clear();
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String key = entry.getKey();
-            Object val = entry.getValue();
-            if (val != null) {
-                Class<?> clazz = val.getClass();
-                TypeSerializer serial = options.getSerializer(clazz);
-                if (serial != null) {
-                    try {
-                        Node node = serial.serialize(clazz, val, options);
-                        node.setTypeToComment(clazz);
-                        set(key, node);
-                    } catch (HoconException e) {
-                        if (options.isDebug()) e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
+    @Override
     public boolean notEmpty() {
         return !value.isEmpty();
     }
 
+    @Override
     public void readValue(BufferedReader reader, boolean keepComments) throws Exception {
         value.clear();
         String line;
         ArrayList<String> commentTemp = new ArrayList<>();
         while ((line = reader.readLine()) != null) {
             line = line.trim();
-            if (line.startsWith("}") || line.startsWith("]")) return;
-            if (line.isEmpty()) continue;
+            if (line.startsWith("}") || line.startsWith("]")) {
+                return;
+            }
+            if (line.isEmpty()) {
+                continue;
+            }
             if (line.startsWith("#")) {
                 if (keepComments) {
                     int index = line.startsWith("#! ") ? 3 : line.startsWith("#!") || line.startsWith("# ") ? 2 : 1;
                     String text = line.substring(index);
                     if (line.startsWith("#!") && this instanceof FileNode) {
                         ((FileNode) this).addHead(text);
-                    } else commentTemp.add(text);
-                } else continue;
+                    } else {
+                        commentTemp.add(text);
+                    }
+                } else {
+                    continue;
+                }
             }
             // text maybe contains { [ ] } ...
             if (line.endsWith("{") || (line.contains("{") && line.endsWith("}"))) {
@@ -488,7 +464,9 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 }
                 String path = line.substring(0, line.indexOf('{') - 1).trim();
                 value.put(unquotation(path), node);
-                if (!line.endsWith("}")) node.readValue(reader, keepComments);
+                if (!line.endsWith("}")) {
+                    node.readValue(reader, keepComments);
+                }
             } else if (line.contains("=") && (line.endsWith("[") || (line.contains("[") && line.endsWith("]")))) {
                 NodeList list = new NodeList(options);
                 if (keepComments) {
@@ -497,7 +475,9 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 }
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 value.put(unquotation(path), list);
-                if (!line.endsWith("]")) list.readValue(reader, keepComments);
+                if (!line.endsWith("]")) {
+                    list.readValue(reader, keepComments);
+                }
             } else if (line.contains("=")) {
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
                 String text = line.substring(line.indexOf('=') + 1).trim();
@@ -511,6 +491,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         }
     }
 
+    @Override
     public void writeValue(int indent, BufferedWriter writer) throws Exception {
         if (notEmpty()) {
             Iterator<Map.Entry<String, Node>> it = value.entrySet().iterator();
@@ -544,16 +525,26 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                         writer.write(" = ");
                         node.writeValue(indent + 1, writer);
                     }
-                    if (it.hasNext()) writer.newLine();
+                    if (it.hasNext()) {
+                        writer.newLine();
+                    }
                 }
             }
         }
     }
 
-    @NotNull
-    public NodeMap translate(byte cfg) {
-        NodeMap map = new NodeMap(options, comments);
-        value.forEach((k, v) -> map.value.put(k, v instanceof NodeBase ? v.translate(cfg) : v));
-        return map;
+    @Override
+    public void translate(byte cfg) {
+        value.values().forEach(val -> val.translate(cfg));
+    }
+
+    @Override
+    public NodeMap copy() {
+        return new NodeMap(this);
+    }
+
+    @Override
+    public final byte getType() {
+        return TYPE_MAP;
     }
 }

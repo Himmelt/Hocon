@@ -12,21 +12,15 @@ import java.lang.reflect.Type;
 
 /**
  * 数值类型序列化器.
+ *
+ * @author Himmelt
  */
 final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
-    /**
-     * 实例化,并计算类型标记.
-     *
-     * @throws SerializerException the serializer exception
-     */
-    NumberSerializer() throws SerializerException {
-    }
-
-    @NotNull
-    public Number deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
+    @Override
+    public @NotNull Number deserialize(@NotNull Type fieldType, @NotNull NodeBase node) throws HoconException {
         String number = node.getString();
         if (fieldType instanceof Class) {
-            Class clazz = Reflects.wrap((Class<?>) fieldType);
+            Class<?> clazz = Reflects.wrap((Class<?>) fieldType);
             try {
                 if (Integer.class.equals(clazz)) {
                     return Integer.valueOf(number);
@@ -40,7 +34,9 @@ final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
                     return Float.valueOf(number);
                 } else if (Double.class.equals(clazz)) {
                     return Double.valueOf(number);
-                } else throw new NotMatchException(getType(), fieldType);
+                } else {
+                    throw new NotMatchException(getType(), fieldType);
+                }
             } catch (Throwable e) {
                 throw new SerializerException(e);
             }
@@ -48,8 +44,8 @@ final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
         throw new NotMatchException(getType(), fieldType);
     }
 
-    @NotNull
-    public NodeBase serialize(@NotNull Type fieldType, @NotNull Number value, @NotNull Options options) {
-        return new NodeBase(options, value);
+    @Override
+    public @NotNull NodeBase serialize(@NotNull Type fieldType, @NotNull Number value, @NotNull Options options) {
+        return new NodeBase(options, String.valueOf(value));
     }
 }

@@ -10,6 +10,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 反射相关工具.
+ *
+ * @author Himmelt
  */
 public final class Reflects {
 
@@ -49,7 +51,9 @@ public final class Reflects {
         PRIMITIVE_WRAPPER = Collections.unmodifiableMap(map1);
         WRAPPER_PRIMITIVE = Collections.unmodifiableMap(map2);
         Map<String, Method> map3 = new HashMap<>();
-        for (Method method : Object.class.getDeclaredMethods()) map3.put(method.getName(), method);
+        for (Method method : Object.class.getDeclaredMethods()) {
+            map3.put(method.getName(), method);
+        }
         OBJECT_METHODS = Collections.unmodifiableMap(map3);
         JAVA_VERSION = Double.parseDouble(System.getProperty("java.specification.version", "0"));
         try {
@@ -85,37 +89,42 @@ public final class Reflects {
     }
 
     /**
-     * 获取类的非静态字段.
+     * 获取本类及父类的非静态字段.
+     * 父类的非静态字段排在前面.
      *
      * @param clazz 类
-     * @return 字段列表
+     * @return 不可变字段列表
      */
-    @NotNull
-    public static List<Field> getFields(@NotNull Class<?> clazz) {
-        if (CLAZZ_FIELDS.containsKey(clazz)) return CLAZZ_FIELDS.get(clazz);
+    public static @NotNull List<Field> getFields(@NotNull Class<?> clazz) {
+        if (CLAZZ_FIELDS.containsKey(clazz)) {
+            return Collections.unmodifiableList(CLAZZ_FIELDS.get(clazz));
+        }
         CopyOnWriteArrayList<Field> fields = new CopyOnWriteArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         fields.removeIf(field -> Modifier.isStatic(field.getModifiers()));
         Class<?> supClz = clazz.getSuperclass();
-        if (supClz != null && supClz != Object.class) fields.addAll(0, getFields(supClz));
+        if (supClz != null && supClz != Object.class) {
+            fields.addAll(0, getFields(supClz));
+        }
         fields.forEach(field -> field.setAccessible(true));
         CLAZZ_FIELDS.put(clazz, fields);
-        return fields;
+        return Collections.unmodifiableList(fields);
     }
 
     /**
-     * 获取类的静态字段.
+     * 获取本类的静态字段.
      *
      * @param clazz 类
-     * @return 字段列表
+     * @return 不可变字段列表
      */
-    @NotNull
-    public static List<Field> getStaticFields(@NotNull Class<?> clazz) {
-        if (STATIC_FIELDS.containsKey(clazz)) return STATIC_FIELDS.get(clazz);
+    public static @NotNull List<Field> getStaticFields(@NotNull Class<?> clazz) {
+        if (STATIC_FIELDS.containsKey(clazz)) {
+            return Collections.unmodifiableList(STATIC_FIELDS.get(clazz));
+        }
         CopyOnWriteArrayList<Field> fields = new CopyOnWriteArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         fields.removeIf(field -> !Modifier.isStatic(field.getModifiers()));
         fields.forEach(field -> field.setAccessible(true));
         STATIC_FIELDS.put(clazz, fields);
-        return fields;
+        return Collections.unmodifiableList(fields);
     }
 
     /**
@@ -131,7 +140,11 @@ public final class Reflects {
         if (fields == null) {
             fields = new ConcurrentHashMap<>();
             Enum[] enums = clazz.getEnumConstants();
-            if (enums != null) for (Enum field : enums) fields.put(field.name(), field);
+            if (enums != null) {
+                for (Enum field : enums) {
+                    fields.put(field.name(), field);
+                }
+            }
             ENUM_FIELDS.put(clazz, fields);
         }
         return (T) fields.get(name);
@@ -150,7 +163,9 @@ public final class Reflects {
         if (upper instanceof ParameterizedType) {
             Class<?> upperRaw = (Class<?>) ((ParameterizedType) upper).getRawType();
             ParameterizedType paramType = getGenericType(upperRaw, lower);
-            if (paramType != null) return isAssignableFrom((ParameterizedType) upper, paramType);
+            if (paramType != null) {
+                return isAssignableFrom((ParameterizedType) upper, paramType);
+            }
             return false;
         }
         if (upper instanceof WildcardType || upper instanceof TypeVariable) {
@@ -160,9 +175,14 @@ public final class Reflects {
     }
 
     public static boolean isAssignableFrom(@NotNull Class<?> upper, @NotNull Class<?> lower) {
-        if (upper.isAssignableFrom(lower)) return true;
-        if (upper.isPrimitive()) return upper == unwrap(lower);
-        else return upper.isAssignableFrom(wrap(lower));
+        if (upper.isAssignableFrom(lower)) {
+            return true;
+        }
+        if (upper.isPrimitive()) {
+            return upper == unwrap(lower);
+        } else {
+            return upper.isAssignableFrom(wrap(lower));
+        }
     }
 
     public static boolean isAssignableFrom(@NotNull ParameterizedType upper, @NotNull ParameterizedType lower) {
@@ -171,7 +191,9 @@ public final class Reflects {
             Type[] lowArgs = lower.getActualTypeArguments();
             if (upArgs.length == lowArgs.length) {
                 for (int i = 0; i < upArgs.length; i++) {
-                    if (!isAssignableFrom(upArgs[i], lowArgs[i])) return false;
+                    if (!isAssignableFrom(upArgs[i], lowArgs[i])) {
+                        return false;
+                    }
                 }
                 return true;
             }
@@ -195,9 +217,13 @@ public final class Reflects {
         } else if (child instanceof ParameterizedType) {
             rawType = (Class<?>) ((ParameterizedType) child).getRawType();
             paramType = (ParameterizedType) child;
-        } else return null;
+        } else {
+            return null;
+        }
 
-        if (ancestor.equals(rawType)) return paramType;
+        if (ancestor.equals(rawType)) {
+            return paramType;
+        }
         ParameterizedType result = null;
 
         if (ancestor.isInterface()) {
@@ -214,7 +240,9 @@ public final class Reflects {
                                 }
                                 result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
                             }
-                        } else result = getGenericType(ancestor, parent);
+                        } else {
+                            result = getGenericType(ancestor, parent);
+                        }
                     }
                 } else if (parent instanceof Class<?> && isAssignableFrom(ancestor, (Class<?>) parent)) {
                     if (RESOLVES_LAMBDAS && rawType.isSynthetic()) {
@@ -227,7 +255,9 @@ public final class Reflects {
                     }
                     result = getGenericType(ancestor, parent);
                 }
-                if (result != null) return result;
+                if (result != null) {
+                    return result;
+                }
             }
         }
         Type parent = rawType.getGenericSuperclass();
@@ -244,7 +274,9 @@ public final class Reflects {
                             }
                             result = getGenericType(ancestor, fillParameter((ParameterizedType) parent, map));
                         }
-                    } else result = getGenericType(ancestor, parent);
+                    } else {
+                        result = getGenericType(ancestor, parent);
+                    }
                 }
             } else if (parent instanceof Class<?> && isAssignableFrom(ancestor, (Class<?>) parent)) {
                 result = getGenericType(ancestor, parent);
@@ -264,7 +296,9 @@ public final class Reflects {
                 params[i] = map.getOrDefault(variable, variable);
             } else if (arguments[i] instanceof ParameterizedType) {
                 params[i] = fillParameter((ParameterizedType) arguments[i], map);
-            } else params[i] = arguments[i];
+            } else {
+                params[i] = arguments[i];
+            }
         }
         return new ParameterizedTypeImpl(rawClass, params, type.getOwnerType());
     }
@@ -277,23 +311,27 @@ public final class Reflects {
                 if (!isDefaultMethod(m) && !Modifier.isStatic(m.getModifiers()) && !m.isBridge()) {
                     // Skip methods that override Object.class
                     Method objectMethod = OBJECT_METHODS.get(m.getName());
-                    if (objectMethod != null && Arrays.equals(m.getTypeParameters(), objectMethod.getTypeParameters()))
+                    if (objectMethod != null && Arrays.equals(m.getTypeParameters(), objectMethod.getTypeParameters())) {
                         continue;
+                    }
 
                     // Get functional interface's type params
                     Type returnTypeVar = m.getGenericReturnType();
                     Type[] paramTypeVars = m.getGenericParameterTypes();
 
                     Member member = getMemberRef(child);
-                    if (member == null) return map;
+                    if (member == null) {
+                        return map;
+                    }
 
                     // Populate return type argument
                     if (returnTypeVar instanceof TypeVariable) {
                         Class<?> returnType = member instanceof Method ? ((Method) member).getReturnType()
                                 : ((Constructor<?>) member).getDeclaringClass();
                         returnType = wrap(returnType);
-                        if (!returnType.equals(Void.class))
+                        if (!returnType.equals(Void.class)) {
                             map.put((TypeVariable<?>) returnTypeVar, returnType);
+                        }
                     }
 
                     Class<?>[] arguments = member instanceof Method ? ((Method) member).getParameterTypes()
@@ -316,8 +354,9 @@ public final class Reflects {
 
                     // Populate type arguments
                     for (int i = 0; i + argOffset < arguments.length; i++) {
-                        if (paramTypeVars[i] instanceof TypeVariable)
+                        if (paramTypeVars[i] instanceof TypeVariable) {
                             map.put((TypeVariable<?>) paramTypeVars[i + paramOffset], wrap(arguments[i + argOffset]));
+                        }
                     }
                     return map;
                 }
@@ -342,13 +381,16 @@ public final class Reflects {
             if (member == null
                     || (member instanceof Constructor
                     && member.getDeclaringClass().getName().equals("java.lang.invoke.SerializedLambda"))
-                    || member.getDeclaringClass().isAssignableFrom(type))
+                    || member.getDeclaringClass().isAssignableFrom(type)) {
                 continue;
+            }
 
             result = member;
 
             // Return if not valueOf method
-            if (!(member instanceof Method) || !isAutoBoxingMethod((Method) member)) break;
+            if (!(member instanceof Method) || !isAutoBoxingMethod((Method) member)) {
+                break;
+            }
         }
 
         return result;

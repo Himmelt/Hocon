@@ -2,6 +2,8 @@ package org.soraworld.hocon.exception;
 
 /**
  * 序列化反序列化异常.
+ *
+ * @author Himmelt
  */
 public class SerializerException extends HoconException {
     private static final long serialVersionUID = -171049263661664476L;

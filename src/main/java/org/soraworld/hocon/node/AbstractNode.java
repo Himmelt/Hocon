@@ -13,14 +13,14 @@ import java.util.regex.Pattern;
  * 抽象结点类.
  *
  * @param <T> 封装内容的参数类型
+ * @author Himmelt
  */
 abstract class AbstractNode<T> implements Node {
 
     /**
      * 封装的值.
      */
-    @NotNull
-    protected final T value;
+    protected final @NotNull T value;
     /**
      * 多行注释.
      */
@@ -28,14 +28,12 @@ abstract class AbstractNode<T> implements Node {
     /**
      * 配置选项.
      */
-    @NotNull
-    protected final Options options;
+    protected final @NotNull Options options;
     /**
      * 非法字符的正则表达式，匹配该正则时需要对字符串加双引号.
      */
     protected static final Pattern ILLEGAL = Pattern.compile(".*[\":=,+?`!@#$^&*{}\\[\\]\\\\].*");
-
-    protected static final Pattern CLZ_COMMENT = Pattern.compile("<class>.+</class>");
+    protected static final byte TYPE_BASE = 0, TYPE_LIST = 1, TYPE_MAP = 2;
 
     /**
      * 初始化一个新结点.
@@ -67,52 +65,44 @@ abstract class AbstractNode<T> implements Node {
         setComments(comments);
     }
 
-    /**
-     * 检查循环引用.
-     *
-     * @param node 被检查 node
-     * @return 如果不存在循环引用则返回 true，否则返回 false
-     */
-    protected boolean checkCycle(Node node) {
-        if (this.equals(node)) return false;
-        if (node instanceof NodeMap) {
-            for (Node sub : ((NodeMap) node).value.values()) {
-                if (!checkCycle(sub)) return false;
-            }
-            return true;
-        } else if (node instanceof NodeList) {
-            for (Node sub : ((NodeList) node).value) {
-                if (!checkCycle(sub)) return false;
-            }
-            return true;
-        } else return true;
-    }
-
+    @Override
     public List<String> getComments() {
         return comments;
     }
 
+    @Override
     public final void addComment(@NotNull String comment) {
         if (!comment.isEmpty()) {
-            if (comments == null) comments = new ArrayList<>();
+            if (comments == null) {
+                comments = new ArrayList<>();
+            }
             comments.addAll(Arrays.asList(comment.split("[\n\r]")));
             comments.removeIf(String::isEmpty);
         }
     }
 
+    @Override
     public void setComment(@NotNull String comment) {
-        comments.clear();
+        if (comments == null) {
+            comments = new ArrayList<>();
+        } else {
+            comments.clear();
+        }
         comments.add(comment);
     }
 
+    @Override
     public final void setComments(List<String> comments) {
         if (comments != null && !comments.isEmpty()) {
             this.comments = new ArrayList<>();
             comments.forEach(s -> this.comments.addAll(Arrays.asList(s.split("[\n\r]"))));
             this.comments.removeIf(String::isEmpty);
-        } else this.comments = null;
+        } else {
+            this.comments = null;
+        }
     }
 
+    @Override
     public final void writeComment(int indent, BufferedWriter writer) throws IOException {
         if (comments != null && !comments.isEmpty()) {
             for (String comment : comments) {
@@ -123,26 +113,8 @@ abstract class AbstractNode<T> implements Node {
         }
     }
 
-    public void setTypeToComment(@NotNull Class<?> clazz) {
-        if (comments == null) comments = new ArrayList<>();
-        comments.removeIf(text -> CLZ_COMMENT.matcher(text).matches());
-        comments.add("<class>" + clazz.getName() + "</class>");
-    }
-
-    public Class<?> getTypeFromComment() {
-        if (comments != null) {
-            String comment = comments.stream().filter(text -> CLZ_COMMENT.matcher(text).matches()).findAny().orElse("");
-            try {
-                return Class.forName(comment.replaceAll("<class>", "").replace("</class>", ""));
-            } catch (ClassNotFoundException e) {
-                if (options.isDebug()) e.printStackTrace();
-            }
-        }
-        return null;
-    }
-
-    @NotNull
-    public final Options options() {
+    @Override
+    public final @NotNull Options options() {
         return options;
     }
 
@@ -166,7 +138,9 @@ abstract class AbstractNode<T> implements Node {
                     .replace("\"", "\\\"");
             return '"' + target + '"';
         }
-        if (text.isEmpty()) return "\"\"";
+        if (text.isEmpty()) {
+            return "\"\"";
+        }
         return text;
     }
 
@@ -178,8 +152,12 @@ abstract class AbstractNode<T> implements Node {
      * @return 处理后的文本
      */
     public static String unquotation(@NotNull String text) {
-        if (text.startsWith("\"")) text = text.substring(1);
-        if (text.endsWith("\"")) text = text.substring(0, text.length() - 1);
+        if (text.startsWith("\"")) {
+            text = text.substring(1);
+        }
+        if (text.endsWith("\"")) {
+            text = text.substring(0, text.length() - 1);
+        }
         return text
                 .replace("\\b", "\b")
                 .replace("\\n", "\n")
@@ -189,8 +167,14 @@ abstract class AbstractNode<T> implements Node {
                 .replace("\\\\", "\\");
     }
 
+    @Override
     public void writeIndent(int indent, BufferedWriter writer) throws IOException {
         indent *= options.getIndent();
-        while (indent-- > 0) writer.write(' ');
+        while (indent-- > 0) {
+            writer.write(' ');
+        }
     }
+
+    @Override
+    public abstract AbstractNode<T> copy();
 }

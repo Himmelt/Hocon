@@ -5,49 +5,66 @@ import org.jetbrains.annotations.NotNull;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.util.List;
 
 /**
  * 基础结点类.
  * 此类会把对象以字符串的形式存储.
+ *
+ * @author Himmelt
  */
 public class NodeBase extends AbstractNode<String> implements Node, Serializable, Comparable<NodeBase>, CharSequence {
 
+    private static final Field FIELD_VALUE;
     private static final long serialVersionUID = 511187959363727820L;
 
-    public NodeBase(@NotNull Object obj) {
-        super(Options.defaults(), String.valueOf(obj));
+    static {
+        Field field = null;
+        try {
+            field = AbstractNode.class.getDeclaredField("value");
+            field.setAccessible(true);
+        } catch (NoSuchFieldException e) {
+            e.printStackTrace();
+        }
+        FIELD_VALUE = field;
+    }
+
+    public NodeBase(@NotNull NodeBase origin) {
+        super(origin.options, origin.value, origin.comments);
     }
 
     /**
      * 实例化一个新的基础结点.
      *
      * @param options 配置选项
-     * @param obj     封装对象
+     * @param value   封装对象
      */
-    public NodeBase(@NotNull Options options, @NotNull Object obj) {
-        super(options, obj.toString());
+    public NodeBase(@NotNull Options options, @NotNull String value) {
+        super(options, value);
     }
 
     /**
      * 实例化一个新的基础结点.
      *
      * @param options 配置选项
-     * @param obj     封装对象
+     * @param value   封装对象
      * @param comment 注释
      */
-    public NodeBase(@NotNull Options options, @NotNull Object obj, String comment) {
-        super(options, obj.toString(), comment);
+    public NodeBase(@NotNull Options options, @NotNull String value, String comment) {
+        super(options, value, comment);
     }
 
-    public NodeBase(@NotNull Options options, @NotNull Object obj, List<String> comments) {
-        super(options, obj.toString(), comments);
+    public NodeBase(@NotNull Options options, @NotNull String value, List<String> comments) {
+        super(options, value, comments);
     }
 
+    @Override
     public boolean notEmpty() {
         return true;
     }
 
+    @Override
     public void readValue(BufferedReader reader, boolean keepComments) {
     }
 
@@ -56,9 +73,13 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
         writer.write(quotation(value));
     }
 
-    @NotNull
-    public NodeBase translate(byte cfg) {
-        return new NodeBase(options, options.translate(cfg, value), comments);
+    @Override
+    public void translate(byte cfg) {
+        try {
+            FIELD_VALUE.set(this, options.translate(cfg, value));
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -66,8 +87,7 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
      *
      * @return 字符串
      */
-    @NotNull
-    public String getString() {
+    public @NotNull String getString() {
         return value;
     }
 
@@ -114,39 +134,55 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
      * @return 逻辑值
      */
     public Boolean getBoolean() {
-        return value.equalsIgnoreCase("true")
-                || value.equalsIgnoreCase("yes")
-                || value.equalsIgnoreCase("1")
-                || value.equalsIgnoreCase("t")
-                || value.equalsIgnoreCase("y");
+        return "true".equalsIgnoreCase(value)
+                || "yes".equalsIgnoreCase(value)
+                || "1".equalsIgnoreCase(value)
+                || "t".equalsIgnoreCase(value)
+                || "y".equalsIgnoreCase(value);
     }
 
+    @Override
     public int length() {
         return value.length();
     }
 
+    @Override
     public char charAt(int index) {
         return value.charAt(index);
     }
 
+    @Override
     public CharSequence subSequence(int start, int end) {
         return value.subSequence(start, end);
     }
 
-    public int compareTo(NodeBase o) {
-        return o == null ? 0 : value.compareTo(o.value);
+    @Override
+    public int compareTo(@NotNull NodeBase o) {
+        return value.compareTo(o.value);
     }
 
+    @Override
     public int hashCode() {
         return value.hashCode();
     }
 
+    @Override
     public boolean equals(Object obj) {
         return obj instanceof NodeBase && value.equals(((NodeBase) obj).value);
     }
 
-    @NotNull
-    public String toString() {
+    @Override
+    public @NotNull String toString() {
         return value;
+    }
+
+    @Override
+    public NodeBase copy() {
+        return new NodeBase(this);
+    }
+
+    @Override
+    public final byte getType() {
+        return TYPE_BASE;
     }
 }

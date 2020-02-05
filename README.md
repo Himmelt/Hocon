@@ -2,13 +2,7 @@
 Simple Hocon Configuration Library
 轻量 Hocon 配置库
 
-[![TravisCI](https://img.shields.io/travis/Himmelt/Hocon/master.svg?label=TravisCI&logo=travis-ci)](https://travis-ci.org/Himmelt/Hocon)
-[![CircleCI](https://img.shields.io/circleci/project/github/Himmelt/Hocon/master.svg?label=CircleCI&logo=circleci)](https://circleci.com/gh/Himmelt/Hocon)
-[![License](https://img.shields.io/github/license/Himmelt/Hocon.svg?color=important)](https://github.com/Himmelt/Hocon/blob/master/LICENSE)
-
-[![Download](https://api.bintray.com/packages/himmelt/Minecraft/Hocon/images/download.svg)](https://bintray.com/himmelt/Minecraft/Hocon/_latestVersion)
-[![Download](https://img.shields.io/badge/Download-release-success.svg)](https://oss.jfrog.org/artifactory/oss-release-local/org/soraworld/hocon/)
-[![Download](https://img.shields.io/badge/Download-snapshot-success.svg)](https://oss.jfrog.org/artifactory/oss-snapshot-local/org/soraworld/hocon/)
+![Hocon](https://github.com/Himmelt/Hocon/workflows/Hocon/badge.svg)
 
 ### 简介
 这是一个轻量级的 Hocon 配置库，没有其他依赖项。
@@ -27,7 +21,7 @@ Simple Hocon Configuration Library
 <dependency>
   <groupId>org.soraworld</groupId>
   <artifactId>hocon</artifactId>
-  <version>1.2.1</version>
+  <version>1.2.2</version>
   <type>pom</type>
 </dependency>
 ```
@@ -52,7 +46,7 @@ repositories {
 0. #### 根结点
 
 根结点即文件所对应的结点, 根结点必定是一个 `NodeMap` 结点.
-根节点下存储 key<->value 键值对, 其中 value 值可以是
+根结点下存储 key<->value 键值对, 其中 value 值可以是
 基础结点(NodeBase), 列表结点(NodeList), 映射结点(NodeMap)
 
 1. #### 基础结点(值实质是字符串)

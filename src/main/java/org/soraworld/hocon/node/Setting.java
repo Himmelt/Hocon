@@ -11,6 +11,8 @@ import java.lang.annotation.*;
  * 1. 本注解修饰的字段请尽量使用具有 公开无参构造器 的 非抽象类.<br>
  * 2. 请不要使用 Immutable 的容器.<br>
  * 3. 由于数组可能定长, 所以请使用列表等可变容器.
+ *
+ * @author Himmelt
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)

@@ -2,6 +2,8 @@ package org.soraworld.hocon.exception;
 
 /**
  * Hocon 操作异常.
+ *
+ * @author Himmelt
  */
 public class HoconException extends Exception {
     private static final long serialVersionUID = 8794532650502015139L;
