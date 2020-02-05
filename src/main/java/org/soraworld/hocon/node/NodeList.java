@@ -16,12 +16,17 @@ import java.util.List;
  */
 public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
 
+    public NodeList(@NotNull NodeList origin) {
+        super(origin.options, new ArrayList<>(), origin.comments);
+        origin.value.forEach(element -> this.value.add(element.copy()));
+    }
+
     /**
      * 实例化一个新的列表结点.
      *
      * @param options 配置选项
      */
-    public NodeList(Options options) {
+    public NodeList(@NotNull Options options) {
         super(options, new ArrayList<>());
     }
 
@@ -31,11 +36,11 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
      * @param options 配置选项
      * @param comment 注释
      */
-    public NodeList(Options options, String comment) {
+    public NodeList(@NotNull Options options, String comment) {
         super(options, new ArrayList<>(), comment);
     }
 
-    public NodeList(Options options, List<String> comments) {
+    public NodeList(@NotNull Options options, List<String> comments) {
         super(options, new ArrayList<>(), comments);
     }
 
@@ -60,8 +65,8 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
      *
      * @param node 结点
      */
-    public void add(Node node) {
-        value.add(node);
+    public void add(@NotNull Node node) {
+        value.add(node.copy());
     }
 
     /**
@@ -85,9 +90,9 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
      * @param index 索引位置
      * @param node  对应结点
      */
-    public void set(int index, Node node) {
+    public void set(int index, @NotNull Node node) {
         if (index >= 0 && index < value.size()) {
-            value.set(index, node);
+            value.set(index, node.copy());
         }
     }
 
@@ -205,5 +210,15 @@ public class NodeList extends AbstractNode<ArrayList<Node>> implements Node {
         NodeList list = new NodeList(options, comments);
         value.forEach(n -> list.value.add(n instanceof NodeBase ? n.translate(cfg) : n));
         return list;
+    }
+
+    @Override
+    public NodeList copy() {
+        return new NodeList(this);
+    }
+
+    @Override
+    public final byte getType() {
+        return TYPE_LIST;
     }
 }

@@ -1,7 +1,6 @@
 package org.soraworld.hocon.node;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.util.Reflects;
@@ -23,8 +22,9 @@ import static org.soraworld.hocon.node.Options.WRITE;
  */
 public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implements Node {
 
-    private NodeMap(NodeMap source) {
-        super(source.options, new LinkedHashMap<>(source.value));
+    public NodeMap(@NotNull NodeMap origin) {
+        super(origin.options, new LinkedHashMap<>(), origin.comments);
+        origin.value.forEach((key, val) -> this.value.put(key, val.copy()));
     }
 
     /**
@@ -197,14 +197,14 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                                     node.setComments(list);
                                 }
                             } else if (options.isDebug()) {
-                                System.out.println("NodeMap set failed, paths is empty or not map path !!");
+                                System.out.println("NodeMap set failed, paths is empty or not-map path !!");
                             }
                         } else if (put(paths, node, comment)) {
                             if (comment.isEmpty() && keepComment) {
                                 node.setComments(list);
                             }
                         } else if (options.isDebug()) {
-                            System.out.println("NodeMap put failed, node not match or already exist !!");
+                            System.out.println("NodeMap put failed, node type not match !!");
                         }
                     } else if (options.isDebug()) {
                         System.out.println("No TypeSerializer for the type of field "
@@ -257,16 +257,18 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         return value.containsValue(node);
     }
 
-    /**
-     * 添加一个新的结点映射.
-     * 如果对应路径树上已有非空结点，则失败.
-     *
-     * @param paths   路径树
-     * @param obj     对象
-     * @param comment 注释
-     * @return 是否成功
-     */
-    // TODO
+    public boolean put(@NotNull String paths, @NotNull Object obj) {
+        return put(new Paths(paths), obj, "");
+    }
+
+    public boolean put(@NotNull String paths, @NotNull Object obj, String comment) {
+        return put(new Paths(paths), obj, comment);
+    }
+
+    public boolean put(@NotNull Paths paths, @NotNull Object obj) {
+        return put(paths, obj, "");
+    }
+
     public boolean put(@NotNull Paths paths, @NotNull Object obj, String comment) {
         if (paths.empty()) {
             return false;
@@ -274,48 +276,69 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         if (paths.hasNext()) {
             Node parent = value.get(paths.first());
             if (parent == null) {
-                parent = new NodeMap(options);
-                putCheck(paths.first(), parent);
+                // 父结点为空，满足条件，直接 set
+                NodeMap map = new NodeMap(options);
+                value.put(paths.first(), map);
+                return map.set(paths.next(), obj, comment);
             }
             if (parent instanceof NodeMap) {
                 return ((NodeMap) parent).put(paths.next(), obj, comment);
             }
+            // 中间结点不是 NodeMap 无法添加子结点
             return false;
         }
-        return putCheck(paths.first(), obj, comment);
+        // 最后结点
+        Node old = value.get(paths.first());
+        Node node = options.serialize(obj);
+        if (node == null) {
+            node = new NodeBase(options, String.valueOf(obj));
+        }
+        node.setComment(comment);
+        // 最后结点为空或可接受类型
+        if (old == null || old.getType() == node.getType()) {
+            value.put(paths.first(), node);
+            return true;
+        }
+        return false;
     }
 
-    /**
-     * 添加一个新的结点映射.
-     * 如果对应路径上已有非空结点，则失败.
-     *
-     * @param path 路径
-     * @param obj  对象
-     * @return 是否成功
-     */
-    public boolean put(@NotNull String path, @NotNull Object obj) {
-        if (get(new Paths(path)) != null) {
+    public boolean set(String paths, @NotNull Object obj) {
+        return set(new Paths(paths), obj);
+    }
+
+    public boolean set(String paths, @NotNull Object obj, String comment) {
+        return set(new Paths(paths), obj, comment);
+    }
+
+    public boolean set(@NotNull Paths paths, @NotNull Object obj) {
+        return set(paths, obj, "");
+    }
+
+    public boolean set(@NotNull Paths paths, @NotNull Object obj, String comment) {
+        if (paths.empty()) {
             return false;
         }
-        return set(new Paths(path), obj);
+        if (paths.hasNext()) {
+            Node parent = value.computeIfAbsent(paths.first(), key -> new NodeMap(options));
+            if (parent instanceof NodeMap) {
+                return ((NodeMap) parent).set(paths.next(), obj, comment);
+            }
+            return false;
+        }
+        // 最后结点
+        Node node = options.serialize(obj);
+        if (node == null) {
+            node = new NodeBase(options, String.valueOf(obj));
+        }
+        node.setComment(comment);
+        value.put(paths.first(), node);
+        return true;
     }
 
-    /**
-     * 获取路径对应的结点.
-     *
-     * @param paths 路径
-     * @return 对应结点
-     */
     public Node get(String paths) {
         return get(new Paths(paths));
     }
 
-    /**
-     * 获取路径树对应的结点.
-     *
-     * @param paths 路径树
-     * @return 对应结点
-     */
     public Node get(@NotNull Paths paths) {
         if (paths.hasNext()) {
             Node node = value.get(paths.first());
@@ -341,76 +364,6 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
     public NodeMap getMap(String paths) {
         Node node = get(new Paths(paths));
         return node instanceof NodeMap ? (NodeMap) node : null;
-    }
-
-    public boolean set(String paths, @NotNull Object obj) {
-        return set(new Paths(paths), obj);
-    }
-
-    public boolean set(String paths, @NotNull Object obj, String comment) {
-        return set(new Paths(paths), obj, comment);
-    }
-
-    public boolean set(@NotNull Paths paths, @NotNull Object obj) {
-        return set(paths, obj, "");
-    }
-
-    /**
-     * 添加一个新的结点映射.<br>
-     * 如果对应路径树上已有非空结点，则覆盖.<br>
-     * 如果路径树中间节点不存在，则创建.<br>
-     * 如果路径中间存在 非空非Map 结点则失败.
-     *
-     * @param paths   路径树
-     * @param obj     对象
-     * @param comment 注释
-     * @return 是否成功
-     */
-    public boolean set(@NotNull Paths paths, @NotNull Object obj, String comment) {
-        if (paths.empty()) {
-            return false;
-        }
-        if (paths.hasNext()) {
-            Node parent = value.get(paths.first());
-            if (parent == null) {
-                parent = new NodeMap(options);
-                putCheck(paths.first(), parent);
-            }
-            if (parent instanceof NodeMap) {
-                return ((NodeMap) parent).set(paths.next(), obj, comment);
-            }
-            return false;
-        }
-        return putCheck(paths.first(), obj, comment);
-    }
-
-    /**
-     * 强制设置(覆盖)路径对应结点.
-     * 如果存在循环引用则失败.
-     *
-     * @param key 路径
-     * @param obj 对象
-     * @return 是否成功
-     */
-    public boolean putCheck(@NotNull String key, @NotNull Object obj) {
-        return putCheck(key, obj, "");
-    }
-
-    public boolean putCheck(@NotNull String key, @NotNull Object obj, @Nullable String comment) {
-        if (obj instanceof Node) {
-            if (checkCycle((Node) obj)) {
-                ((Node) obj).addComment(comment);
-                value.put(key, (Node) obj);
-                return true;
-            }
-            if (options.isDebug()) {
-                System.out.println("NodeMap Cycle Reference !!");
-            }
-            return false;
-        }
-        // TODO 序列化
-        value.put(key, new NodeBase(options, obj, comment));
-        return true;
     }
 
     /**
@@ -611,5 +564,15 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         NodeMap map = new NodeMap(options, comments);
         value.forEach((k, v) -> map.value.put(k, v instanceof NodeBase ? v.translate(cfg) : v));
         return map;
+    }
+
+    @Override
+    public NodeMap copy() {
+        return new NodeMap(this);
+    }
+
+    @Override
+    public final byte getType() {
+        return TYPE_MAP;
     }
 }

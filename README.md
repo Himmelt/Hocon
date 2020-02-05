@@ -46,7 +46,7 @@ repositories {
 0. #### 根结点
 
 根结点即文件所对应的结点, 根结点必定是一个 `NodeMap` 结点.
-根节点下存储 key<->value 键值对, 其中 value 值可以是
+根结点下存储 key<->value 键值对, 其中 value 值可以是
 基础结点(NodeBase), 列表结点(NodeList), 映射结点(NodeMap)
 
 1. #### 基础结点(值实质是字符串)

@@ -46,6 +46,6 @@ final class NumberSerializer extends TypeSerializer<Number, NodeBase> {
 
     @Override
     public @NotNull NodeBase serialize(@NotNull Type fieldType, @NotNull Number value, @NotNull Options options) {
-        return new NodeBase(options, value);
+        return new NodeBase(options, String.valueOf(value));
     }
 }

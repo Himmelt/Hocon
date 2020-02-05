@@ -20,8 +20,7 @@ abstract class AbstractNode<T> implements Node {
     /**
      * 封装的值.
      */
-    @NotNull
-    protected final T value;
+    protected final @NotNull T value;
     /**
      * 多行注释.
      */
@@ -29,14 +28,12 @@ abstract class AbstractNode<T> implements Node {
     /**
      * 配置选项.
      */
-    @NotNull
-    protected final Options options;
+    protected final @NotNull Options options;
     /**
      * 非法字符的正则表达式，匹配该正则时需要对字符串加双引号.
      */
     protected static final Pattern ILLEGAL = Pattern.compile(".*[\":=,+?`!@#$^&*{}\\[\\]\\\\].*");
-
-    protected static final Pattern CLZ_COMMENT = Pattern.compile("<class>.+</class>");
+    protected static final byte TYPE_BASE = 0, TYPE_LIST = 1, TYPE_MAP = 2;
 
     /**
      * 初始化一个新结点.
@@ -86,7 +83,11 @@ abstract class AbstractNode<T> implements Node {
 
     @Override
     public void setComment(@NotNull String comment) {
-        comments.clear();
+        if (comments == null) {
+            comments = new ArrayList<>();
+        } else {
+            comments.clear();
+        }
         comments.add(comment);
     }
 
@@ -113,8 +114,7 @@ abstract class AbstractNode<T> implements Node {
     }
 
     @Override
-    @NotNull
-    public final Options options() {
+    public final @NotNull Options options() {
         return options;
     }
 
@@ -174,4 +174,7 @@ abstract class AbstractNode<T> implements Node {
             writer.write(' ');
         }
     }
+
+    @Override
+    public abstract AbstractNode<T> copy();
 }

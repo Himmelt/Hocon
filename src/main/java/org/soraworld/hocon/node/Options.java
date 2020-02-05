@@ -1,6 +1,8 @@
 package org.soraworld.hocon.node;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.SerializerException;
 import org.soraworld.hocon.serializer.TypeSerializer;
 import org.soraworld.hocon.serializer.TypeSerializers;
@@ -165,5 +167,19 @@ public final class Options {
             }
         }
         return comment;
+    }
+
+    public @Nullable Node serialize(@NotNull Object object) {
+        if (object instanceof Node) {
+            return ((Node) object).copy();
+        }
+        TypeSerializer type = getSerializer(object.getClass());
+        if (type != null) {
+            try {
+                return type.serialize(object.getClass(), object, this);
+            } catch (HoconException ignored) {
+            }
+        }
+        return null;
     }
 }

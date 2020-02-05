@@ -52,7 +52,7 @@ final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
     public @NotNull NodeMap serialize(@NotNull Type fieldType, @NotNull Map<?, ?> value, @NotNull Options options) throws HoconException {
         Type[] arguments = Reflects.getActualTypes(Map.class, fieldType);
         if (arguments != null && arguments.length == 2) {
-            NodeMap node = new NodeMap(options);
+            NodeMap map = new NodeMap(options);
             if (!value.isEmpty()) {
                 final TypeSerializer KEY_S = options.getSerializer(arguments[0]);
                 final TypeSerializer VAL_S = options.getSerializer(arguments[1]);
@@ -65,7 +65,7 @@ final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
                         if (KEY.keyAble() && key != null && obj != null) {
                             NodeBase base = (NodeBase) KEY.serialize(KEY_S != null ? arguments[0] : key.getClass(), key, options);
                             Node valNode = VAL.serialize(VAL_S != null ? arguments[1] : obj.getClass(), obj, options);
-                            if (!node.add(base.getString(), valNode)) {
+                            if (!map.put(base.getString(), valNode)) {
                                 throw new SerializerException("Node for key <" + base.getString() + "> already exist !");
                             }
                         }
@@ -74,7 +74,7 @@ final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
                     }
                 }
             }
-            return node;
+            return map;
         } else {
             throw new NotMatchException(getType(), fieldType);
         }

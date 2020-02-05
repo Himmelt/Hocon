@@ -93,7 +93,7 @@ public interface Node {
      * 翻译
      *
      * @param cfg 配置字
-     * @return 节点
+     * @return 结点
      */
     @NotNull Node translate(byte cfg);
 
@@ -112,4 +112,8 @@ public interface Node {
      * @throws IOException 写入异常
      */
     void writeIndent(int indent, BufferedWriter writer) throws IOException;
+
+    Node copy();
+
+    byte getType();
 }

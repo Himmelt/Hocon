@@ -17,33 +17,33 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
 
     private static final long serialVersionUID = 511187959363727820L;
 
-    public NodeBase(@NotNull Object obj) {
-        super(Options.defaults(), String.valueOf(obj));
+    public NodeBase(@NotNull NodeBase origin) {
+        super(origin.options, origin.value, origin.comments);
     }
 
     /**
      * 实例化一个新的基础结点.
      *
      * @param options 配置选项
-     * @param obj     封装对象
+     * @param value   封装对象
      */
-    public NodeBase(@NotNull Options options, @NotNull Object obj) {
-        super(options, obj.toString());
+    public NodeBase(@NotNull Options options, @NotNull String value) {
+        super(options, value);
     }
 
     /**
      * 实例化一个新的基础结点.
      *
      * @param options 配置选项
-     * @param obj     封装对象
+     * @param value   封装对象
      * @param comment 注释
      */
-    public NodeBase(@NotNull Options options, @NotNull Object obj, String comment) {
-        super(options, obj.toString(), comment);
+    public NodeBase(@NotNull Options options, @NotNull String value, String comment) {
+        super(options, value, comment);
     }
 
-    public NodeBase(@NotNull Options options, @NotNull Object obj, List<String> comments) {
-        super(options, obj.toString(), comments);
+    public NodeBase(@NotNull Options options, @NotNull String value, List<String> comments) {
+        super(options, value, comments);
     }
 
     @Override
@@ -157,5 +157,15 @@ public class NodeBase extends AbstractNode<String> implements Node, Serializable
     @Override
     public @NotNull String toString() {
         return value;
+    }
+
+    @Override
+    public NodeBase copy() {
+        return new NodeBase(this);
+    }
+
+    @Override
+    public final byte getType() {
+        return TYPE_BASE;
     }
 }
