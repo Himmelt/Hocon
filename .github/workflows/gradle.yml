@@ -22,4 +22,7 @@ jobs:
       - name: Gradle Test
         run: ./gradlew test
       - name: Artifactory Publish
+        env:
+          BINTRAY_KEY: ${{ secrets.BINTRAY_KEY }}
+          BINTRAY_USER: ${{ secrets.BINTRAY_USER }}
         run: ./gradlew artifactoryPublish
