@@ -5,5 +5,5 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.soraworld</groupId>
     <artifactId>Hocon</artifactId>
-    <version>1.2.2-SNAPSHOT</version>
+    <version>1.2.3-SNAPSHOT</version>
 </project>

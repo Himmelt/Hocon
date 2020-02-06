@@ -1,9 +1,23 @@
+buildscript {
+    repositories {
+        maven { url 'https://plugins.gradle.org/m2/' }
+    }
+    dependencies {
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.2"
+    }
+}
+
 apply plugin: 'java'
-apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.artifactory'
 
 group = 'org.soraworld'
-version = '1.2.2-SNAPSHOT'
+version = '1.2.3-SNAPSHOT'
+
+def _BINTRAY_USER = System.getenv('BINTRAY_USER')
+def _BINTRAY_KEY = System.getenv('BINTRAY_KEY')
+def _REPO_KEY = version.contains("SNAPSHOT") ? 'oss-snapshot-local' : 'oss-release-local'
+def _PUBLISH_CFG = version.contains("SNAPSHOT") ? 'mavenSnapshot' : 'mavenRelease'
 
 sourceCompatibility = targetCompatibility = 1.8
 
@@ -27,4 +41,38 @@ task sourcesJar(type: Jar) {
 artifacts {
     archives jar
     archives sourcesJar
+}
+
+publishing {
+    publications {
+        mavenRelease(MavenPublication) {
+            from components.java
+            groupId = 'org.soraworld'
+            artifactId = 'hocon'
+            version = project.version
+            artifact sourcesJar
+        }
+        mavenSnapshot(MavenPublication) {
+            from components.java
+            groupId = 'org.soraworld'
+            artifactId = 'hocon'
+            version = project.version
+            artifact sourcesJar
+        }
+    }
+}
+
+artifactory {
+    setContextUrl('https://oss.jfrog.org/artifactory')
+    publish {
+        repository {
+            repoKey = _REPO_KEY
+            username = _BINTRAY_USER
+            password = _BINTRAY_KEY
+            maven = true
+        }
+        defaults {
+            publications(_PUBLISH_CFG)
+        }
+    }
 }

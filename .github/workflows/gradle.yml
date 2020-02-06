@@ -21,3 +21,5 @@ jobs:
         run: ./gradlew build
       - name: Gradle Test
         run: ./gradlew test
+      - name: Artifactory Publish
+        run: ./gradlew artifactoryPublish
