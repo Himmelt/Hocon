@@ -72,7 +72,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
             Setting setting = field.getAnnotation(Setting.class);
             if (setting != null) {
                 Type fieldType = field.getGenericType();
-                TypeSerializer serializer = options.getSerializer(fieldType);
+                TypeSerializer<Object, Node> serializer = options.getSerializer(fieldType);
                 if (serializer != null) {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     Node node = get(paths);
@@ -153,10 +153,10 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 try {
                     Paths paths = new Paths(setting.path().isEmpty() ? field.getName() : setting.path());
                     String comment = (setting.trans() & 0b1001) == 0 ? setting.comment() : options.translateComment(setting.comment(), paths);
-                    Node old = oldNode.get(paths.clone());
+                    Node old = oldNode.get(paths.copy());
                     List<String> list = old != null ? old.getComments() : null;
                     Type fieldType = field.getGenericType();
-                    TypeSerializer serializer = options.getSerializer(fieldType);
+                    TypeSerializer<Object, Node> serializer = options.getSerializer(fieldType);
                     if (serializer == null && fieldType instanceof Class<?> && Serializable.class.isAssignableFrom((Class<?>) fieldType)) {
                         serializer = options.getSerializer(Serializable.class);
                     }
@@ -467,26 +467,27 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                 if (!line.endsWith("}")) {
                     node.readValue(reader, keepComments);
                 }
-            } else if (line.contains("=") && (line.endsWith("[") || (line.contains("[") && line.endsWith("]")))) {
-                NodeList list = new NodeList(options);
-                if (keepComments) {
-                    list.setComments(commentTemp);
-                    commentTemp = new ArrayList<>();
-                }
+            } else {
                 String path = line.substring(0, line.indexOf('=') - 1).trim();
-                value.put(unquotation(path), list);
-                if (!line.endsWith("]")) {
-                    list.readValue(reader, keepComments);
+                if (line.contains("=") && (line.endsWith("[") || (line.contains("[") && line.endsWith("]")))) {
+                    NodeList list = new NodeList(options);
+                    if (keepComments) {
+                        list.setComments(commentTemp);
+                        commentTemp = new ArrayList<>();
+                    }
+                    value.put(unquotation(path), list);
+                    if (!line.endsWith("]")) {
+                        list.readValue(reader, keepComments);
+                    }
+                } else if (line.contains("=")) {
+                    String text = line.substring(line.indexOf('=') + 1).trim();
+                    NodeBase base = new NodeBase(options, unquotation(text));
+                    if (keepComments) {
+                        base.setComments(commentTemp);
+                        commentTemp = new ArrayList<>();
+                    }
+                    value.put(unquotation(path), base);
                 }
-            } else if (line.contains("=")) {
-                String path = line.substring(0, line.indexOf('=') - 1).trim();
-                String text = line.substring(line.indexOf('=') + 1).trim();
-                NodeBase base = new NodeBase(options, unquotation(text));
-                if (keepComments) {
-                    base.setComments(commentTemp);
-                    commentTemp = new ArrayList<>();
-                }
-                value.put(unquotation(path), base);
             }
         }
     }

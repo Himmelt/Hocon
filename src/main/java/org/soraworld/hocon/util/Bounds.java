@@ -34,7 +34,7 @@ final class Bounds {
                 this.lower = lower[0];
             }
         } else if (type instanceof TypeVariable) {
-            Type[] upper = ((TypeVariable) type).getBounds();
+            Type[] upper = ((TypeVariable<?>) type).getBounds();
             if (upper.length == 0) {
                 this.upper = Object.class;
             } else {

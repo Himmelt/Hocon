@@ -50,7 +50,7 @@ public interface Node {
     /**
      * 获取 node 的多行注释.
      *
-     * @return 多行注释
+     * @return 多行注释 comments
      */
     List<String> getComments();
 
@@ -97,7 +97,7 @@ public interface Node {
     /**
      * 获取 配置选项 options.
      *
-     * @return options
+     * @return options options
      */
     Options options();
 
@@ -110,7 +110,17 @@ public interface Node {
      */
     void writeIndent(int indent, BufferedWriter writer) throws IOException;
 
+    /**
+     * Copy node.
+     *
+     * @return the node
+     */
     Node copy();
 
+    /**
+     * Gets type.
+     *
+     * @return the type
+     */
     byte getType();
 }

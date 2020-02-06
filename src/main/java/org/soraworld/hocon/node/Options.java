@@ -134,8 +134,8 @@ public final class Options {
      * @param type 类型
      * @return 序列化器
      */
-    public TypeSerializer<?, ?> getSerializer(@NotNull Type type) {
-        return serializers.get(type);
+    public TypeSerializer<Object, Node> getSerializer(@NotNull Type type) {
+        return (TypeSerializer<Object, Node>) serializers.get(type);
     }
 
     /**
@@ -173,7 +173,7 @@ public final class Options {
         if (object instanceof Node) {
             return ((Node) object).copy();
         }
-        TypeSerializer type = getSerializer(object.getClass());
+        TypeSerializer<Object, Node> type = getSerializer(object.getClass());
         if (type != null) {
             try {
                 return type.serialize(object.getClass(), object, this);

@@ -17,8 +17,7 @@ import java.util.List;
  */
 public class FileNode extends NodeMap {
 
-    @NotNull
-    private final File file;
+    private final @NotNull File file;
     protected List<String> heads;
 
     private static final Field FD_VALUE;

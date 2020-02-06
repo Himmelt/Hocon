@@ -25,9 +25,9 @@ final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
         Type[] arguments = Reflects.getActualTypes(Map.class, fieldType);
         if (arguments != null && arguments.length == 2) {
             Options options = node.options();
-            TypeSerializer KEY = options.getSerializer(arguments[0]);
-            TypeSerializer VAL = options.getSerializer(arguments[1]);
-            Map map;
+            final TypeSerializer<Object, Node> keySerial = options.getSerializer(arguments[0]);
+            final TypeSerializer<Object, Node> valSerial = options.getSerializer(arguments[1]);
+            Map<Object, Object> map;
             try {
                 map = (Map) getTypeInstance(fieldType);
             } catch (Throwable e) {
@@ -38,8 +38,8 @@ final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
                 map = new LinkedHashMap<>();
             }
             for (String path : node.keys()) {
-                Object key = KEY.deserialize(arguments[0], new NodeBase(options, path));
-                Object val = VAL.deserialize(arguments[1], node.get(path));
+                Object key = keySerial.deserialize(arguments[0], new NodeBase(options, path));
+                Object val = valSerial.deserialize(arguments[1], node.get(path));
                 map.put(key, val);
             }
             return map;
@@ -54,17 +54,17 @@ final class MapSerializer extends TypeSerializer<Map<?, ?>, NodeMap> {
         if (arguments != null && arguments.length == 2) {
             NodeMap map = new NodeMap(options);
             if (!value.isEmpty()) {
-                final TypeSerializer KEY_S = options.getSerializer(arguments[0]);
-                final TypeSerializer VAL_S = options.getSerializer(arguments[1]);
+                final TypeSerializer<Object, Node> keyS = options.getSerializer(arguments[0]);
+                final TypeSerializer<Object, Node> valS = options.getSerializer(arguments[1]);
                 for (Map.Entry<?, ?> entry : value.entrySet()) {
                     Object key = entry.getKey();
                     Object obj = entry.getValue();
-                    TypeSerializer KEY = KEY_S != null ? KEY_S : options.getSerializer(key.getClass());
-                    TypeSerializer VAL = VAL_S != null ? VAL_S : options.getSerializer(obj.getClass());
-                    if (KEY != null && VAL != null) {
-                        if (KEY.keyAble() && key != null && obj != null) {
-                            NodeBase base = (NodeBase) KEY.serialize(KEY_S != null ? arguments[0] : key.getClass(), key, options);
-                            Node valNode = VAL.serialize(VAL_S != null ? arguments[1] : obj.getClass(), obj, options);
+                    final TypeSerializer<Object, Node> keySerial = keyS != null ? keyS : options.getSerializer(key.getClass());
+                    final TypeSerializer<Object, Node> valSerial = valS != null ? valS : options.getSerializer(obj.getClass());
+                    if (keySerial != null && valSerial != null) {
+                        if (keySerial.keyAble() && key != null && obj != null) {
+                            NodeBase base = (NodeBase) keySerial.serialize(keyS != null ? arguments[0] : key.getClass(), key, options);
+                            Node valNode = valSerial.serialize(valS != null ? arguments[1] : obj.getClass(), obj, options);
                             if (!map.put(base.getString(), valNode)) {
                                 throw new SerializerException("Node for key <" + base.getString() + "> put failed !");
                             }

@@ -1,5 +1,7 @@
 package org.soraworld.hocon.node;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.StringJoiner;
 
 /**
@@ -13,9 +15,9 @@ public final class Paths {
     private final int length;
     private final String[] paths;
 
-    private Paths(Paths source) {
-        this.paths = source.paths;
-        this.length = source.length;
+    private Paths(@NotNull Paths origin) {
+        this.paths = origin.paths;
+        this.length = origin.length;
         this.current = 0;
     }
 
@@ -143,8 +145,7 @@ public final class Paths {
         }
     }
 
-    @Override
-    protected Paths clone() {
+    public final Paths copy() {
         return new Paths(this);
     }
 

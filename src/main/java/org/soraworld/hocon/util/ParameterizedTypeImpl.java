@@ -72,8 +72,8 @@ final class ParameterizedTypeImpl implements ParameterizedType {
     public String toString() {
         StringBuilder builder = new StringBuilder();
         if (ownerType != null) {
-            if (ownerType instanceof Class) {
-                builder.append(((Class) ownerType).getName());
+            if (ownerType instanceof Class<?>) {
+                builder.append(((Class<?>) ownerType).getName());
             } else {
                 builder.append(ownerType.toString());
             }

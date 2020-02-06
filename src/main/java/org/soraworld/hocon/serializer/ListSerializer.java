@@ -3,6 +3,7 @@ package org.soraworld.hocon.serializer;
 import org.jetbrains.annotations.NotNull;
 import org.soraworld.hocon.exception.HoconException;
 import org.soraworld.hocon.exception.NotMatchException;
+import org.soraworld.hocon.node.Node;
 import org.soraworld.hocon.node.NodeList;
 import org.soraworld.hocon.node.Options;
 import org.soraworld.hocon.util.Reflects;
@@ -23,8 +24,8 @@ final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
         Type[] arguments = Reflects.getActualTypes(Collection.class, fieldType);
         if (arguments != null && arguments.length == 1) {
             Options options = node.options();
-            TypeSerializer KEY = options.getSerializer(arguments[0]);
-            Collection list;
+            TypeSerializer<Object, Node> KEY = options.getSerializer(arguments[0]);
+            Collection<Object> list;
             try {
                 list = (Collection) getTypeInstance(fieldType);
             } catch (Throwable e) {
@@ -49,7 +50,7 @@ final class ListSerializer extends TypeSerializer<Collection<?>, NodeList> {
         Type[] arguments = Reflects.getActualTypes(Collection.class, fieldType);
         if (arguments != null && arguments.length == 1) {
             NodeList nodeList = new NodeList(options);
-            TypeSerializer ELEMENT = options.getSerializer(arguments[0]);
+            TypeSerializer<Object, Node> ELEMENT = options.getSerializer(arguments[0]);
             for (Object obj : value) {
                 nodeList.add(ELEMENT.serialize(arguments[0], obj, options));
             }
