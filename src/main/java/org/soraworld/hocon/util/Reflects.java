@@ -22,10 +22,11 @@ public final class Reflects {
     private static final ConcurrentHashMap<Class<?>, CopyOnWriteArrayList<Field>> CLAZZ_FIELDS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Class<?>, CopyOnWriteArrayList<Field>> STATIC_FIELDS = new ConcurrentHashMap<>();
     private static final ConcurrentHashMap<Class<? extends Enum<?>>, ConcurrentHashMap<String, Enum<?>>> ENUM_FIELDS = new ConcurrentHashMap<>();
-    private static boolean RESOLVES_LAMBDAS;
-    private static Method GET_CONSTANT_POOL;
-    private static Method GET_CONSTANT_POOL_SIZE;
-    private static Method GET_CONSTANT_POOL_METHOD_AT;
+    private static final boolean RESOLVES_LAMBDAS;
+    private static final Field FIELD_MODIFIERS;
+    private static final Method GET_CONSTANT_POOL;
+    private static final Method GET_CONSTANT_POOL_SIZE;
+    private static final Method GET_CONSTANT_POOL_METHOD_AT;
 
     static {
         Map<Class<?>, Class<?>> map1 = new HashMap<>();
@@ -56,23 +57,34 @@ public final class Reflects {
         }
         OBJECT_METHODS = Collections.unmodifiableMap(map3);
         JAVA_VERSION = Double.parseDouble(System.getProperty("java.specification.version", "0"));
+        boolean resolvesLambdas = false;
+        Field fieldModifiers = null;
+        Method getConstantPool = null, getConstantPoolSize = null, getConstantPoolMethodAt = null;
         try {
-            GET_CONSTANT_POOL = Class.class.getDeclaredMethod("getConstantPool");
+            fieldModifiers = Field.class.getDeclaredField("modifiers");
+            fieldModifiers.setAccessible(true);
+
+            getConstantPool = Class.class.getDeclaredMethod("getConstantPool");
             String constantPoolName = JAVA_VERSION < 9 ? "sun.reflect.ConstantPool" : "jdk.internal.reflect.ConstantPool";
             Class<?> constantPoolClass = Class.forName(constantPoolName);
-            GET_CONSTANT_POOL_SIZE = constantPoolClass.getDeclaredMethod("getSize");
-            GET_CONSTANT_POOL_METHOD_AT = constantPoolClass.getDeclaredMethod("getMethodAt", int.class);
+            getConstantPoolSize = constantPoolClass.getDeclaredMethod("getSize");
+            getConstantPoolMethodAt = constantPoolClass.getDeclaredMethod("getMethodAt", int.class);
 
-            GET_CONSTANT_POOL.setAccessible(true);
-            GET_CONSTANT_POOL_SIZE.setAccessible(true);
-            GET_CONSTANT_POOL_METHOD_AT.setAccessible(true);
+            getConstantPool.setAccessible(true);
+            getConstantPoolSize.setAccessible(true);
+            getConstantPoolMethodAt.setAccessible(true);
 
-            Object constantPool = GET_CONSTANT_POOL.invoke(Object.class);
-            GET_CONSTANT_POOL_SIZE.invoke(constantPool);
-            RESOLVES_LAMBDAS = true;
+            Object constantPool = getConstantPool.invoke(Object.class);
+            getConstantPoolSize.invoke(constantPool);
+            resolvesLambdas = true;
         } catch (Throwable e) {
             e.printStackTrace();
         }
+        RESOLVES_LAMBDAS = resolvesLambdas;
+        FIELD_MODIFIERS = fieldModifiers;
+        GET_CONSTANT_POOL = getConstantPool;
+        GET_CONSTANT_POOL_SIZE = getConstantPoolSize;
+        GET_CONSTANT_POOL_METHOD_AT = getConstantPoolMethodAt;
     }
 
     private Reflects() {
@@ -122,7 +134,14 @@ public final class Reflects {
         }
         CopyOnWriteArrayList<Field> fields = new CopyOnWriteArrayList<>(Arrays.asList(clazz.getDeclaredFields()));
         fields.removeIf(field -> !Modifier.isStatic(field.getModifiers()));
-        fields.forEach(field -> field.setAccessible(true));
+        fields.forEach(field -> {
+            field.setAccessible(true);
+            try {
+                FIELD_MODIFIERS.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        });
         STATIC_FIELDS.put(clazz, fields);
         return Collections.unmodifiableList(fields);
     }
