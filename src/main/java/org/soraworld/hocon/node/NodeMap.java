@@ -267,7 +267,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         if (node == null) {
             node = new NodeBase(options, String.valueOf(obj));
         }
-        node.setComment(comment);
+        node.addComment(comment);
         // 最后结点为空或可接受类型
         if (old == null || old.getType() == node.getType()) {
             value.put(paths.first(), node);
@@ -304,7 +304,7 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
         if (node == null) {
             node = new NodeBase(options, String.valueOf(obj));
         }
-        node.setComment(comment);
+        node.addComment(comment);
         value.put(paths.first(), node);
         return true;
     }

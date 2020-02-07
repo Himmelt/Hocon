@@ -21,13 +21,13 @@ Simple Hocon Configuration Library
 <dependency>
   <groupId>org.soraworld</groupId>
   <artifactId>hocon</artifactId>
-  <version>1.2.2</version>
+  <version>1.2.3-SNAPSHOT</version>
   <type>pom</type>
 </dependency>
 ```
 #### Gradle
 ```groovy
-compile 'org.soraworld:hocon:1.2.1'
+compile 'org.soraworld:hocon:1.2.3-SNAPSHOT'
 ```
 #### 仓库
 ```groovy
