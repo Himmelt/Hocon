@@ -88,7 +88,7 @@ abstract class AbstractNode<T> implements Node {
         } else {
             comments.clear();
         }
-        comments.add(comment);
+        addComment(comment);
     }
 
     @Override
