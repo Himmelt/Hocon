@@ -12,7 +12,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.artifactory'
 
 group = 'org.soraworld'
-version = '1.2.3-SNAPSHOT'
+version = '1.2.3'
 
 def _BINTRAY_USER = System.getenv('BINTRAY_USER')
 def _BINTRAY_KEY = System.getenv('BINTRAY_KEY')
