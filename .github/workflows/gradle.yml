@@ -25,4 +25,6 @@ jobs:
       - name: Gradle Build
         run: ./gradlew build
       - name: Packages Publish
+        env:
+          PACKAGES_TOKEN: ${{ secrets.PACKAGES_TOKEN }}
         run: ./gradlew publish
