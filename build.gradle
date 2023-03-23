@@ -1,58 +1,25 @@
-buildscript {
-    repositories {
-        maven { url 'https://plugins.gradle.org/m2/' }
-    }
-    dependencies {
-        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:4.7.2"
-    }
+plugins {
+    id 'java'
+    id 'maven-publish'
 }
 
-apply plugin: 'java'
-apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.artifactory'
-
 group = 'org.soraworld'
-version = '1.2.3'
-
-def _BINTRAY_USER = System.getenv('BINTRAY_USER')
-def _BINTRAY_KEY = System.getenv('BINTRAY_KEY')
-def _REPO_KEY = version.contains("SNAPSHOT") ? 'oss-snapshot-local' : 'oss-release-local'
-def _PUBLISH_CFG = version.contains("SNAPSHOT") ? 'mavenSnapshot' : 'mavenRelease'
+version = '1.2.3-SNAPSHOT'
 
 sourceCompatibility = targetCompatibility = 1.8
 
-repositories {
-    jcenter()
-}
-
-dependencies {
-    testCompile 'junit:junit:4.12'
-}
-
-tasks.withType(JavaCompile) {
+tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier = 'sources'
     from sourceSets.main.allJava
-}
-
-artifacts {
-    archives jar
-    archives sourcesJar
 }
 
 publishing {
     publications {
-        mavenRelease(MavenPublication) {
-            from components.java
-            groupId = 'org.soraworld'
-            artifactId = 'hocon'
-            version = project.version
-            artifact sourcesJar
-        }
-        mavenSnapshot(MavenPublication) {
+        maven(MavenPublication) {
             from components.java
             groupId = 'org.soraworld'
             artifactId = 'hocon'
@@ -60,19 +27,14 @@ publishing {
             artifact sourcesJar
         }
     }
-}
-
-artifactory {
-    setContextUrl('https://oss.jfrog.org/artifactory')
-    publish {
-        repository {
-            repoKey = _REPO_KEY
-            username = _BINTRAY_USER
-            password = _BINTRAY_KEY
-            maven = true
-        }
-        defaults {
-            publications(_PUBLISH_CFG)
+    repositories {
+        maven {
+            name = "hocon"
+            url = uri("https://maven.pkg.github.com/himmelt/hocon")
+            credentials {
+                username = 'Himmelt'
+                password = System.getenv("PACKAGES_TOKEN")
+            }
         }
     }
 }
