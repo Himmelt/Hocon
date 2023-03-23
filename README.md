@@ -1,8 +1,25 @@
 # Hocon
+
 Simple Hocon Configuration Library
+
 轻量 Hocon 配置库
 
 ![Hocon](https://github.com/Himmelt/Hocon/workflows/Hocon/badge.svg)
+
+<!-- TOC -->
+* [Hocon](#hocon)
+    * [简介](#简介)
+    * [使用依赖](#使用依赖)
+      * [Maven](#maven)
+      * [Gradle](#gradle)
+      * [仓库](#仓库)
+    * [专用HOCON格式](#专用hocon格式)
+      * [根结点](#根结点)
+      * [基础结点(值实质是字符串)](#基础结点--值实质是字符串-)
+      * [列表结点](#列表结点)
+      * [映射结点](#映射结点)
+    * [示例](#示例)
+<!-- TOC -->
 
 ### 简介
 这是一个轻量级的 Hocon 配置库，没有其他依赖项。
@@ -12,8 +29,6 @@ Simple Hocon Configuration Library
 使用 NodeMap 的 `void modify(Object target);` 方法，可以用结点的值修改目标对象对应名称用 `@Setting` 注解的字段。
 使用 NodeMap 的 `void extract(Object source);` 方法，可以提取源对象对应名称用 `@Setting` 注解的字段的值到结点。
 另外该库支持对注释内容的翻译，可通过设置翻译器实现本地化效果。
-
-具体使用方法可以查看 [Javadoc](https://docs.soraworld.org/hocon/)
 
 ### 使用依赖
 #### Maven
@@ -32,24 +47,22 @@ compile 'org.soraworld:hocon:1.2.3-SNAPSHOT'
 #### 仓库
 ```groovy
 repositories {
-    jcenter()
     maven {
-        url = 'https://oss.jfrog.org/artifactory/oss-release-local/' //''https://oss.jfrog.org/artifactory/libs-release/'
-    }
-    maven {
-        url = 'https://oss.jfrog.org/artifactory/oss-snapshot-local/' //'https://oss.jfrog.org/artifactory/libs-snapshot/'
+        url 'https://maven.pkg.github.com/himmelt/hocon'
+        credentials {
+            username = 'Your Github Username'
+            password = System.getenv("PACKAGES_TOKEN")//Your personal access token (classic)
+        }
     }
 }
 ```
 
 ### 专用HOCON格式
-0. #### 根结点
-
+#### 根结点
 根结点即文件所对应的结点, 根结点必定是一个 `NodeMap` 结点.
 根结点下存储 key<->value 键值对, 其中 value 值可以是
 基础结点(NodeBase), 列表结点(NodeList), 映射结点(NodeMap)
-
-1. #### 基础结点(值实质是字符串)
+#### 基础结点(值实质是字符串)
 
 键 和 值 之间用 `=` 连接, 如果字符串含有空格或其他特殊字符,
 则需要在字符串两端加双引号 `"`
@@ -66,7 +79,7 @@ keyNull = null
 stringNull = "null"
 ```
 
-2. #### 列表结点
+#### 列表结点
 
 键 和 值 之间用 `=` 连接, 如果列表为空, 直接接 关闭的方括号 `[]`,
 如过列表不为空, 接 左方括号 `[` , 新行填列表元素, 每个元素都新起一行.
@@ -118,7 +131,7 @@ hello = "Hello World"
 ]
 ```
 
-3. #### 映射结点
+#### 映射结点
 
 键 和 值 之间没有内容, 如果映射为空, 直接接 关闭的花括号 `{}`,
 键 只能为字符串, 如果键含有特殊字符 则要加双引号 `"`,
