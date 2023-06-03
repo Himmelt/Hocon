@@ -161,24 +161,27 @@ public class NodeMap extends AbstractNode<LinkedHashMap<String, Node>> implement
                         serializer = options.getSerializer(Serializable.class);
                     }
                     if (serializer != null) {
-                        Node node = serializer.serialize(fieldType, field.get(source), options);
-                        if ((setting.trans() & 0b1100) != 0) {
-                            node.translate(WRITE);
-                        }
-                        if (overwrite) {
-                            if (set(paths, node, comment)) {
+                        Object value = field.get(source);
+                        if (value != null) {
+                            Node node = serializer.serialize(fieldType, value, options);
+                            if ((setting.trans() & 0b1100) != 0) {
+                                node.translate(WRITE);
+                            }
+                            if (overwrite) {
+                                if (set(paths, node, comment)) {
+                                    if (comment.isEmpty() && keepComment) {
+                                        node.setComments(list);
+                                    }
+                                } else if (options.isDebug()) {
+                                    System.out.println("NodeMap set failed, paths is empty or not-map path !!");
+                                }
+                            } else if (put(paths, node, comment)) {
                                 if (comment.isEmpty() && keepComment) {
                                     node.setComments(list);
                                 }
                             } else if (options.isDebug()) {
-                                System.out.println("NodeMap set failed, paths is empty or not-map path !!");
+                                System.out.println("NodeMap put failed, node type not match !!");
                             }
-                        } else if (put(paths, node, comment)) {
-                            if (comment.isEmpty() && keepComment) {
-                                node.setComments(list);
-                            }
-                        } else if (options.isDebug()) {
-                            System.out.println("NodeMap put failed, node type not match !!");
                         }
                     } else if (options.isDebug()) {
                         System.out.println("No TypeSerializer for the type of field "
