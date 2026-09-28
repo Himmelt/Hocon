@@ -4,17 +4,32 @@ plugins {
 }
 
 group = 'org.soraworld'
-version = '1.2.3-SNAPSHOT'
+version = '2.0.0-SNAPSHOT'
 
 sourceCompatibility = targetCompatibility = 1.8
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    // 全量 lint；-path 排除的是本机 JAVA_HOME 下 tools.jar 的路径噪声，不是代码问题
+    options.compilerArgs << '-Xlint:all' << '-Xlint:-path'
 }
 
 tasks.register('sourcesJar', Jar) {
     archiveClassifier = 'sources'
     from sourceSets.main.allJava
+}
+
+// 无依赖自检：解析/打印/绑定的保真往返、注释保留、原子性与诊断
+tasks.register('verify', JavaExec) {
+    group = 'verification'
+    description = '运行无依赖自检程序'
+    dependsOn tasks.named('testClasses')
+    mainClass = 'org.soraworld.hocon.Verify'
+    classpath = sourceSets.test.runtimeClasspath
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('verify')
 }
 
 publishing {
